@@ -50,6 +50,8 @@ class TenantSecurityMiddleware:
                     current_path = request.path
                     allowed_prefixes = [
                         reverse('logout'),
+                        reverse('login'),
+                        '/login/',
                         '/compte-suspendu/',
                         '/static/',
                         '/favicon.ico',
