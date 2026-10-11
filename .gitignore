@@ -1,0 +1,20 @@
+# Python & Django
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+*.log
+
+# Staticfiles collectstatic target
+staticfiles/
+
+# Binaires & gros fichiers
+cloudflared.exe
+*.zip
+*.rar
+*.iso
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store

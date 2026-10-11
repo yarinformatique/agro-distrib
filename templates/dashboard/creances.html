@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+
+{% block title %}Suivi des Créances & Recouvrement • Agro-Distrib B2B{% endblock %}
+
+{% block content %}
+<div class="space-y-6" x-data="{ openReglementModal: false, openPlafondModal: false, activeVente: {}, activeAlim: {} }">
+    <!-- En-tête avec Indicateurs Clés -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+        <div>
+            <div class="flex items-center space-x-2 text-xs font-bold text-red-600 uppercase tracking-wider mb-1">
+                <span>💳</span>
+                <span>Gestion Financière & Recouvrement</span>
+            </div>
+            <h1 class="text-2xl font-black text-slate-800 tracking-tight">Suivi des Créances & Plafonds d'Impayés</h1>
+            <p class="text-xs text-slate-500">Contrôle des encours clients, dates d'échéances et blocage automatique en cas de dépassement de seuil.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+            <div class="bg-red-50 border border-red-200 px-4 py-2.5 rounded-2xl flex items-center gap-3">
+                <span class="text-2xl">💳</span>
+                <div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-red-600 block">Total Créances Dehors</span>
+                    <span class="text-lg sm:text-xl font-black text-red-700">{{ total_creances|floatformat:0 }} FCFA</span>
+                </div>
+            </div>
+
+            <div class="bg-amber-50 border border-amber-200 px-4 py-2.5 rounded-2xl flex items-center gap-3">
+                <span class="text-2xl">⏰</span>
+                <div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 block">Dettes Échues (En retard)</span>
+                    <span class="text-lg sm:text-xl font-black text-amber-800">{{ total_creances_echues|floatformat:0 }} FCFA</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertes Risques Recouvrement -->
+    {% if creances_echues %}
+    <div class="p-4 bg-red-50 border-l-4 border-red-500 rounded-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm">
+        <div class="flex items-start gap-3">
+            <span class="text-2xl">🚨</span>
+            <div>
+                <h3 class="text-xs sm:text-sm font-black text-red-900">
+                    Alerte Recouvrement : {{ creances_echues|length }} facture(s) sont arrivées à échéance sans règlement !
+                </h3>
+                <p class="text-[11px] text-red-700 mt-0.5">
+                    Montant total échu en retard : <strong>{{ total_creances_echues|floatformat:0 }} FCFA</strong>.
+                    Les livraisons à crédit pour ces boutiques sont automatiquement bloquées par le système.
+                </p>
+            </div>
+        </div>
+        <span class="px-3 py-1 bg-red-600 text-white rounded-xl text-xs font-bold whitespace-nowrap self-start sm:self-auto">
+            Action requise
+        </span>
+    </div>
+    {% endif %}
+
+    <!-- Tableau 1 : Ventes à Crédit et Factures Individuelles -->
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <h2 class="text-sm font-black text-slate-800">Factures à Crédit en Souffrance ({{ ventes_a_credit|length }})</h2>
+                <p class="text-[11px] text-slate-400">Détail des bons de livraison avec date d'échéance et bouton direct WhatsApp</p>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-100 text-[11px] uppercase tracking-wider">
+                    <tr>
+                        <th class="py-3.5 px-4">Boutique & Quartier</th>
+                        <th class="py-3.5 px-4">Gérant / Téléphone</th>
+                        <th class="py-3.5 px-4">Date Vente</th>
+                        <th class="py-3.5 px-4">Échéance Crédit</th>
+                        <th class="py-3.5 px-4 text-right">Total Vente</th>
+                        <th class="py-3.5 px-4 text-right">Déjà Payé</th>
+                        <th class="py-3.5 px-4 text-right">Reste Dû</th>
+                        <th class="py-3.5 px-4 text-center">Relances Directes</th>
+                        <th class="py-3.5 px-4 text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for v in ventes_a_credit %}
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3.5 px-4">
+                            <div class="font-bold text-slate-900">{{ v.alimentation.nom }}</div>
+                            <div class="text-[11px] text-slate-500">📍 {{ v.alimentation.quartier }}</div>
+                            {% if v.notes %}
+                            <div class="text-[10px] text-slate-400 italic mt-0.5">Note: {{ v.notes }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <div class="font-medium text-slate-800">{{ v.alimentation.nom_gerant }}</div>
+                            <div class="text-[11px] font-mono text-emerald-700">{{ v.alimentation.telephone_gerant }}</div>
+                        </td>
+                        <td class="py-3.5 px-4 font-mono text-slate-500">
+                            {{ v.date_heure|date:"d/m/Y" }}
+                        </td>
+                        <td class="py-3.5 px-4">
+                            {% if v.date_echeance_credit %}
+                                <div class="font-bold font-mono {% if v.date_echeance_credit < aujourdhui %}text-red-600{% elif v.date_echeance_credit == aujourdhui %}text-amber-600{% else %}text-slate-700{% endif %}">
+                                    {{ v.date_echeance_credit|date:"d/m/Y" }}
+                                </div>
+                                <div>
+                                    {% if v.date_echeance_credit < aujourdhui %}
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800">🔴 Retard échu</span>
+                                    {% elif v.date_echeance_credit == aujourdhui %}
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">⚠️ Aujourd'hui</span>
+                                    {% else %}
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">À venir</span>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <span class="text-slate-400 italic">Non définie</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 text-right font-bold text-slate-800">
+                            {{ v.montant_total|floatformat:0 }} FCFA
+                        </td>
+                        <td class="py-3.5 px-4 text-right font-bold text-emerald-700">
+                            {{ v.montant_paye|floatformat:0 }} FCFA
+                        </td>
+                        <td class="py-3.5 px-4 text-right font-black text-red-600 text-sm">
+                            {{ v.reste_a_payer|floatformat:0 }} FCFA
+                        </td>
+                        <td class="py-3.5 px-4 text-center space-x-1">
+                            <!-- Bouton WhatsApp avec message pré-rédigé -->
+                            <a href="https://wa.me/{{ v.alimentation.telephone_gerant|cut:' '|cut:'+'|cut:'-' }}?text=Bonjour%20{{ v.alimentation.nom_gerant|urlencode }}%2C%20c%27est%20la%20direction%20Agro-Distrib.%20Nous%20vous%20rappelons%20l%27%C3%A9ch%C3%A9ance%20du%20cr%C3%A9dit%20de%20{{ v.reste_a_payer|floatformat:0 }}%20FCFA%20concernant%20{{ v.alimentation.nom|urlencode }}.%20Merci%20de%20votre%20partenariat."
+                               target="_blank"
+                               title="Relancer sur WhatsApp"
+                               class="inline-flex items-center px-2.5 py-1 rounded-xl bg-green-500 text-white hover:bg-green-600 font-bold text-[11px] transition shadow-sm">
+                                💬 WhatsApp
+                            </a>
+                            <!-- Bouton Appel Téléphonique -->
+                            <a href="tel:{{ v.alimentation.telephone_gerant }}"
+                               title="Appeler directement"
+                               class="inline-flex items-center px-2 py-1 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-[11px] transition">
+                                📞 Appel
+                            </a>
+                        </td>
+                        <td class="py-3.5 px-4 text-right">
+                            <button @click="activeVente = { id: '{{ v.id }}', boutique: '{{ v.alimentation.nom|escapejs }}', reste: '{{ v.reste_a_payer|floatformat:0 }}', total: '{{ v.montant_total|floatformat:0 }}' }; openReglementModal = true"
+                                    class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition">
+                                💵 Encaisser
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="py-8 text-center text-slate-400 italic">
+                            🎉 Aucune créance en cours ! Toutes les livraisons sont soldées.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tableau 2 : Plafonds d'Encours & Gestion du Risque par Boutique -->
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <h2 class="text-sm font-black text-slate-800">Plafonds de Crédit & Encours Maximum Autorisé</h2>
+                <p class="text-[11px] text-slate-400">Si une boutique atteint son plafond, les livraisons à crédit sont automatiquement bloquées pour empêcher le surendettement.</p>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-100 text-[11px] uppercase tracking-wider">
+                    <tr>
+                        <th class="py-3.5 px-4">Boutique</th>
+                        <th class="py-3.5 px-4">Quartier & Gérant</th>
+                        <th class="py-3.5 px-4 text-right">Dette Actuelle</th>
+                        <th class="py-3.5 px-4 text-right">Plafond Autorisé</th>
+                        <th class="py-3.5 px-4 text-right">Crédit Restant Disponible</th>
+                        <th class="py-3.5 px-4 text-center">Statut Risque</th>
+                        <th class="py-3.5 px-4 text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for a in alimentations %}
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3.5 px-4 font-bold text-slate-900">
+                            {{ a.nom }}
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-600">
+                            {{ a.quartier }} ({{ a.nom_gerant }})
+                        </td>
+                        <td class="py-3.5 px-4 text-right font-black {% if a.total_creance_en_cours > 0 %}text-red-600{% else %}text-emerald-700{% endif %}">
+                            {{ a.total_creance_en_cours|floatformat:0 }} FCFA
+                        </td>
+                        <td class="py-3.5 px-4 text-right font-bold text-slate-800 font-mono">
+                            {{ a.plafond_credit|floatformat:0 }} FCFA
+                        </td>
+                        <td class="py-3.5 px-4 text-right font-bold text-slate-700">
+                            {{ a.credit_disponible|floatformat:0 }} FCFA
+                        </td>
+                        <td class="py-3.5 px-4 text-center">
+                            {% if a.a_creance_en_retard %}
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-800">
+                                🔴 Retard échu (Bloqué)
+                            </span>
+                            {% elif a.depasse_plafond_credit %}
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800">
+                                ⚠️ Plafond atteint (Bloqué)
+                            </span>
+                            {% else %}
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                🟢 Solvable (Autorisé)
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 text-right">
+                            <button @click="activeAlim = { id: '{{ a.id }}', nom: '{{ a.nom|escapejs }}', plafond: '{{ a.plafond_credit|floatformat:0 }}', dette: '{{ a.total_creance_en_cours|floatformat:0 }}' }; openPlafondModal = true"
+                                    class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs transition">
+                                ⚙️ Ajuster Seuil
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal 1 : Enregistrement de Règlement de Créance -->
+    <div x-show="openReglementModal" style="display: none;"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100" @click.away="openReglementModal = false">
+            <h3 class="text-base font-black text-slate-900 mb-1">Encaisser un Règlement de Créance</h3>
+            <p class="text-xs text-slate-500 mb-4" x-text="'Alimentation : ' + activeVente.boutique"></p>
+
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="regler">
+                <input type="hidden" name="vente_id" :value="activeVente.id">
+
+                <div class="p-3 bg-red-50 rounded-xl text-xs text-red-900 flex justify-between">
+                    <span>Reste dû actuellement :</span>
+                    <strong class="font-black" x-text="activeVente.reste + ' FCFA'"></strong>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Montant Encaissé (FCFA)</label>
+                    <input type="number" step="100" name="montant" required :value="activeVente.reste"
+                           class="w-full px-3 py-2.5 border rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Mode de Paiement</label>
+                    <select name="mode_reglement" class="w-full px-3 py-2.5 border rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <option value="ESPECES">💵 Espèces (Cash)</option>
+                        <option value="ORANGE_MONEY">🟠 Orange Money</option>
+                        <option value="MOOV_MONEY">🔵 Moov Money</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Notes / Réf. Transaction</label>
+                    <input type="text" name="notes" placeholder="Ex: Réf. transfert OM 12345"
+                           class="w-full px-3 py-2.5 border rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-4 border-t">
+                    <button type="button" @click="openReglementModal = false" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Annuler</button>
+                    <button type="submit" class="px-5 py-2.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg">Valider l'Encaissement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 2 : Ajuster le Plafond de Crédit d'une Boutique -->
+    <div x-show="openPlafondModal" style="display: none;"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100" @click.away="openPlafondModal = false">
+            <h3 class="text-base font-black text-slate-900 mb-1">Ajuster le Plafond de Crédit Autorisé</h3>
+            <p class="text-xs text-slate-500 mb-4" x-text="'Boutique : ' + activeAlim.nom"></p>
+
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="modifier_plafond">
+                <input type="hidden" name="alimentation_id" :value="activeAlim.id">
+
+                <div class="p-3 bg-slate-50 rounded-xl text-xs space-y-1">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Dette actuelle en cours :</span>
+                        <strong class="font-bold text-red-600" x-text="activeAlim.dette + ' FCFA'"></strong>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nouveau Plafond Maximum (FCFA) *</label>
+                    <input type="number" step="5000" name="plafond_credit" required :value="activeAlim.plafond"
+                           class="w-full px-3 py-2.5 border rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none">
+                    <p class="text-[10px] text-slate-400 mt-1">Si la dette dépasse ce montant, toute livraison à crédit sera automatiquement rejetée.</p>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-4 border-t">
+                    <button type="button" @click="openPlafondModal = false" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Annuler</button>
+                    <button type="submit" class="px-5 py-2.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg">Enregistrer le Seuil</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

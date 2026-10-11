@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{% block title %}Agro-Distrib B2B | Van Sales{% endblock %}</title>
+    
+    <!-- PWA & Mobile Meta Tags -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#059669">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AgroDistrib">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        agro: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                        },
+                        ambercustom: '#d97706'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Alpine.js CDN -->
+    <script defer src="https://unpkg.com/alpinejs@3.14.3/dist/cdn.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full flex flex-col text-slate-800 antialiased selection:bg-emerald-500 selection:text-white w-full overflow-x-hidden">
+
+    <!-- Top Navigation (En-tête professionnel fixe, 100% responsive, sans débordement latéral) -->
+    {% if user.is_authenticated and user.is_staff %}
+    <header class="bg-emerald-800 text-white shadow-md sticky top-0 z-40 w-full" x-data="{ menuOpen: false }">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-14 sm:h-16">
+                
+                <!-- GAUCHE : Logo & Identité Entreprise -->
+                <div class="flex items-center space-x-2 min-w-0 pr-2">
+                    <a href="{% if is_superadmin %}{% url 'superadmin_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}" class="flex items-center space-x-2 font-black text-sm sm:text-lg tracking-tight text-white hover:text-emerald-200 transition min-w-0">
+                        <span class="p-1 sm:p-1.5 bg-emerald-600 rounded-lg shadow-inner text-base flex-shrink-0">🥭</span>
+                        <span class="truncate max-w-[130px] sm:max-w-xs font-black">{{ current_tenant.nom|default:"Agro-Distrib" }}</span>
+                        <span class="text-[9px] sm:text-[10px] px-1.5 py-0.5 bg-emerald-950 text-emerald-300 rounded font-mono uppercase font-bold flex-shrink-0">B2B</span>
+                    </a>
+                </div>
+
+                <!-- DROITE : Raccourcis + Porte Déconnexion + Menu Hamburger (3 barres, tout à droite) -->
+                <div class="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0">
+                    
+                    <!-- Raccourcis desktop uniquement -->
+                    <div class="hidden md:flex items-center space-x-2 mr-1">
+                        <a href="{% url 'mobile_link' %}" class="inline-flex items-center px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-400 text-slate-900 hover:bg-amber-300 transition shadow">
+                            📲 Liens Mobiles
+                        </a>
+                        <a href="{% url 'boutique_login' %}" target="_blank" class="inline-flex items-center px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-950 text-emerald-300 hover:bg-emerald-900 transition">
+                            🏪 Boutique
+                        </a>
+                        <a href="{% url 'livreur_app' %}" class="inline-flex items-center px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-white hover:bg-emerald-400 transition shadow">
+                            📱 Livreur
+                        </a>
+                        <span class="text-xs text-emerald-200 font-semibold border-l border-emerald-700 pl-2">
+                            {{ user.first_name|default:user.username }}
+                        </span>
+                    </div>
+
+                    <!-- Sur Mobile : Bouton direct QR Code compact sans texte -->
+                    <a href="{% url 'mobile_link' %}" class="md:hidden p-2 rounded-xl bg-amber-400 text-slate-900 text-xs shadow hover:bg-amber-300 transition flex items-center justify-center" title="QR Code Mobile">
+                        📲
+                    </a>
+
+                    <!-- Bouton Déconnexion Direct (La Porte) - TOUJOURS visible sans défiler latéralement -->
+                    <a href="{% url 'logout' %}" class="p-2 rounded-xl bg-emerald-900/80 hover:bg-red-600 hover:text-white text-emerald-100 transition text-sm flex items-center justify-center border border-emerald-700/50" title="Déconnexion">
+                        🚪
+                    </a>
+
+                    <!-- LE BOUTON HAMBURGER (3 barres épurées, sans texte, placé tout à droite) -->
+                    <div class="relative">
+                        <button type="button" @click="menuOpen = !menuOpen" 
+                                class="p-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white border border-emerald-600 transition shadow flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                                aria-label="Menu de navigation">
+                            <svg class="w-5 h-5 transition-transform duration-200" :class="menuOpen ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16" x-show="!menuOpen"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12" x-show="menuOpen" style="display: none;"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Menu Déroulant Élégant (Aligné à droite, ne déborde jamais de l'écran) -->
+                        <div x-show="menuOpen" 
+                             @click.outside="menuOpen = false"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                             class="absolute right-0 mt-2 w-72 sm:w-80 bg-white text-slate-800 rounded-2xl shadow-2xl border border-slate-100 p-2 z-50 divide-y divide-slate-100 max-h-[85vh] overflow-y-auto max-w-[calc(100vw-24px)]"
+                             style="display: none;">
+                            
+                            <!-- Carte Utilisateur en tête de menu -->
+                            <div class="p-2.5 bg-slate-50 rounded-xl mb-1 flex items-center justify-between">
+                                <div class="min-w-0">
+                                    <div class="text-xs font-black text-slate-800 truncate">{{ user.get_full_name|default:user.username }}</div>
+                                    <div class="text-[10px] text-emerald-700 font-semibold truncate">{{ current_tenant.nom }}</div>
+                                </div>
+                                <span class="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-100 text-emerald-800">
+                                    {% if is_superadmin %}SUPERADMIN{% else %}PROMOTRICE{% endif %}
+                                </span>
+                            </div>
+
+                            <!-- Section Pilotage Quotidien -->
+                            <div class="p-1.5 space-y-1">
+                                <div class="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pilotage Quotidien</div>
+                                <a href="{% url 'dashboard' %}" class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-50 hover:text-emerald-800 transition {% if request.resolver_match.url_name == 'dashboard' %}bg-emerald-50 text-emerald-800{% endif %}">
+                                    <span class="text-base">📊</span>
+                                    <div>
+                                        <div>Tableau de bord (Dashboard)</div>
+                                        <div class="text-[10px] font-normal text-slate-400">Indicateurs clés & caisse</div>
+                                    </div>
+                                </a>
+                                <a href="{% url 'tournees' %}" class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-50 hover:text-emerald-800 transition {% if 'tournee' in request.resolver_match.url_name %}bg-emerald-50 text-emerald-800{% endif %}">
+                                    <span class="text-base">🚚</span>
+                                    <div>
+                                        <div>Tournées & Missions</div>
+                                        <div class="text-[10px] font-normal text-slate-400">Dotations, caisses & ventes du jour</div>
+                                    </div>
+                                </a>
+                                <a href="{% url 'expeditions' %}" class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-50 hover:text-emerald-800 transition {% if 'expedition' in request.resolver_match.url_name %}bg-emerald-50 text-emerald-800{% endif %}">
+                                    <span class="text-base">📦</span>
+                                    <div>
+                                        <div>Expéditions (Bobo → Ouaga)</div>
+                                        <div class="text-[10px] font-normal text-slate-400">Transferts inter-villes</div>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <!-- Section Flotte & Partenaires -->
+                            <div class="p-1.5 space-y-1">
+                                <div class="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Flotte & Partenaires</div>
+                                <a href="{% url 'livreurs' %}" class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-50 hover:text-emerald-800 transition {% if request.resolver_match.url_name == 'livreurs' %}bg-emerald-50 text-emerald-800{% endif %}">
+                                    <span class="text-base">🛵</span>
+                                    <div>
+                                        <div class="flex items-center gap-1.5">
+                                            <span>Livreurs & Flotte</span>
+                                            <span class="text-[9px] bg-emerald-600 text-white px-1.5 py-0.2 rounded font-bold">Comptes</span>
+                                        </div>
+                                        <div class="text-[10px] font-normal text-slate-400">Créer et gérer les comptes livreurs</div>
+                                    </div>
+                                </a>
+                                <a href="{% url 'prospection' %}" class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-50 hover:text-emerald-800 transition {% if request.resolver_match.url_name == 'prospection' %}bg-emerald-50 text-emerald-800{% endif %}">
+                                    <span class="text-base">🧭</span>
+                                    <div>
+                                        <div>Prospection Terrain (GPS)</div>
+                                        <div class="text-[10px] font-normal text-slate-400">Recrutement & cartographie</div>
+                                    </div>
+                                </a>
+                                <a href="{% url 'alimentations' %}" class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-50 hover:text-emerald-800 transition {% if request.resolver_match.url_name == 'alimentations' %}bg-emerald-50 text-emerald-800{% endif %}">
+                                    <span class="text-base">🏪</span>
+                                    <div>
+                                        <div>Boutiques Alimentations</div>
+                                        <div class="text-[10px] font-normal text-slate-400">Répertoire clients & Code PIN</div>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <!-- Section Catalogue & Finances -->
+                            <div class="p-1.5 space-y-1">
+                                <div class="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Catalogue & Finances</div>
+                                <a href="{% url 'produits' %}" class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-50 hover:text-emerald-800 transition {% if request.resolver_match.url_name == 'produits' %}bg-emerald-50 text-emerald-800{% endif %}">
+                                    <span class="text-base">🏷️</span>
+                                    <div>
+                                        <div>Catalogue Produits & Prix</div>
+                                        <div class="text-[10px] font-normal text-slate-400">Stocks entrepôt & barèmes</div>
+                                    </div>
+                                </a>
+                                <a href="{% url 'creances' %}" class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-50 hover:text-emerald-800 transition {% if request.resolver_match.url_name == 'creances' %}bg-emerald-50 text-emerald-800{% endif %}">
+                                    <span class="text-base">💳</span>
+                                    <div>
+                                        <div>Créances & Règlements</div>
+                                        <div class="text-[10px] font-normal text-slate-400">Suivi des dettes et encaissements</div>
+                                    </div>
+                                </a>
+                                <a href="{% url 'rapports' %}" class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-50 hover:text-emerald-800 transition {% if request.resolver_match.url_name == 'rapports' %}bg-emerald-50 text-emerald-800{% endif %}">
+                                    <span class="text-base">📈</span>
+                                    <div>
+                                        <div>Rapports & Clôtures</div>
+                                        <div class="text-[10px] font-normal text-slate-400">Bilan d'activité et marges</div>
+                                    </div>
+                                </a>
+                                <a href="{% url 'parametres' %}" class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold hover:bg-amber-50 hover:text-amber-800 transition {% if request.resolver_match.url_name == 'parametres' %}bg-amber-50 text-amber-800{% endif %}">
+                                    <span class="text-base">⚙️</span>
+                                    <div>
+                                        <div class="flex items-center gap-1.5">
+                                            <span>Paramètres & Paiements</span>
+                                            <span class="text-[9px] bg-amber-500 text-white px-1.5 py-0.2 rounded font-bold">CinetPay</span>
+                                        </div>
+                                        <div class="text-[10px] font-normal text-slate-400">Passerelles Mobile Money & CinetPay</div>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <!-- Accès Dédiés Terrain & Boutiques -->
+                            <div class="p-1.5 space-y-1 bg-slate-50 rounded-xl">
+                                <a href="{% url 'livreur_app' %}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition">
+                                    <span>📱</span>
+                                    <span>Basculer vers Application Livreur PWA</span>
+                                </a>
+                                <a href="{% url 'boutique_login' %}" target="_blank" class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-200 transition">
+                                    <span>🏪</span>
+                                    <span>Ouvrir Portail Boutique (Code PIN)</span>
+                                </a>
+                            </div>
+
+                            {% if is_superadmin %}
+                            <div class="p-1.5 bg-amber-50 rounded-b-xl">
+                                <a href="{% url 'superadmin_dashboard' %}" class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-amber-900 hover:bg-amber-100 transition">
+                                    <span class="text-base">👑</span>
+                                    <div>
+                                        <div>Superadmin SaaS</div>
+                                        <div class="text-[10px] font-normal text-amber-700">Gestion globale des entreprises</div>
+                                    </div>
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </header>
+    {% endif %}
+
+    <!-- Messages Flash Django -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-3 w-full">
+        {% for message in messages %}
+        <div class="rounded-lg p-3 text-sm font-medium mb-2 flex items-center justify-between {% if message.tags == 'success' %}bg-emerald-100 text-emerald-800 border border-emerald-300{% elif message.tags == 'error' %}bg-red-100 text-red-800 border border-red-300{% else %}bg-blue-100 text-blue-800 border border-blue-300{% endif %}">
+            <div class="flex items-center space-x-2">
+                <span>{% if message.tags == 'success' %}✅{% elif message.tags == 'error' %}⚠️{% else %}ℹ️{% endif %}</span>
+                <span>{{ message }}</span>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-700">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Contenu Principal -->
+    <main class="flex-1 w-full {% block main_class %}max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6{% endblock %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer minimaliste -->
+    {% block footer %}
+    <footer class="bg-white border-t border-slate-200 text-slate-500 text-xs py-4 text-center">
+        <p>Agro-Distrib B2B • Van Sales & Logistique Agroalimentaire (Ouagadougou, Burkina Faso)</p>
+    </footer>
+    {% endblock %}
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then(reg => console.log('PWA Service Worker actif'))
+                    .catch(err => console.log('Erreur SW:', err));
+            });
+        }
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Expédition {{ expedition.numero_bordereau }} • Agro-Distrib{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- En-tête -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <a href="{% url 'expeditions' %}" class="text-xs font-semibold text-slate-500 hover:text-blue-700">&larr; Retour aux expéditions</a>
+                <span class="text-slate-300">•</span>
+                <span class="text-xs font-mono font-bold text-blue-700">{{ expedition.numero_bordereau }}</span>
+            </div>
+            <h1 class="text-2xl font-black text-slate-800 tracking-tight mt-1 flex items-center gap-2">
+                <span>📦 {{ expedition.ville_depart }} &rarr; {{ expedition.ville_destination }}</span>
+                {% if expedition.statut == 'EN_TRANSIT' %}
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 animate-pulse">En Transit</span>
+                {% elif expedition.statut == 'RECEPTIONNE' %}
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Réceptionné</span>
+                {% endif %}
+            </h1>
+            <p class="text-xs text-slate-500">Expédié le {{ expedition.date_expedition|date:"d/m/Y à H:i" }} par {{ expedition.cree_par.first_name|default:"la Direction" }}</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="{% url 'expedition_bordereau' expedition.id %}" target="_blank"
+               class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+                <span>🖨️</span> Bordereau Officiel
+            </a>
+            {% if expedition.statut == 'EN_TRANSIT' %}
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="receptionner">
+                <button type="submit" onclick="return confirm('Confirmez-vous la réception du colis au dépôt relais ?')"
+                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow">
+                    <span>✅</span> Confirmer Réception
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Méta & Acteurs -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Transporteur -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-2 text-xs">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Société de Transport</span>
+            <div class="text-sm font-black text-slate-800">🚌 {{ expedition.transporteur_nom }}</div>
+            <div class="text-slate-600">Téléphone : <strong class="font-mono text-blue-700">{{ expedition.transporteur_telephone }}</strong></div>
+            <div class="text-slate-500">Frais de transport : <strong class="text-slate-900">{{ expedition.frais_transport|floatformat:0 }} FCFA</strong></div>
+        </div>
+
+        <!-- Destinataire -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-2 text-xs">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Destinataire (Livreur / Dépôt)</span>
+            <div class="text-sm font-black text-slate-800">🛵 {{ expedition.destinataire_nom }}</div>
+            <div class="text-slate-600">Téléphone : <strong class="font-mono text-emerald-700">{{ expedition.destinataire_telephone }}</strong></div>
+            <div class="text-slate-500">Ville : <strong class="text-slate-900">{{ expedition.ville_destination }}</strong></div>
+        </div>
+
+        <!-- Valeur Marchandise -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-2 text-xs">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Valeur Exacte Déclarée</span>
+            <div class="text-2xl font-black text-blue-700">{{ expedition.valeur_totale_marchandise|floatformat:0 }} <span class="text-xs text-slate-400 font-normal">FCFA</span></div>
+            <div class="text-slate-500">Volume total : <strong class="text-slate-800">{{ expedition.nombre_articles_total }} articles</strong></div>
+        </div>
+    </div>
+
+    <!-- Consignes Générales -->
+    {% if expedition.consignes_generales %}
+    <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-900 space-y-1">
+        <strong class="font-black flex items-center gap-1.5">
+            <span>📢</span> Consignes d'Expédition du PDG :
+        </strong>
+        <p class="pl-5">{{ expedition.consignes_generales }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Détail des Marchandises & Consignes de Répartition -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+        <h2 class="text-base font-bold text-slate-800 mb-4 flex items-center justify-between">
+            <span>📦 Articles Inclus & Consignes Spécifiques par Boutique</span>
+            <span class="text-xs text-slate-400 font-mono">{{ lignes.count }} référence(s)</span>
+        </h2>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-100">
+                    <tr>
+                        <th class="py-3 px-4">Désignation</th>
+                        <th class="py-3 px-4 text-center">Quantité</th>
+                        <th class="py-3 px-4 text-right">Valeur Unitaire</th>
+                        <th class="py-3 px-4 text-right">Valeur Totale</th>
+                        <th class="py-3 px-4">Consigne de Distribution Spécifique</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for l in lignes %}
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3.5 px-4 font-bold text-slate-800">{{ l.produit.designation }}</td>
+                        <td class="py-3.5 px-4 text-center font-black text-blue-800">
+                            {{ l.quantite }} {{ l.unite }}(s)
+                        </td>
+                        <td class="py-3.5 px-4 text-right font-mono text-slate-600">{{ l.valeur_unitaire|floatformat:0 }} FCFA</td>
+                        <td class="py-3.5 px-4 text-right font-mono font-black text-slate-900">{{ l.sous_total|floatformat:0 }} FCFA</td>
+                        <td class="py-3.5 px-4 text-slate-700">
+                            {% if l.consigne_specifique %}
+                            <span class="inline-block bg-amber-50 border border-amber-200 text-amber-900 px-2.5 py-1 rounded-lg text-[11px] font-semibold">
+                                🎯 {{ l.consigne_specifique }}
+                            </span>
+                            {% else %}
+                            <span class="text-slate-400 italic">Pour dotation générale van</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

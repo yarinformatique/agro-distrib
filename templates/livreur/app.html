@@ -1,0 +1,924 @@
+{% extends 'base.html' %}
+
+{% block title %}Van Sales Mobile • Agro-Distrib{% endblock %}
+
+{% block extra_head %}
+<!-- Leaflet CSS & JS pour la navigation et le tracé cartographique en direct -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endblock %}
+
+{% block main_class %}max-w-lg mx-auto px-3 sm:px-4 pt-3 pb-24{% endblock %}
+
+{% block content %}
+<div x-data="livreurApp()" x-init="initApp()" class="space-y-4">
+    <!-- Barre Supérieure Tournée & Profil Livreur -->
+    <div class="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white p-4 rounded-2xl shadow-lg border border-emerald-600">
+        <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center space-x-2">
+                <span class="p-1.5 bg-emerald-600 rounded-lg text-lg">🛵</span>
+                <div>
+                    <h1 class="text-sm font-black tracking-tight">{{ user.first_name|default:user.username }}</h1>
+                    <span class="text-[10px] text-emerald-200">Tournée du {{ tournee.date_tournee|date:"d/m/Y" }}</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-1.5 flex-wrap justify-end gap-1">
+                {% if user.is_staff %}
+                <a href="{% url 'dashboard' %}" class="px-2.5 py-1 rounded-xl text-[10px] font-black bg-emerald-950 text-emerald-300 border border-emerald-500 hover:bg-emerald-900 transition flex items-center gap-1 shadow-sm">
+                    👑 Direction
+                </a>
+                {% else %}
+                <a href="{% url 'login' %}?switch=1" class="px-2 py-1 rounded-xl text-[10px] font-bold bg-white/20 text-white hover:bg-white/30 transition flex items-center gap-1" title="Se connecter en tant que Promotrice">
+                    🔄 Promotrice
+                </a>
+                {% endif %}
+                <a href="{% url 'logout' %}" class="px-2.5 py-1 rounded-xl text-[10px] font-black bg-red-600 hover:bg-red-700 text-white shadow-sm transition flex items-center gap-1" title="Se déconnecter">
+                    🚪 Quitter
+                </a>
+                {% if tournee.statut == 'EN_COURS' %}
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-400 text-slate-900 shadow-sm animate-pulse">
+                    🟢 ACTIF
+                </span>
+                {% else %}
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-slate-300 text-slate-800">
+                    🏁 CLÔTURÉ
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Mini Stats Caisse & Livraisons -->
+        <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-emerald-600/60 text-xs">
+            <div class="bg-emerald-900/60 p-2.5 rounded-xl">
+                <span class="text-[10px] text-emerald-300 block">Caisse Espèces Actuelle</span>
+                <span class="font-black text-sm" x-text="formatFCFA(caisseTheorique) + ' FCFA'">{{ tournee.caisse_theorique|floatformat:0 }} FCFA</span>
+            </div>
+            <div class="bg-emerald-900/60 p-2.5 rounded-xl">
+                <span class="text-[10px] text-emerald-300 block">Livraisons Réalisées</span>
+                <span class="font-black text-sm" x-text="ventesCount + ' faites'">{{ ventes_recents.count }} faites</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bannière État GPS Temps Réel -->
+    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between text-xs">
+        <div class="flex items-center space-x-2">
+            <span class="relative flex h-3 w-3">
+                <span :class="gpsActive ? 'animate-ping bg-emerald-400' : 'bg-slate-300'" class="absolute inline-flex h-full w-full rounded-full opacity-75"></span>
+                <span :class="gpsActive ? 'bg-emerald-500' : 'bg-slate-400'" class="relative inline-flex rounded-full h-3 w-3"></span>
+            </span>
+            <div>
+                <span class="font-bold text-slate-800" x-text="gpsStatusText">Localisation active</span>
+                <span class="block text-[10px] text-slate-400 font-mono" x-show="userLat" x-text="'GPS: ' + userLat.toFixed(4) + ', ' + userLon.toFixed(4)"></span>
+            </div>
+        </div>
+        <button @click="activerGPS(true)"
+                class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-[11px] transition">
+            🔄 Réactualiser
+        </button>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SECTION MISSIONS & CONSIGNES DU PDG (OBJECTIFS DU JOUR) -->
+    <!-- ========================================================================= -->
+    {% if missions %}
+    <div class="bg-blue-50/80 border border-blue-200 rounded-2xl p-3.5 space-y-2">
+        <div class="flex items-center justify-between">
+            <span class="text-xs font-black uppercase tracking-wider text-blue-900 flex items-center gap-1.5">
+                <span>🎯</span> Missions & Consignes du PDG ({{ missions.count }})
+            </span>
+            <span class="text-[10px] text-blue-700 font-bold">Priorités du jour</span>
+        </div>
+        <div class="space-y-2">
+            {% for m in missions %}
+            <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm space-y-1.5 text-xs">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <strong class="text-slate-900 font-bold">{{ m.alimentation.nom }}</strong>
+                        <span class="text-[11px] text-slate-500 block">📍 {{ m.alimentation.quartier }}</span>
+                    </div>
+                    <div>
+                        {% if m.statut == 'LIVRE' %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">✅ Livré</span>
+                        {% else %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 animate-pulse">⏳ À faire</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="text-[11px] text-slate-700">
+                    📦 À livrer : <strong>{{ m.produits_consignes }}</strong>
+                </div>
+                <div class="text-[11px] text-slate-700 flex justify-between">
+                    <span>Montant cible :</span>
+                    <strong class="font-black text-slate-900">{{ m.montant_cible|floatformat:0 }} FCFA</strong>
+                </div>
+                {% if m.consigne_particuliere %}
+                <div class="text-[11px] text-amber-800 bg-amber-50 p-1.5 rounded border border-amber-100">
+                    💡 <strong>Consigne :</strong> {{ m.consigne_particuliere }}
+                </div>
+                {% endif %}
+
+                {% if m.statut == 'A_FAIRE' %}
+                <div class="pt-1 flex gap-2">
+                    <button @click="demarrerGuidageDirect({ id: '{{ m.alimentation.id }}', nom: '{{ m.alimentation.nom|escapejs }}', quartier: '{{ m.alimentation.quartier|escapejs }}', latitude: {{ m.alimentation.latitude }}, longitude: {{ m.alimentation.longitude }} })"
+                            class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-[11px] shadow transition flex items-center justify-center gap-1">
+                        <span>🚀</span> Démarrer Navigation GPS
+                    </button>
+                    <button @click="preparerVente({ id: '{{ m.alimentation.id }}', nom: '{{ m.alimentation.nom|escapejs }}' })"
+                            class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[11px] shadow transition flex items-center justify-center gap-1">
+                        <span>🛒</span> Enregistrer Vente
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ========================================================================= -->
+    <!-- ONGLET 1 : TOURNÉE & BOUTIQUES PARTENAIRES (TRI GPS AUTOMATIQUE) -->
+    <!-- ========================================================================= -->
+    <div x-show="currentTab === 'boutiques'" class="space-y-3">
+        <div class="flex items-center justify-between px-1">
+            <h2 class="text-xs font-black uppercase tracking-wider text-slate-500">
+                Alimentations à proximité (<span x-text="boutiques.length"></span>)
+            </h2>
+            <span class="text-[11px] text-emerald-700 font-bold" x-show="gpsActive">
+                ⚡ Triées du plus proche au plus loin
+            </span>
+        </div>
+
+        <!-- Liste des Boutiques -->
+        <template x-for="b in boutiques" :key="b.id">
+            <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm space-y-3 transition hover:shadow-md">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h3 class="text-sm font-black text-slate-900" x-text="b.nom"></h3>
+                        <div class="text-xs text-slate-500 flex items-center gap-1">
+                            <span>📍</span>
+                            <span x-text="b.quartier + ' (' + b.ville + ')'"></span>
+                        </div>
+                    </div>
+                    <!-- Pastille Distance Proximité -->
+                    <span class="px-2.5 py-1 rounded-full text-[11px] font-black"
+                          :class="b.distance_km < 1 ? 'bg-emerald-100 text-emerald-800' : (b.distance_km < 4 ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700')"
+                          x-text="b.distance_formatee || 'Calcul en cours...'">
+                    </span>
+                </div>
+
+                <!-- Info Gérant, Consigne & Dette -->
+                <div class="p-2.5 bg-slate-50 rounded-xl text-xs space-y-1">
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-500">Gérant : <strong class="text-slate-700" x-text="b.nom_gerant"></strong></span>
+                        <a :href="'tel:' + b.telephone_gerant" class="text-emerald-700 font-bold hover:underline flex items-center gap-1">
+                            📞 <span x-text="b.telephone_gerant"></span>
+                        </a>
+                    </div>
+                    <div x-show="b.consignes_reglement" class="text-[11px] text-amber-800 bg-amber-50 p-1.5 rounded border border-amber-100">
+                        💡 <span x-text="b.consignes_reglement"></span>
+                    </div>
+                    <div x-show="b.creance_actuelle > 0" class="text-[11px] p-2 rounded-xl border font-bold flex justify-between items-center"
+                         :class="(b.a_creance_en_retard || b.depasse_plafond_credit) ? 'text-red-900 bg-red-100 border-red-200' : 'text-amber-800 bg-amber-50 border-amber-100'">
+                        <span x-text="b.a_creance_en_retard ? '🔴 Échéance impayée (Bloquant) :' : (b.depasse_plafond_credit ? '⚠️ Plafond atteint (Bloquant) :' : '⚠️ Dette en cours :')"></span>
+                        <span x-text="formatFCFA(b.creance_actuelle) + ' FCFA'"></span>
+                    </div>
+                </div>
+
+                <!-- Boutons d'Action Rapide : DÉMARRER ITINÉRAIRE + VENDRE -->
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <!-- Bouton Démarrer Itinéraire (Guidage GPS Automatique) -->
+                    <button @click="demarrerGuidageDirect(b)"
+                            class="touch-btn flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-black rounded-xl shadow-md transition">
+                        <span>🚀</span> DÉMARRER
+                    </button>
+
+                    <!-- Bouton Enregistrer Vente -->
+                    <button @click="preparerVente(b)"
+                            class="touch-btn flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black rounded-xl shadow-md transition">
+                        <span>🛒</span> LIVRER / VENDRE
+                    </button>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODAL GUIDAGE GPS & CARTE INTERACTIVE EN DIRECT -->
+    <!-- ========================================================================= -->
+    <div x-show="modalNavigation" style="display: none;"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3">
+        <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl border border-slate-100 space-y-4 text-center" @click.away="fermerNavigation()">
+            <div class="flex items-center justify-between pb-2 border-b">
+                <div class="text-left">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600">Guidage GPS Automatique</span>
+                    <h3 class="text-base font-black text-slate-900" x-text="navBoutique.nom"></h3>
+                </div>
+                <button @click="fermerNavigation()" class="text-slate-400 hover:text-slate-700 text-lg font-bold">&times;</button>
+            </div>
+
+            <!-- Conteneur Carte Leaflet -->
+            <div id="live-map" class="w-full h-48 rounded-2xl border border-slate-200 overflow-hidden shadow-inner"></div>
+
+            <!-- Distances et ETA -->
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <div class="p-2.5 bg-blue-50 rounded-xl">
+                    <span class="text-[10px] text-blue-700 block">Distance de Vous</span>
+                    <strong class="text-base font-black text-blue-900" x-text="navBoutique.distance_formatee || 'Calcul...'"></strong>
+                </div>
+                <div class="p-2.5 bg-emerald-50 rounded-xl">
+                    <span class="text-[10px] text-emerald-700 block">Temps Trajet Estimé</span>
+                    <strong class="text-base font-black text-emerald-900" x-text="navBoutique.eta || '3 à 6 min'"></strong>
+                </div>
+            </div>
+
+            <!-- Actions : Lancer Google Maps Direct ou Livrer -->
+            <div class="space-y-2 pt-1">
+                <a :href="urlGoogleMapsTurnByTurn" target="_blank"
+                   class="touch-btn w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg">
+                    <span>🧭</span> Ouvrir Guidage Vocal Google Maps
+                </a>
+                <button type="button" @click="fermerNavigation(); preparerVente(navBoutique)"
+                        class="touch-btn w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl flex items-center justify-center gap-2 shadow">
+                    <span>🛒</span> Saisir la Livraison pour cette Boutique
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- ONGLET 2 : SAISIE RAPIDE DE VENTE (STOCK EMBARQUÉ + MODES PAIEMENT) -->
+    <!-- ========================================================================= -->
+    <div x-show="currentTab === 'vente'" class="space-y-4">
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 space-y-4">
+            <h2 class="text-sm font-black text-slate-800 flex items-center justify-between">
+                <span>⚡ Enregistrer une Livraison / Vente</span>
+                <span class="text-xs text-emerald-600 font-bold" x-text="formatFCFA(totalVenteCalcul) + ' FCFA'"></span>
+            </h2>
+
+            <!-- Choix Boutique -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Boutique Destinataire</label>
+                <select x-model="venteForm.alimentation_id" class="w-full p-2.5 border rounded-xl text-xs font-bold text-slate-800 bg-slate-50 outline-none">
+                    <option value="">-- Choisir une alimentation --</option>
+                    <template x-for="b in boutiques" :key="b.id">
+                        <option :value="b.id" x-text="b.nom + ' (' + b.quartier + ')'"></option>
+                    </template>
+                </select>
+            </div>
+
+            <!-- Alerte Risque Crédit & Plafond de la boutique sélectionnée -->
+            <div x-show="selectedBoutiqueObj" class="p-3 rounded-2xl text-xs space-y-1 transition"
+                 :class="(selectedBoutiqueObj?.a_creance_en_retard || selectedBoutiqueObj?.depasse_plafond_credit) ? 'bg-red-50 border border-red-200 text-red-900' : 'bg-slate-50 border border-slate-200 text-slate-700'">
+                <div class="flex items-center justify-between font-bold">
+                    <span>Dette en cours : <span x-text="formatFCFA(selectedBoutiqueObj?.creance_actuelle) + ' FCFA'"></span></span>
+                    <span>Plafond : <span x-text="formatFCFA(selectedBoutiqueObj?.plafond_credit) + ' FCFA'"></span></span>
+                </div>
+                <template x-if="selectedBoutiqueObj?.a_creance_en_retard">
+                    <p class="text-red-700 font-bold text-[11px] pt-1 border-t border-red-200/60">
+                        🚨 Échéance impayée dépassée ! Vente à crédit bloquée. Paiement comptant obligatoire.
+                    </p>
+                </template>
+                <template x-if="!selectedBoutiqueObj?.a_creance_en_retard && selectedBoutiqueObj?.depasse_plafond_credit">
+                    <p class="text-amber-800 font-bold text-[11px] pt-1 border-t border-amber-200/60">
+                        ⚠️ Plafond d'encours atteint. Vente à crédit non autorisée pour éviter le surendettement.
+                    </p>
+                </template>
+                <template x-if="!selectedBoutiqueObj?.a_creance_en_retard && !selectedBoutiqueObj?.depasse_plafond_credit">
+                    <p class="text-emerald-700 font-medium text-[11px]">
+                        🟢 Compte sain. Crédit disponible : <strong x-text="formatFCFA(selectedBoutiqueObj?.credit_disponible) + ' FCFA'"></strong>
+                    </p>
+                </template>
+            </div>
+
+            <!-- Liste des Produits avec Stock Camion & Contrôleurs Tactiles +/- -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-2">Produits Livrés (Stock Camion)</label>
+                <div class="space-y-2 max-h-72 overflow-y-auto pr-1">
+                    <template x-for="item in dotations" :key="item.produit_id">
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                            <div class="flex-1 pr-2">
+                                <div class="text-xs font-bold text-slate-800" x-text="item.designation"></div>
+                                <div class="text-[11px] text-slate-500">
+                                    <span x-text="formatFCFA(item.prix_unitaire) + ' FCFA'"></span> •
+                                    Restant van: <strong :class="item.stock_restant < 3 ? 'text-red-600' : 'text-emerald-700'" x-text="item.stock_restant"></strong>
+                                </div>
+                            </div>
+
+                            <!-- Contrôle Quantité Tactile -->
+                            <div class="flex items-center space-x-2">
+                                <button type="button"
+                                        @click="diminuerQte(item.produit_id)"
+                                        class="w-8 h-8 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 font-black text-sm flex items-center justify-center">
+                                    -
+                                </button>
+                                <span class="w-7 text-center font-black text-sm text-slate-900"
+                                      x-text="getQteChoisie(item.produit_id)">
+                                </span>
+                                <button type="button"
+                                        @click="augmenterQte(item.produit_id, item.stock_restant)"
+                                        class="w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm flex items-center justify-center">
+                                    +
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Résumé Montant -->
+            <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center justify-between">
+                <span class="text-xs font-bold text-emerald-900">Total Commande :</span>
+                <span class="text-base font-black text-emerald-800" x-text="formatFCFA(totalVenteCalcul) + ' FCFA'"></span>
+            </div>
+
+            <!-- Mode de Règlement & Statut Paiement -->
+            <div class="space-y-3">
+                <label class="block text-xs font-semibold text-slate-600">Mode de Règlement</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button"
+                            @click="venteForm.mode_reglement = 'ESPECES'; venteForm.statut_paiement = 'PAYE'"
+                            :class="venteForm.mode_reglement === 'ESPECES' ? 'bg-emerald-800 text-white ring-2 ring-emerald-500' : 'bg-slate-100 text-slate-700'"
+                            class="p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+                        💵 Espèces (Cash)
+                    </button>
+                    <button type="button"
+                            @click="venteForm.mode_reglement = 'ORANGE_MONEY'; venteForm.statut_paiement = 'PAYE'"
+                            :class="venteForm.mode_reglement === 'ORANGE_MONEY' ? 'bg-orange-600 text-white ring-2 ring-orange-400' : 'bg-slate-100 text-slate-700'"
+                            class="p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+                        🟠 Orange Money
+                    </button>
+                    <button type="button"
+                            @click="venteForm.mode_reglement = 'MOOV_MONEY'; venteForm.statut_paiement = 'PAYE'"
+                            :class="venteForm.mode_reglement === 'MOOV_MONEY' ? 'bg-blue-600 text-white ring-2 ring-blue-400' : 'bg-slate-100 text-slate-700'"
+                            class="p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+                        🔵 Moov Money
+                    </button>
+                    <button type="button"
+                            @click="if (selectedBoutiqueObj && (selectedBoutiqueObj.a_creance_en_retard || selectedBoutiqueObj.depasse_plafond_credit)) { alert('⚠️ Vente à crédit bloquée : Cette boutique a dépassé son plafond autorisé ou a une facture échue en retard. Veuillez encaisser en espèces ou Mobile Money avant d\'approvisionner.'); } else { venteForm.mode_reglement = 'AUCUN'; venteForm.statut_paiement = 'CREDIT'; }"
+                            :class="venteForm.statut_paiement === 'CREDIT' ? 'bg-red-700 text-white ring-2 ring-red-400' : ((selectedBoutiqueObj && (selectedBoutiqueObj.a_creance_en_retard || selectedBoutiqueObj.depasse_plafond_credit)) ? 'bg-red-50 text-red-400 opacity-60 cursor-not-allowed border border-red-200' : 'bg-slate-100 text-slate-700')"
+                            class="p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+                        ⏳ À Crédit / Partiel
+                    </button>
+                </div>
+
+                {% if tenant.lien_paiement_cinetpay %}
+                <div class="mt-2 p-2.5 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between text-xs">
+                    <div class="text-blue-900 font-semibold flex items-center gap-1.5">
+                        <span>💳</span>
+                        <span>Règlement digital CinetPay</span>
+                    </div>
+                    <a href="{{ tenant.lien_paiement_cinetpay }}" target="_blank"
+                       class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-[11px] shadow">
+                        Ouvrir Guichet 🔗
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Champs de Crédit / Acompte -->
+            <div x-show="venteForm.statut_paiement === 'CREDIT' || venteForm.statut_paiement === 'PARTIEL'"
+                 class="p-3.5 bg-amber-50 rounded-xl border border-amber-200 space-y-3">
+                <div class="flex items-center justify-between text-xs font-bold text-amber-900">
+                    <span>Gestion de la Créance</span>
+                    <span class="text-[11px] font-normal">Acompte possible</span>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-amber-800 mb-1">Acompte Versé (FCFA)</label>
+                        <input type="number" step="100" x-model.number="venteForm.montant_paye"
+                               class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-amber-800 mb-1">Date Relance / Échéance</label>
+                        <input type="date" x-model="venteForm.date_echeance"
+                               class="w-full p-2 border rounded-lg text-xs font-medium bg-white outline-none">
+                    </div>
+                </div>
+                <div class="text-xs font-bold text-amber-900 flex justify-between pt-1">
+                    <span>Reste dû en crédit :</span>
+                    <span x-text="formatFCFA(Math.max(0, totalVenteCalcul - (venteForm.montant_paye || 0))) + ' FCFA'"></span>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Note de livraison (optionnel)</label>
+                <input type="text" x-model="venteForm.notes" placeholder="Ex: Déposé 3 cartons au frigo"
+                       class="w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+
+            <!-- Bouton Validation Vente -->
+            <button @click="validerVente()"
+                    :disabled="venteSubmitting || totalVenteCalcul <= 0 || !venteForm.alimentation_id"
+                    class="touch-btn w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-black text-sm rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                <span x-show="!venteSubmitting">✅ Valider la Vente & Reçu</span>
+                <span x-show="venteSubmitting">Enregistrement en cours...</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- ONGLET 3 : MON STOCK EMBARQUÉ (CAMION / MOTO) -->
+    <!-- ========================================================================= -->
+    <div x-show="currentTab === 'stock'" class="space-y-3">
+        <h2 class="text-xs font-black uppercase tracking-wider text-slate-500 px-1">
+            📦 Inventaire Embarqué dans le Véhicule
+        </h2>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 divide-y divide-slate-100 overflow-hidden">
+            <template x-for="item in dotations" :key="item.dotation_id">
+                <div class="p-3.5 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-black text-slate-800" x-text="item.designation"></div>
+                        <div class="text-[11px] text-slate-500">
+                            Départ : <span x-text="item.quantite_depart"></span> • Vendu : <strong class="text-emerald-700" x-text="item.quantite_vendue"></strong>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-base font-black" :class="item.stock_restant < 3 ? 'text-red-600' : 'text-slate-900'" x-text="item.stock_restant"></span>
+                        <span class="text-[10px] text-slate-400 block" x-text="item.unite + '(s) à bord'"></span>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- ONGLET 4 : BILAN FIN DE TOURNÉE (CLÔTURE TERRAIN) -->
+    <!-- ========================================================================= -->
+    <div x-show="currentTab === 'bilan'" class="space-y-4">
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 space-y-4">
+            <h2 class="text-sm font-black text-slate-800">🏁 Bilan de Fin de Tournée</h2>
+            <p class="text-xs text-slate-500">Rapprochement de caisse et inventaire des retours physiques de stock</p>
+
+            <!-- Caisse Théorique Recalculée -->
+            <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-100 space-y-2">
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-emerald-800 font-bold">Caisse Théorique Espèces :</span>
+                    <span class="text-base font-black text-emerald-900" x-text="formatFCFA(caisseTheorique) + ' FCFA'"></span>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-emerald-800 mb-1">Caisse Déclarée (Argent physique remis)</label>
+                    <input type="number" step="100" x-model.number="bilanForm.caisse_declaree"
+                           class="w-full p-2.5 border rounded-xl text-sm font-black text-slate-900 bg-white outline-none">
+                </div>
+                <div class="flex justify-between text-xs pt-1 border-t border-emerald-200/50">
+                    <span class="text-slate-600 font-medium">Écart de caisse :</span>
+                    <span class="font-black"
+                          :class="(bilanForm.caisse_declaree - caisseTheorique) >= 0 ? 'text-emerald-700' : 'text-red-600'"
+                          x-text="formatFCFA(bilanForm.caisse_declaree - caisseTheorique) + ' FCFA'">
+                    </span>
+                </div>
+            </div>
+
+            <!-- Retours de Stock -->
+            <div>
+                <h3 class="text-xs font-bold text-slate-700 mb-2">Retours de Produits Physiques Restants</h3>
+                <div class="space-y-2 max-h-56 overflow-y-auto">
+                    <template x-for="item in dotations" :key="item.dotation_id">
+                        <div class="p-2.5 bg-slate-50 rounded-xl border flex items-center justify-between text-xs">
+                            <div>
+                                <span class="font-bold text-slate-800" x-text="item.designation"></span>
+                                <span class="block text-[10px] text-slate-500" x-text="'Théorique restant : ' + item.stock_restant"></span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <label class="text-[10px] text-slate-500">Retour :</label>
+                                <input type="number" min="0" x-model.number="bilanForm.retours[item.dotation_id]"
+                                       class="w-16 p-1.5 border rounded-lg text-center font-bold text-slate-900 bg-white outline-none">
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Bouton Clôture -->
+            <button @click="cloturerTournee()"
+                    :disabled="clotureSubmitting"
+                    class="touch-btn w-full bg-red-600 hover:bg-red-700 text-white font-black text-sm rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                <span x-show="!clotureSubmitting">🔒 Soumettre la Clôture Définitive</span>
+                <span x-show="clotureSubmitting">Clôture en cours...</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODAL REÇU NUMÉRIQUE APRÈS VENTE -->
+    <!-- ========================================================================= -->
+    <div x-show="modalRecu" style="display: none;"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 text-center space-y-4">
+            <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto text-2xl">
+                ✅
+            </div>
+            <div>
+                <h3 class="text-base font-black text-slate-900">Livraison Enregistrée !</h3>
+                <p class="text-xs text-slate-500 mt-1">Le stock embarqué et la caisse ont été mis à jour.</p>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-xl text-xs space-y-1 text-left">
+                <div class="flex justify-between">
+                    <span class="text-slate-500">Total Vente :</span>
+                    <strong class="text-slate-900" x-text="formatFCFA(recuDetails.total) + ' FCFA'"></strong>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-500">Montant Encaissé :</span>
+                    <strong class="text-emerald-700" x-text="formatFCFA(recuDetails.paye) + ' FCFA'"></strong>
+                </div>
+                <div x-show="recuDetails.reste > 0" class="flex justify-between text-red-600 font-bold">
+                    <span>Reste dû (Crédit) :</span>
+                    <span x-text="formatFCFA(recuDetails.reste) + ' FCFA'"></span>
+                </div>
+            </div>
+
+            {% if tenant.lien_paiement_cinetpay %}
+            <div class="p-2.5 bg-blue-50 rounded-xl border border-blue-200 text-[11px] text-blue-900 text-left flex items-center justify-between">
+                <span>Paiement en ligne disponible :</span>
+                <a href="{{ tenant.lien_paiement_cinetpay }}" target="_blank" class="font-bold text-blue-700 underline">
+                    Guichet CinetPay 🔗
+                </a>
+            </div>
+            {% endif %}
+
+            <div class="space-y-2 pt-2">
+                <a :href="recuDetails.url" target="_blank"
+                   class="touch-btn w-full bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow">
+                    🧾 Voir / Imprimer le Reçu
+                </a>
+                <button type="button" @click="modalRecu = false; currentTab = 'boutiques'"
+                        class="touch-btn w-full bg-emerald-50 text-emerald-800 font-bold text-xs rounded-xl hover:bg-emerald-100">
+                    Fermer & Continuer la Tournée
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- BOTTOM NAVIGATION BAR (FIXÉE POUR UTILISATION TERRAIN MOBILE) -->
+    <!-- ========================================================================= -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 shadow-lg px-2 py-1 max-w-lg mx-auto">
+        <div class="grid grid-cols-4 gap-1 text-[11px] font-bold">
+            <button @click="currentTab = 'boutiques'"
+                    :class="currentTab === 'boutiques' ? 'text-emerald-700 bg-emerald-50' : 'text-slate-500 hover:text-slate-800'"
+                    class="py-2 rounded-xl flex flex-col items-center justify-center">
+                <span class="text-lg">📍</span>
+                <span>Boutiques</span>
+            </button>
+
+            <button @click="currentTab = 'vente'"
+                    :class="currentTab === 'vente' ? 'text-emerald-700 bg-emerald-50' : 'text-slate-500 hover:text-slate-800'"
+                    class="py-2 rounded-xl flex flex-col items-center justify-center">
+                <span class="text-lg">⚡</span>
+                <span>Vendre</span>
+            </button>
+
+            <button @click="currentTab = 'stock'"
+                    :class="currentTab === 'stock' ? 'text-emerald-700 bg-emerald-50' : 'text-slate-500 hover:text-slate-800'"
+                    class="py-2 rounded-xl flex flex-col items-center justify-center">
+                <span class="text-lg">📦</span>
+                <span>Mon Stock</span>
+            </button>
+
+            <button @click="currentTab = 'bilan'"
+                    :class="currentTab === 'bilan' ? 'text-emerald-700 bg-emerald-50' : 'text-slate-500 hover:text-slate-800'"
+                    class="py-2 rounded-xl flex flex-col items-center justify-center">
+                <span class="text-lg">🏁</span>
+                <span>Bilan</span>
+            </button>
+        </div>
+    </nav>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function livreurApp() {
+    return {
+        tourneeId: '{{ tournee.id }}',
+        currentTab: 'boutiques',
+        boutiques: {{ alimentations_json|safe }},
+        dotations: {{ dotations_json|safe }},
+        caisseTheorique: {{ tournee.caisse_theorique|floatformat:0 }},
+        ventesCount: {{ ventes_recents.count }},
+
+        userLat: 12.3685, // Position initiale par défaut (Centre Ouagadougou)
+        userLon: -1.5275,
+        gpsActive: false,
+        gpsLoading: false,
+        gpsStatusText: 'GPS automatique...',
+
+        // Modal Navigation Directe & Carte
+        modalNavigation: false,
+        navBoutique: {},
+        leafMap: null,
+        leafMarkers: [],
+
+        // Formulaire de Vente
+        venteForm: {
+            alimentation_id: '',
+            mode_reglement: 'ESPECES',
+            statut_paiement: 'PAYE',
+            montant_paye: 0,
+            date_echeance: '',
+            notes: '',
+            lignes: {}
+        },
+        venteSubmitting: false,
+
+        // Modal Reçu
+        modalRecu: false,
+        recuDetails: { total: 0, paye: 0, reste: 0, url: '#' },
+
+        // Bilan Clôture
+        bilanForm: {
+            caisse_declaree: {{ tournee.caisse_theorique|floatformat:0 }},
+            retours: {}
+        },
+        clotureSubmitting: false,
+
+        initApp() {
+            this.dotations.forEach(d => {
+                this.bilanForm.retours[d.dotation_id] = d.stock_restant;
+            });
+            // Trier immédiatement avec position par défaut pour un affichage instantané sans bug
+            this.trierBoutiquesParProximite();
+            // Lancement non-bloquant de la détection GPS
+            setTimeout(() => this.activerGPS(false), 150);
+        },
+
+        get selectedBoutiqueObj() {
+            return this.boutiques.find(b => b.id === this.venteForm.alimentation_id) || null;
+        },
+
+        formatFCFA(val) {
+            if (!val) return '0';
+            return Math.round(val).toLocaleString('fr-FR');
+        },
+
+        calcHaversine(lat1, lon1, lat2, lon2) {
+            const R = 6371; // km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        },
+
+        activerGPS(showNotification = false) {
+            if (!navigator.geolocation) {
+                this.gpsStatusText = 'GPS fixe';
+                this.trierBoutiquesParProximite();
+                return;
+            }
+            this.gpsLoading = true;
+
+            // Détection automatique continue sans intervention utilisateur
+            navigator.geolocation.watchPosition(
+                (pos) => {
+                    this.userLat = pos.coords.latitude;
+                    this.userLon = pos.coords.longitude;
+                    this.gpsActive = true;
+                    this.gpsLoading = false;
+                    this.gpsStatusText = 'Signal GPS En direct (±' + Math.round(pos.coords.accuracy) + 'm)';
+                    this.trierBoutiquesParProximite();
+                },
+                (err) => {
+                    this.gpsLoading = false;
+                    this.gpsActive = true;
+                    this.gpsStatusText = 'GPS Ouagadougou';
+                    this.trierBoutiquesParProximite();
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
+            );
+        },
+
+        trierBoutiquesParProximite() {
+            if (!this.userLat || !this.userLon) return;
+
+            this.boutiques.forEach(b => {
+                const dist = this.calcHaversine(this.userLat, this.userLon, b.latitude, b.longitude);
+                b.distance_km = dist;
+                if (dist < 1.0) {
+                    b.distance_formatee = Math.round(dist * 1000) + ' m';
+                } else {
+                    b.distance_formatee = dist.toFixed(1) + ' km';
+                }
+            });
+
+            this.boutiques.sort((a, b) => a.distance_km - b.distance_km);
+        },
+
+        // Démarrage instantané du guidage GPS Turn-by-Turn
+        demarrerGuidageDirect(boutique) {
+            this.navBoutique = boutique;
+            const dist = this.calcHaversine(this.userLat, this.userLon, boutique.latitude, boutique.longitude);
+            this.navBoutique.distance_km = dist;
+            this.navBoutique.distance_formatee = dist < 1 ? Math.round(dist * 1000) + ' m' : dist.toFixed(1) + ' km';
+            // Estimation temps moto en ville (vitesse moy 25 km/h)
+            const minutes = Math.max(2, Math.round((dist / 25) * 60));
+            this.navBoutique.eta = minutes + ' min';
+
+            this.modalNavigation = true;
+
+            // Initialiser ou actualiser la carte Leaflet
+            setTimeout(() => {
+                this.initLeafletMap(boutique);
+            }, 250);
+        },
+
+        initLeafletMap(boutique) {
+            const mapContainer = document.getElementById('live-map');
+            if (!mapContainer) return;
+
+            if (this.leafMap) {
+                this.leafMap.remove();
+            }
+
+            this.leafMap = L.map('live-map').setView([this.userLat, this.userLon], 14);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(this.leafMap);
+
+            // Marqueur Livreur (Position de départ)
+            const livreurMarker = L.marker([this.userLat, this.userLon]).addTo(this.leafMap)
+                .bindPopup('<b>Votre position (Livreur)</b>').openPopup();
+
+            // Marqueur Boutique Destinataire
+            const destMarker = L.marker([boutique.latitude, boutique.longitude]).addTo(this.leafMap)
+                .bindPopup('<b>' + boutique.nom + '</b><br>' + boutique.quartier);
+
+            // Ligne de tracé direct
+            const polyline = L.polyline([
+                [this.userLat, this.userLon],
+                [boutique.latitude, boutique.longitude]
+            ], { color: '#059669', weight: 4, dashArray: '6, 8' }).addTo(this.leafMap);
+
+            // Ajuster la vue pour voir les 2 points
+            this.leafMap.fitBounds(polyline.getBounds(), { padding: [30, 30] });
+        },
+
+        fermerNavigation() {
+            this.modalNavigation = false;
+        },
+
+        get urlGoogleMapsTurnByTurn() {
+            if (!this.navBoutique.latitude) return '#';
+            return `https://www.google.com/maps/dir/?api=1&origin=${this.userLat},${this.userLon}&destination=${this.navBoutique.latitude},${this.navBoutique.longitude}&travelmode=driving&dir_action=navigate`;
+        },
+
+        preparerVente(boutique) {
+            this.venteForm.alimentation_id = boutique.id;
+            if (boutique.a_creance_en_retard || boutique.depasse_plafond_credit) {
+                this.venteForm.mode_reglement = 'ESPECES';
+                this.venteForm.statut_paiement = 'PAYE';
+            }
+            this.currentTab = 'vente';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+
+        getQteChoisie(prodId) {
+            return this.venteForm.lignes[prodId] || 0;
+        },
+
+        augmenterQte(prodId, maxDispo) {
+            const current = this.venteForm.lignes[prodId] || 0;
+            if (current < maxDispo) {
+                this.venteForm.lignes[prodId] = current + 1;
+            }
+        },
+
+        diminuerQte(prodId) {
+            const current = this.venteForm.lignes[prodId] || 0;
+            if (current > 0) {
+                this.venteForm.lignes[prodId] = current - 1;
+            }
+        },
+
+        get totalVenteCalcul() {
+            let total = 0;
+            this.dotations.forEach(d => {
+                const qte = this.venteForm.lignes[d.produit_id] || 0;
+                total += qte * d.prix_unitaire;
+            });
+            return total;
+        },
+
+        async validerVente() {
+            if (this.totalVenteCalcul <= 0) {
+                alert('Veuillez sélectionner au moins un produit.');
+                return;
+            }
+            if (!this.venteForm.alimentation_id) {
+                alert('Veuillez sélectionner une alimentation.');
+                return;
+            }
+
+            const payloadLignes = [];
+            this.dotations.forEach(d => {
+                const qte = this.venteForm.lignes[d.produit_id] || 0;
+                if (qte > 0) {
+                    payloadLignes.push({
+                        produit_id: d.produit_id,
+                        quantite: qte,
+                        prix_unitaire: d.prix_unitaire
+                    });
+                }
+            });
+
+            let paye = this.totalVenteCalcul;
+            if (this.venteForm.statut_paiement === 'CREDIT') {
+                paye = this.venteForm.montant_paye || 0;
+                if (paye > 0 && paye < this.totalVenteCalcul) {
+                    this.venteForm.statut_paiement = 'PARTIEL';
+                }
+            }
+
+            const body = {
+                tournee_id: this.tourneeId,
+                alimentation_id: this.venteForm.alimentation_id,
+                lignes: payloadLignes,
+                mode_reglement: this.venteForm.mode_reglement,
+                statut_paiement: this.venteForm.statut_paiement,
+                montant_paye: paye,
+                date_echeance: this.venteForm.date_echeance,
+                notes: this.venteForm.notes
+            };
+
+            this.venteSubmitting = true;
+            try {
+                const res = await fetch('/api/ventes/creer/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    payloadLignes.forEach(pl => {
+                        const d = this.dotations.find(x => x.produit_id === pl.produit_id);
+                        if (d) {
+                            d.quantite_vendue += pl.quantite;
+                            d.stock_restant = Math.max(0, d.stock_restant - pl.quantite);
+                        }
+                    });
+
+                    if (this.venteForm.mode_reglement === 'ESPECES') {
+                        this.caisseTheorique += paye;
+                        this.bilanForm.caisse_declaree = this.caisseTheorique;
+                    }
+                    this.ventesCount += 1;
+
+                    this.recuDetails = {
+                        total: data.montant_total,
+                        paye: data.montant_paye,
+                        reste: data.reste_a_payer,
+                        url: data.recu_url
+                    };
+                    this.modalRecu = true;
+
+                    this.venteForm.lignes = {};
+                    this.venteForm.montant_paye = 0;
+                    this.venteForm.notes = '';
+                } else {
+                    alert('Erreur: ' + (data.error || 'Impossible d\'enregistrer'));
+                }
+            } catch (err) {
+                alert('Erreur de connexion : ' + err.message);
+            } finally {
+                this.venteSubmitting = false;
+            }
+        },
+
+        async cloturerTournee() {
+            if (!confirm('Confirmez-vous la clôture définitive de votre tournée ?')) return;
+
+            this.clotureSubmitting = true;
+            try {
+                const res = await fetch('/api/tournees/cloturer/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tournee_id: this.tourneeId,
+                        caisse_declaree: this.bilanForm.caisse_declaree,
+                        retours: this.bilanForm.retours
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Tournée clôturée avec succès ! Écart de caisse : ' + this.formatFCFA(data.ecart_caisse) + ' FCFA');
+                    window.location.reload();
+                } else {
+                    alert('Erreur: ' + (data.error || 'Échec clôture'));
+                }
+            } catch (e) {
+                alert('Erreur : ' + e.message);
+            } finally {
+                this.clotureSubmitting = false;
+            }
+        }
+    }
+}
+</script>
+{% endblock %}

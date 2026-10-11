@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Reporting Mensuel Autonome • Agro-Distrib B2B{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- En-tête -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <div>
+            <h1 class="text-2xl font-black text-slate-800 tracking-tight">Rapports & Bilans Périodiques</h1>
+            <p class="text-xs text-slate-500">Synthèse autonome des ventes, performances des livreurs et volumes de distribution</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <!-- Formulaire Sélecteur de Mois -->
+            <form method="GET" class="flex items-center gap-2">
+                <input type="month" name="mois" value="{{ mois_actuel }}"
+                       class="px-3 py-2 border rounded-xl text-xs font-bold text-slate-800 bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none">
+                <button type="submit" class="px-3 py-2 bg-emerald-700 text-white rounded-xl text-xs font-bold hover:bg-emerald-800 transition">
+                    Filtrer
+                </button>
+            </form>
+            <a href="?mois={{ mois_actuel }}&export=csv"
+               class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                <span>📥</span> Export CSV / Excel
+            </a>
+            <button onclick="window.print()"
+                    class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                <span>🖨️</span> Imprimer
+            </button>
+        </div>
+    </div>
+
+    <!-- Synthèse Chiffrée du Mois -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">CA Mensuel Réalisé</span>
+            <div class="text-2xl font-black text-slate-900 mt-1">{{ kpis_mois.total_ca|floatformat:0 }} FCFA</div>
+            <span class="text-[11px] text-slate-500">{{ kpis_mois.nb_ventes }} livraisons effectuées</span>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Recouvré & Encaissé</span>
+            <div class="text-2xl font-black text-emerald-700 mt-1">{{ kpis_mois.total_encaisse|floatformat:0 }} FCFA</div>
+            <span class="text-[11px] text-slate-500">Liquidités et Mobile Money</span>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Crédits Accordés</span>
+            <div class="text-2xl font-black text-amber-600 mt-1">{{ kpis_mois.total_creances|floatformat:0 }} FCFA</div>
+            <span class="text-[11px] text-slate-500">Reste à recouvrer</span>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Période du Rapport</span>
+            <div class="text-base font-black text-slate-800 mt-1">{{ debut_mois|date:"d M" }} au {{ fin_mois|date:"d M Y" }}</div>
+            <span class="text-[11px] text-emerald-700 font-semibold">Mois complet</span>
+        </div>
+    </div>
+
+    <!-- Grille : Performance Livreurs & Volumes Produits -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Performance des Livreurs -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+            <h2 class="text-base font-bold text-slate-800 mb-4 flex items-center justify-between">
+                <span>🛵 Bilan de Performance par Livreur</span>
+                <span class="text-xs text-slate-400">Activité terrain</span>
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-100">
+                        <tr>
+                            <th class="py-2.5 px-3">Livreur</th>
+                            <th class="py-2.5 px-3 text-center">Livraisons</th>
+                            <th class="py-2.5 px-3 text-right">CA Généré</th>
+                            <th class="py-2.5 px-3 text-right">Encaissé</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for b in bilan_livreurs %}
+                        <tr class="hover:bg-slate-50">
+                            <td class="py-3 px-3 font-bold text-slate-900 flex items-center gap-1.5">
+                                <span>🛵</span>
+                                <span>{{ b.tournee__livreur__first_name|default:b.tournee__livreur__username }}</span>
+                            </td>
+                            <td class="py-3 px-3 text-center font-semibold text-slate-700">{{ b.nb_livraisons }}</td>
+                            <td class="py-3 px-3 text-right font-black text-slate-900">{{ b.ca_total|floatformat:0 }} FCFA</td>
+                            <td class="py-3 px-3 text-right font-bold text-emerald-700">{{ b.encaisse|floatformat:0 }} FCFA</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="py-6 text-center text-slate-400 italic">Aucune donnée pour ce mois.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Volumes des Produits Écoulés -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+            <h2 class="text-base font-bold text-slate-800 mb-4 flex items-center justify-between">
+                <span>📦 Volumes & Écoulement des Produits</span>
+                <span class="text-xs text-slate-400">Total distribué</span>
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-100">
+                        <tr>
+                            <th class="py-2.5 px-3">Produit</th>
+                            <th class="py-2.5 px-3 text-center">Quantité</th>
+                            <th class="py-2.5 px-3 text-right">Chiffre d'Affaires</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for p in bilan_produits %}
+                        <tr class="hover:bg-slate-50">
+                            <td class="py-3 px-3 font-bold text-slate-800">{{ p.produit__designation }}</td>
+                            <td class="py-3 px-3 text-center font-bold text-emerald-700">{{ p.quantite_totale }} {{ p.produit__unite }}s</td>
+                            <td class="py-3 px-3 text-right font-black text-slate-900">{{ p.chiffre_affaires|floatformat:0 }} FCFA</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="py-6 text-center text-slate-400 italic">Aucun produit vendu sur ce mois.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

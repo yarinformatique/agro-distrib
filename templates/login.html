@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Connexion • Agro-Distrib B2B{% endblock %}
+
+{% block main_class %}flex items-center justify-center min-h-[82vh] px-4 py-8{% endblock %}
+
+{% block content %}
+<div class="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8 sm:p-10">
+    <!-- En-tête sobre et professionnel -->
+    <div class="text-center mb-6">
+        <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-sm border border-emerald-100/60 mb-4">
+            🥭
+        </div>
+        <h1 class="text-2xl font-black text-slate-800 tracking-tight">Agro-Distrib B2B</h1>
+        <p class="text-xs text-slate-500 mt-1.5 font-medium">Plateforme Multi-Tenant de Distribution & Van Sales</p>
+    </div>
+
+    {% if already_authenticated %}
+    <div class="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-left shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                <span>⚠️</span> Session active sur ce téléphone
+            </span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-200 text-amber-900 uppercase">
+                {{ role_label }}
+            </span>
+        </div>
+        <p class="text-xs text-amber-800 mb-3">
+            Vous êtes connecté en tant que <strong class="font-bold text-slate-900">{{ current_user.username }}</strong>.
+        </p>
+        <div class="grid grid-cols-2 gap-2">
+            <a href="{% url redirect_url %}" class="text-center py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition">
+                ➡️ Accéder à l'espace
+            </a>
+            <a href="{% url 'logout' %}" class="text-center py-2 px-3 bg-white hover:bg-slate-100 text-red-600 border border-red-200 rounded-xl text-xs font-bold transition">
+                🚪 Se déconnecter
+            </a>
+        </div>
+        <div class="mt-3 pt-2 border-t border-amber-200/60 text-center">
+            <span class="text-[11px] text-amber-900/80 font-medium">Ou saisissez ci-dessous vos identifiants Promotrice / Direction :</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Formulaire d'authentification standard sécurisé -->
+    <form method="POST" class="space-y-5">
+        {% csrf_token %}
+        <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+                Identifiant ou Adresse email
+            </label>
+            <div class="relative">
+                <input type="text" name="username" required autofocus autocomplete="username"
+                       class="w-full pl-10 pr-4 py-3.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-900 text-sm transition outline-none shadow-sm"
+                       placeholder="nom_utilisateur ou email@domaine.com">
+                <span class="absolute left-3.5 top-3.5 text-slate-400 text-sm">👤</span>
+            </div>
+        </div>
+
+        <div>
+            <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                    Mot de passe
+                </label>
+            </div>
+            <div class="relative">
+                <input type="password" name="password" required autocomplete="current-password"
+                       class="w-full pl-10 pr-4 py-3.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-900 text-sm transition outline-none shadow-sm"
+                       placeholder="••••••••••••">
+                <span class="absolute left-3.5 top-3.5 text-slate-400 text-sm">🔒</span>
+            </div>
+        </div>
+
+        <button type="submit"
+                class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-600/25 transition transform active:scale-[0.98] text-sm flex items-center justify-center gap-2">
+            <span>Se connecter</span>
+            <span>&rarr;</span>
+        </button>
+    </form>
+
+    <!-- Pied de page du formulaire : Liens sobres -->
+    <div class="mt-8 pt-6 border-t border-slate-100 flex flex-col items-center space-y-3 text-center">
+        <a href="{% url 'boutique_login' %}"
+           class="text-xs text-slate-500 hover:text-emerald-700 font-medium transition inline-flex items-center gap-1.5">
+            <span>🏪</span> Accès Espace Alimentation / Boutique
+        </a>
+        <p class="text-[11px] text-slate-400">
+            Connexion sécurisée SSL/TLS • Agro-Distrib SaaS
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}{% endblock %}

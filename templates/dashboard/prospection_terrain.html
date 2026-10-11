@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+
+{% block title %}Fiche Terrain • Recensement Boutique • Agro-Distrib{% endblock %}
+
+{% block extra_head %}
+<!-- Leaflet pour aperçu cartographique -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endblock %}
+
+{% block main_class %}max-w-xl mx-auto px-4 py-6{% endblock %}
+
+{% block content %}
+<div class="space-y-6" x-data="prospectionTerrainApp()" x-init="initTerrain()">
+
+    <!-- En-tête Mobile -->
+    <div class="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white p-5 rounded-3xl shadow-lg text-center space-y-2">
+        <div class="w-12 h-12 bg-white/20 rounded-2xl mx-auto flex items-center justify-center text-2xl shadow-inner">
+            📍
+        </div>
+        <h1 class="text-xl font-black tracking-tight">Fiche de Recensement Terrain</h1>
+        <p class="text-xs text-emerald-100 max-w-sm mx-auto">
+            Enregistrez une boutique partenaire sur place avec sa position GPS exacte pour intégration immédiate au circuit de livraison.
+        </p>
+    </div>
+
+    {% if success_alim %}
+    <!-- Écran de Succès après enregistrement -->
+    <div class="bg-white rounded-3xl p-6 shadow-xl border border-emerald-200 text-center space-y-4">
+        <div class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full mx-auto flex items-center justify-center text-3xl">
+            ✅
+        </div>
+        <div>
+            <h2 class="text-lg font-black text-slate-900">Boutique Enregistrée avec Succès !</h2>
+            <p class="text-xs text-slate-500 mt-1">La boutique a été synchronisée en temps réel dans le système de la promotrice.</p>
+        </div>
+
+        <div class="p-4 bg-slate-50 rounded-2xl border text-left text-xs space-y-2 font-mono">
+            <div class="flex justify-between">
+                <span class="text-slate-500">Nom :</span>
+                <span class="font-bold text-slate-900">{{ success_alim.nom }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-500">Ville / Quartier :</span>
+                <span class="font-bold text-slate-800">{{ success_alim.ville }} - {{ success_alim.quartier }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-500">Gérant :</span>
+                <span class="font-bold text-slate-800">{{ success_alim.nom_gerant }} ({{ success_alim.telephone_gerant }})</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-500">GPS :</span>
+                <span class="font-bold text-emerald-700">{{ success_alim.latitude }}, {{ success_alim.longitude }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-500">Code PIN Espace Client :</span>
+                <span class="font-bold text-emerald-800">{{ success_alim.code_pin }}</span>
+            </div>
+        </div>
+
+        <a href="{% url 'prospection_terrain' %}"
+           class="inline-block w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl text-xs font-black shadow-lg transition">
+            ➕ Recenser une Autre Boutique
+        </a>
+    </div>
+
+    {% else %}
+
+    <!-- Formulaire de Recensement Mobile -->
+    <div class="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 space-y-5">
+
+        <!-- Module de Capture GPS -->
+        <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-black text-emerald-900 flex items-center gap-1.5">
+                    <span>📡</span> Position GPS de la Boutique
+                </span>
+                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-white text-emerald-700 border" x-text="gpsStatus"></span>
+            </div>
+
+            <!-- Bouton Grand Format pour Capture GPS 1-clic -->
+            <button type="button" @click="capturerGps()"
+                    class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center gap-2">
+                <span x-show="!gpsLoading">📍 CAPTURER MA POSITION GPS ICI</span>
+                <span x-show="gpsLoading" class="animate-spin">⏳</span>
+                <span x-show="gpsLoading">Recherche satellite en cours...</span>
+            </button>
+
+            <!-- Option alternative : Coller coordonnées ou lien Maps -->
+            <div class="pt-2 border-t border-emerald-200/60">
+                <label class="block text-[11px] font-semibold text-emerald-900 mb-1">
+                    Ou coller un lien Google Maps / Coordonnées WhatsApp :
+                </label>
+                <div class="flex gap-2">
+                    <input type="text" x-model="pastedLocation" placeholder="Ex: https://maps.google.com/?q=12.3685,-1.5241"
+                           class="w-full px-2.5 py-1.5 bg-white border border-emerald-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-emerald-500">
+                    <button type="button" @click="parsePastedLocation()"
+                            class="px-3 py-1.5 bg-slate-800 text-white rounded-lg text-xs font-bold whitespace-nowrap hover:bg-black transition">
+                        Extraire
+                    </button>
+                </div>
+            </div>
+
+            <!-- Affichage des coordonnées capturées -->
+            <div class="grid grid-cols-2 gap-2 text-center text-xs pt-1">
+                <div class="p-2 bg-white rounded-xl border border-emerald-100">
+                    <span class="text-[10px] text-slate-400 block uppercase font-bold">Latitude</span>
+                    <span class="font-mono font-bold text-emerald-800" x-text="lat"></span>
+                </div>
+                <div class="p-2 bg-white rounded-xl border border-emerald-100">
+                    <span class="text-[10px] text-slate-400 block uppercase font-bold">Longitude</span>
+                    <span class="font-mono font-bold text-emerald-800" x-text="lon"></span>
+                </div>
+            </div>
+
+            <!-- Mini Carte Interactive -->
+            <div id="terrain-map" class="h-40 w-full rounded-xl border border-emerald-200 shadow-inner z-0"></div>
+            <p class="text-[10px] text-emerald-700 text-center">Vous pouvez aussi cliquer sur la carte pour ajuster la position exacte de la boutique.</p>
+        </div>
+
+        <!-- Formulaire de Saisie des Détails Boutique -->
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="latitude" :value="lat">
+            <input type="hidden" name="longitude" :value="lon">
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Nom de l'Alimentation / Boutique *</label>
+                <input type="text" name="nom" required placeholder="Ex: Alimentation Wend-Panga"
+                       class="w-full px-3 py-2.5 bg-slate-50 border rounded-xl text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Ville *</label>
+                    <input type="text" name="ville" value="Ouagadougou" required
+                           class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Quartier *</label>
+                    <input type="text" name="quartier" required placeholder="Ex: Dassasgho, Wayalghin"
+                           class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nom du Gérant</label>
+                    <input type="text" name="nom_gerant" placeholder="Ex: Moussa Sana"
+                           class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Téléphone Gérant *</label>
+                    <input type="text" name="telephone_gerant" required placeholder="Ex: 70 12 34 56"
+                           class="w-full px-3 py-2 border rounded-xl text-xs font-mono outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Panier Estimé (FCFA)</label>
+                    <input type="number" step="1000" name="panier_moyen_estime" value="25000"
+                           class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 font-bold">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Code PIN Client</label>
+                    <input type="text" name="code_pin" value="1234"
+                           class="w-full px-3 py-2 border rounded-xl text-xs font-mono text-center font-bold outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Consignes & Habitudes de Paiement</label>
+                <textarea name="consignes_reglement" rows="2" placeholder="Ex: Préfère Orange Money, livraison le matin avant 10h"
+                          class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+            </div>
+
+            <button type="submit"
+                    class="w-full py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white font-black text-sm rounded-2xl shadow-xl transition flex items-center justify-center gap-2">
+                <span>💾</span> ENREGISTRER CETTE BOUTIQUE
+            </button>
+        </form>
+
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+function prospectionTerrainApp() {
+    return {
+        lat: '12.371400',
+        lon: '-1.519700',
+        gpsLoading: false,
+        gpsStatus: 'En attente...',
+        pastedLocation: '',
+        map: null,
+        marker: null,
+
+        initTerrain() {
+            this.$nextTick(() => {
+                this.initMap();
+                this.capturerGps();
+            });
+        },
+
+        initMap() {
+            const mapEl = document.getElementById('terrain-map');
+            if (!mapEl) return;
+            const startLat = parseFloat(this.lat) || 12.3714;
+            const startLon = parseFloat(this.lon) || -1.5197;
+
+            this.map = L.map('terrain-map').setView([startLat, startLon], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(this.map);
+
+            this.marker = L.marker([startLat, startLon], { draggable: true }).addTo(this.map);
+            this.marker.bindPopup("<b>Boutique ciblée</b><br>Déplacez pour ajuster.").openPopup();
+
+            this.marker.on('dragend', (e) => {
+                const pos = e.target.getLatLng();
+                this.lat = pos.lat.toFixed(6);
+                this.lon = pos.lng.toFixed(6);
+                this.gpsStatus = 'Position ajustée manuellement';
+            });
+
+            this.map.on('click', (e) => {
+                this.marker.setLatLng(e.latlng);
+                this.lat = e.latlng.lat.toFixed(6);
+                this.lon = e.latlng.lng.toFixed(6);
+                this.gpsStatus = 'Position pointée sur la carte';
+            });
+        },
+
+        updateMapMarker(lat, lon) {
+            if (this.marker && this.map) {
+                const newPos = [lat, lon];
+                this.marker.setLatLng(newPos);
+                this.map.setView(newPos, 16);
+            }
+        },
+
+        capturerGps() {
+            if (!navigator.geolocation) {
+                this.gpsStatus = 'GPS non supporté';
+                return;
+            }
+            this.gpsLoading = true;
+            this.gpsStatus = 'Recherche satellite...';
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    this.lat = pos.coords.latitude.toFixed(6);
+                    this.lon = pos.coords.longitude.toFixed(6);
+                    this.gpsLoading = false;
+                    this.gpsStatus = 'Position GPS Verrouillée (±' + Math.round(pos.coords.accuracy) + 'm)';
+                    this.updateMapMarker(pos.coords.latitude, pos.coords.longitude);
+                },
+                (err) => {
+                    this.gpsLoading = false;
+                    this.gpsStatus = 'GPS indisponible (mode manuel)';
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        },
+
+        parsePastedLocation() {
+            if (!this.pastedLocation) return;
+            const text = this.pastedLocation.trim();
+            // Recherche lat, lon
+            const regex = /(-?\d{1,2}\.\d{4,8})[\s,]+(-?\d{1,3}\.\d{4,8})/;
+            const match = text.match(regex);
+            if (match) {
+                const latVal = parseFloat(match[1]);
+                const lonVal = parseFloat(match[2]);
+                this.lat = latVal.toFixed(6);
+                this.lon = lonVal.toFixed(6);
+                this.gpsStatus = 'Extrait avec succès';
+                this.updateMapMarker(latVal, lonVal);
+                alert('✅ Coordonnées extraites : ' + this.lat + ', ' + this.lon);
+            } else {
+                alert('Format non reconnu. Collez des coordonnées type "12.3685, -1.5241" ou un lien Google Maps.');
+            }
+        }
+    };
+}
+</script>
+{% endblock %}

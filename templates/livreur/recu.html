@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}Reçu de Livraison #{{ vente.id|stringformat:".8s" }} • Agro-Distrib{% endblock %}
+
+{% block main_class %}max-w-md mx-auto px-4 py-6{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+    <!-- Boutons d'action non imprimables -->
+    <div class="no-print flex items-center justify-between gap-2">
+        <a href="{% url 'livreur_app' %}" class="text-xs font-semibold text-slate-500 hover:text-emerald-700">
+            &larr; Retour à l'application
+        </a>
+        <div class="flex items-center gap-2">
+            <button onclick="window.print()" class="px-3 py-1.5 bg-slate-800 text-white rounded-lg text-xs font-bold hover:bg-slate-900 transition flex items-center gap-1">
+                <span>🖨️</span> Imprimer
+            </button>
+            <a href="https://wa.me/{{ vente.alimentation.telephone_gerant|cut:' '|cut:'+'|cut:'-' }}?text=Re%C3%A7u%20de%20Livraison%20Agro-Distrib%0AAlimentation%20%3A%20{{ vente.alimentation.nom|urlencode }}%0ATotal%20%3A%20{{ vente.montant_total|floatformat:0 }}%20FCFA%0APay%C3%A9%20%3A%20{{ vente.montant_paye|floatformat:0 }}%20FCFA%0AReste%20d%C3%BB%20%3A%20{{ vente.reste_a_payer|floatformat:0 }}%20FCFA%0AMerci%20de%20votre%20confiance%20%21"
+               target="_blank"
+               class="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700 transition flex items-center gap-1">
+                <span>💬</span> WhatsApp
+            </a>
+        </div>
+    </div>
+
+    <!-- Ticket Reçu Imprimable -->
+    <div id="printable-receipt" class="bg-white rounded-2xl p-6 shadow-md border border-slate-200 text-slate-800 space-y-4 font-mono text-xs">
+        <!-- Logo & Titre Entreprise -->
+        <div class="text-center pb-3 border-b border-dashed border-slate-300">
+            <div class="text-xl font-black text-slate-900 tracking-wider">AGRO-DISTRIB B2B</div>
+            <div class="text-[10px] text-slate-500">Distribution Agroalimentaire & Van Sales</div>
+            <div class="text-[10px] text-slate-500">Ouagadougou, Burkina Faso • Tél: +226 70 00 00 00</div>
+        </div>
+
+        <!-- Méta Vente -->
+        <div class="space-y-1 text-[11px]">
+            <div class="flex justify-between">
+                <span class="text-slate-500">Bordereau N° :</span>
+                <span class="font-bold">#{{ vente.id|stringformat:".8s"|upper }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-500">Date & Heure :</span>
+                <span>{{ vente.date_heure|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-500">Livreur :</span>
+                <span>{{ vente.tournee.livreur.get_full_name|default:vente.tournee.livreur.username }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-500">Client / Boutique :</span>
+                <span class="font-bold text-slate-900">{{ vente.alimentation.nom }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-500">Quartier :</span>
+                <span>{{ vente.alimentation.quartier }}</span>
+            </div>
+        </div>
+
+        <!-- Tableau des Lignes Produits -->
+        <div class="pt-2 border-t border-dashed border-slate-300">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="border-b border-slate-200 text-slate-400 text-[10px]">
+                        <th class="py-1">Article</th>
+                        <th class="py-1 text-center">Qté</th>
+                        <th class="py-1 text-right">P.U</th>
+                        <th class="py-1 text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for l in vente.lignes.all %}
+                    <tr>
+                        <td class="py-1.5 pr-1">{{ l.produit.designation }}</td>
+                        <td class="py-1.5 text-center font-bold">{{ l.quantite }}</td>
+                        <td class="py-1.5 text-right">{{ l.prix_unitaire|floatformat:0 }}</td>
+                        <td class="py-1.5 text-right font-bold">{{ l.sous_total|floatformat:0 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Totaux & Règlement -->
+        <div class="pt-3 border-t border-dashed border-slate-300 space-y-1.5 text-[11px]">
+            <div class="flex justify-between text-sm font-black text-slate-900">
+                <span>TOTAL :</span>
+                <span>{{ vente.montant_total|floatformat:0 }} FCFA</span>
+            </div>
+            <div class="flex justify-between font-bold text-emerald-700">
+                <span>MONTANT PAYÉ :</span>
+                <span>{{ vente.montant_paye|floatformat:0 }} FCFA</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
+                <span>MODE DE RÈGLEMENT :</span>
+                <span>{{ vente.get_mode_reglement_display }}</span>
+            </div>
+            {% if vente.reste_a_payer > 0 %}
+            <div class="flex justify-between font-bold text-red-600 pt-1 border-t border-dotted">
+                <span>RESTE DÛ (CRÉDIT) :</span>
+                <span>{{ vente.reste_a_payer|floatformat:0 }} FCFA</span>
+            </div>
+            {% if vente.date_echeance_credit %}
+            <div class="flex justify-between text-slate-500 text-[10px]">
+                <span>ÉCHÉANCE RELANCE :</span>
+                <span>{{ vente.date_echeance_credit|date:"d/m/Y" }}</span>
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+
+        <!-- Règlements Digitaux / CinetPay & Mobile Money -->
+        {% if vente.entreprise.numero_orange_money or vente.entreprise.numero_moov_money or vente.entreprise.lien_paiement_cinetpay %}
+        <div class="pt-3 border-t border-dashed border-slate-300 text-[10px] text-slate-600 space-y-1">
+            <div class="font-bold text-slate-800 uppercase tracking-wider">Règlement Digital & Mobile Money :</div>
+            {% if vente.entreprise.numero_orange_money %}
+            <div class="flex justify-between">
+                <span>Orange Money :</span>
+                <span class="font-bold text-slate-900">{{ vente.entreprise.numero_orange_money }}</span>
+            </div>
+            {% endif %}
+            {% if vente.entreprise.numero_moov_money %}
+            <div class="flex justify-between">
+                <span>Moov Money :</span>
+                <span class="font-bold text-slate-900">{{ vente.entreprise.numero_moov_money }}</span>
+            </div>
+            {% endif %}
+            {% if vente.entreprise.lien_paiement_cinetpay %}
+            <div class="pt-1">
+                <a href="{{ vente.entreprise.lien_paiement_cinetpay }}" target="_blank" class="block text-center py-1 bg-blue-50 text-blue-700 font-bold rounded border border-blue-200">
+                    💳 Payer en ligne (CinetPay)
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Pied de Reçu -->
+        <div class="pt-4 border-t border-dashed border-slate-300 text-center text-[10px] text-slate-500 space-y-1">
+            <p>Merci pour votre fidélité et bon réassort !</p>
+            <p>Signature Livreur & Cachet Boutique</p>
+            <div class="h-10 border border-dotted border-slate-300 rounded mt-2"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

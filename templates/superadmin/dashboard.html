@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+
+{% block title %}Super-Admin SaaS • Gestion des Tenants{% endblock %}
+
+{% block content %}
+<div class="space-y-6" x-data="{ modalCreer: false, search: '', filtreStatut: 'tous' }">
+
+    <!-- En-tête Superadmin Global -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl">
+        <div>
+            <div class="flex items-center space-x-2 mb-2">
+                <span class="px-3 py-1 bg-amber-400 text-slate-950 text-xs font-black rounded-lg uppercase tracking-wider">
+                    Super-Administrateur SaaS
+                </span>
+                <span class="text-xs text-slate-400">Accès Propriétaire Global</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Console de Supervision Multi-Tenant</h1>
+            <p class="text-xs sm:text-sm text-slate-400 mt-1">
+                Gestion des Entreprises clientes (Tenants), activation / suspension d'abonnements et isolation des données.
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <button type="button" @click="modalCreer = true"
+                    class="px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-500/20 transition flex items-center gap-2">
+                <span>➕</span>
+                <span>Nouvelle Entreprise</span>
+            </button>
+            <a href="{% url 'logout' %}" class="p-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-2xl transition" title="Déconnexion">
+                🚪
+            </a>
+        </div>
+    </div>
+
+    <!-- KPIs Globaux de la Plateforme -->
+    <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4">
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+            <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Entreprises</div>
+            <div class="text-2xl font-black text-slate-800 mt-1">{{ total_entreprises }}</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Tenants enregistrés</div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-emerald-100 bg-emerald-50/20 shadow-sm">
+            <div class="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">Entreprises Actives</div>
+            <div class="text-2xl font-black text-emerald-600 mt-1">{{ entreprises_actives }}</div>
+            <div class="text-[10px] text-emerald-600 mt-0.5">Accès opérationnel</div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-red-100 bg-red-50/20 shadow-sm">
+            <div class="text-[11px] font-semibold text-red-600 uppercase tracking-wider">Suspendues</div>
+            <div class="text-2xl font-black text-red-600 mt-1">{{ entreprises_suspendues }}</div>
+            <div class="text-[10px] text-red-500 mt-0.5">Accès bloqué en cascade</div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+            <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Utilisateurs SaaS</div>
+            <div class="text-2xl font-black text-slate-800 mt-1">{{ total_utilisateurs }}</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Comptes sur le système</div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+            <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Livraisons Réalisées</div>
+            <div class="text-2xl font-black text-slate-800 mt-1">{{ total_ventes }}</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Transactions van sales</div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+            <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Volume d'Affaires</div>
+            <div class="text-xl sm:text-2xl font-black text-slate-900 mt-1">{{ total_ca|floatformat:0 }}</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">FCFA générés au total</div>
+        </div>
+    </div>
+
+    <!-- Tableau de Gestion des Entreprises (Tenants) -->
+    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+                <h2 class="text-base font-black text-slate-800">Entreprises & Abonnements Clients</h2>
+                <p class="text-xs text-slate-400">Suspendez ou activez une entreprise en 1 clic pour appliquer immédiatement les règles de sécurité.</p>
+            </div>
+
+            <!-- Filtres rapides -->
+            <div class="flex items-center space-x-2">
+                <input type="text" x-model="search" placeholder="Rechercher une entreprise..."
+                       class="px-3 py-2 border rounded-xl text-xs bg-slate-50 outline-none w-48 sm:w-64 focus:ring-2 focus:ring-emerald-500">
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-slate-50/70 border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                        <th class="py-3.5 px-4">Entreprise (Tenant)</th>
+                        <th class="py-3.5 px-4">Promotrice (PDG)</th>
+                        <th class="py-3.5 px-4 text-center">Statut Abonnement</th>
+                        <th class="py-3.5 px-4 text-center">Ressources</th>
+                        <th class="py-3.5 px-4 text-right">CA Réalisé</th>
+                        <th class="py-3.5 px-4 text-center">Action Sécurité</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for item in entreprises_data %}
+                    <tr class="hover:bg-slate-50/50 transition"
+                        x-show="!search || '{{ item.obj.nom|lower }}'.includes(search.toLowerCase()) || '{{ item.obj.ville|lower }}'.includes(search.toLowerCase())">
+                        <td class="py-4 px-4">
+                            <div class="font-black text-slate-800 text-sm flex items-center gap-1.5">
+                                <span>🏢</span>
+                                <span>{{ item.obj.nom }}</span>
+                            </div>
+                            <div class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
+                                <span>📍 {{ item.obj.ville }}</span>
+                                <span>•</span>
+                                <span>Slug : <code class="bg-slate-100 px-1 rounded text-slate-600">{{ item.obj.slug }}</code></span>
+                                <span>•</span>
+                                <span>Créé le {{ item.obj.date_creation|date:"d/m/Y" }}</span>
+                            </div>
+                        </td>
+
+                        <td class="py-4 px-4">
+                            {% if item.promotrice %}
+                            <div class="font-bold text-slate-700">{{ item.promotrice.get_full_name|default:item.promotrice.username }}</div>
+                            <div class="text-[11px] text-slate-400">Identifiant : <span class="font-mono text-slate-600">{{ item.promotrice.username }}</span></div>
+                            {% else %}
+                            <span class="text-slate-400 italic">Non assignée</span>
+                            {% endif %}
+                            {% if item.obj.contact_telephone %}
+                            <div class="text-[10px] text-slate-400">📞 {{ item.obj.contact_telephone }}</div>
+                            {% endif %}
+                        </td>
+
+                        <td class="py-4 px-4 text-center">
+                            {% if item.obj.statut_abonnement == 'actif' %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                                Actif
+                            </span>
+                            {% elif item.obj.statut_abonnement == 'suspendu' %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-red-100 text-red-800 border border-red-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                                Suspendu
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                Inactif
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="py-4 px-4 text-center">
+                            <div class="inline-flex items-center gap-2 text-[11px] text-slate-600 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200">
+                                <span title="Utilisateurs">👥 {{ item.nb_users }}</span>
+                                <span>•</span>
+                                <span title="Produits">📦 {{ item.nb_prods }}</span>
+                                <span>•</span>
+                                <span title="Boutiques">🏪 {{ item.nb_alims }}</span>
+                            </div>
+                        </td>
+
+                        <td class="py-4 px-4 text-right">
+                            <span class="font-black text-slate-800 text-xs">{{ item.ca|floatformat:0 }} FCFA</span>
+                        </td>
+
+                        <td class="py-4 px-4 text-center">
+                            <form method="POST" action="{% url 'superadmin_toggle_statut' item.obj.id %}" class="inline-block"
+                                  onsubmit="return confirm('Confirmez-vous le changement de statut pour {{ item.obj.nom }} ?')">
+                                {% csrf_token %}
+                                {% if item.obj.statut_abonnement == 'actif' %}
+                                <button type="submit"
+                                        class="px-3 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold text-[11px] transition flex items-center gap-1 mx-auto">
+                                    <span>⛔</span>
+                                    <span>Suspendre</span>
+                                </button>
+                                {% else %}
+                                <button type="submit"
+                                        class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-[11px] transition flex items-center gap-1 mx-auto">
+                                    <span>✅</span>
+                                    <span>Activer</span>
+                                </button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="py-8 text-center text-slate-400">
+                            Aucune entreprise trouvée.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL DE CRÉATION D'UNE NOUVELLE ENTREPRISE & PROMOTRICE -->
+    <div x-show="modalCreer" style="display: none;"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-5"
+             @click.away="modalCreer = false">
+            <div class="flex items-center justify-between border-b pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🏢</span>
+                    <h3 class="text-base font-black text-slate-900">Ajouter une Nouvelle Entreprise (Tenant)</h3>
+                </div>
+                <button type="button" @click="modalCreer = false" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+            </div>
+
+            <form method="POST" action="{% url 'superadmin_creer_entreprise' %}" class="space-y-4">
+                {% csrf_token %}
+
+                <!-- Infos Entreprise -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nom de l'Entreprise *</label>
+                    <input type="text" name="nom" required placeholder="Ex: Faso Agro Industrie"
+                           class="w-full p-2.5 border rounded-xl text-xs bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ville du Siège</label>
+                        <input type="text" name="ville" value="Ouagadougou"
+                               class="w-full p-2.5 border rounded-xl text-xs bg-slate-50 focus:bg-white outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Statut Initial</label>
+                        <select name="statut_abonnement" class="w-full p-2.5 border rounded-xl text-xs bg-slate-50 font-bold outline-none">
+                            <option value="actif">Actif (Abonnement valide)</option>
+                            <option value="suspendu">Suspendu (Inactif)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Coordonnées & Responsable -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Nom de la Promotrice (PDG)</label>
+                        <input type="text" name="contact_nom" placeholder="Ex: Aïcha Kaboré"
+                               class="w-full p-2.5 border rounded-xl text-xs bg-slate-50 focus:bg-white outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Téléphone de contact</label>
+                        <input type="text" name="contact_telephone" placeholder="Ex: +226 70 00 00 00"
+                               class="w-full p-2.5 border rounded-xl text-xs bg-slate-50 focus:bg-white outline-none">
+                    </div>
+                </div>
+
+                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                    <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <span>👤</span>
+                        <span>Compte de Connexion de la Promotrice</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Identifiant *</label>
+                            <input type="text" name="username" required placeholder="Ex: promotrice_faso"
+                                   class="w-full p-2 border rounded-lg text-xs bg-white outline-none font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Mot de Passe *</label>
+                            <input type="password" name="password" required placeholder="••••••••"
+                                   class="w-full p-2 border rounded-lg text-xs bg-white outline-none font-mono">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end space-x-2 pt-2">
+                    <button type="button" @click="modalCreer = false"
+                            class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50">
+                        Annuler
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md">
+                        Créer le Tenant & Activer l'Accès
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

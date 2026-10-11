@@ -1,0 +1,57 @@
+/* Styles personnalisés Agro-Distrib */
+:root {
+  --primary-emerald: #059669;
+  --primary-dark: #064e3b;
+  --accent-amber: #d97706;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Touch-friendly styles for mobile couriers */
+.touch-btn {
+  min-height: 48px;
+  touch-action: manipulation;
+}
+
+/* Badge styles */
+.badge-paye {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.badge-partiel {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.badge-credit {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* Print styles for digital receipts */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-receipt, #printable-receipt * {
+    visibility: visible;
+  }
+  #printable-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 15px;
+    background: white;
+    color: black;
+    box-shadow: none !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

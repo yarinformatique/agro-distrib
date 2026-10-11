@@ -1,0 +1,358 @@
+{% extends 'base.html' %}
+
+{% block title %}Tournée {{ tournee.livreur.get_full_name|default:tournee.livreur.username }} • Agro-Distrib B2B{% endblock %}
+
+{% block content %}
+<div class="space-y-6" x-data="{ openClotureModal: false, openMissionModal: false }">
+    <!-- En-tête Tournée -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <a href="{% url 'tournees' %}" class="text-xs font-semibold text-slate-500 hover:text-emerald-700">&larr; Retour aux tournées</a>
+                <span class="text-slate-300">•</span>
+                <span class="text-xs font-mono text-slate-400">ID: {{ tournee.id|stringformat:".8s" }}</span>
+            </div>
+            <h1 class="text-2xl font-black text-slate-800 tracking-tight mt-1 flex items-center gap-2">
+                <span>🛵 Tournée de {{ tournee.livreur.get_full_name|default:tournee.livreur.username }}</span>
+                {% if tournee.statut == 'EN_COURS' %}
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 animate-pulse">En Cours</span>
+                {% else %}
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Clôturée</span>
+                {% endif %}
+            </h1>
+            <p class="text-xs text-slate-500">Date de la tournée : {{ tournee.date_tournee|date:"l d F Y" }}</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            {% if tournee.statut == 'EN_COURS' %}
+            <button @click="openMissionModal = true"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-md text-xs flex items-center gap-1.5">
+                <span>🎯</span> + Assigner une Consigne / Mission
+            </button>
+            <button @click="openClotureModal = true"
+                    class="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-md text-xs flex items-center gap-2">
+                <span>🏁</span> Clôturer la Tournée
+            </button>
+            {% else %}
+            <div class="px-3 py-1.5 bg-emerald-50 text-emerald-800 rounded-xl text-xs font-bold border border-emerald-200">
+                ✅ Tournée clôturée et réconciliée
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- KPI Tournée -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Chiffre d'Affaires</span>
+            <div class="text-xl font-black text-slate-800 mt-1">{{ tournee.chiffre_affaires_total|floatformat:0 }} FCFA</div>
+            <span class="text-[11px] text-slate-500">{{ ventes.count }} boutique(s) livrée(s)</span>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Caisse Théorique (Espèces)</span>
+            <div class="text-xl font-black text-blue-700 mt-1">{{ tournee.caisse_theorique|floatformat:0 }} FCFA</div>
+            <span class="text-[11px] text-slate-500">Espèces physiques attendues</span>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Caisse Déclarée (Remise)</span>
+            <div class="text-xl font-black text-slate-900 mt-1">
+                {% if tournee.statut == 'CLOTUREE' %}
+                    {{ tournee.caisse_declaree|floatformat:0 }} FCFA
+                {% else %}
+                    <span class="text-slate-400 text-sm italic">En attente</span>
+                {% endif %}
+            </div>
+            <span class="text-[11px] text-slate-500">Remise physique par le livreur</span>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Écart de Caisse</span>
+            <div class="text-xl font-black mt-1">
+                {% if tournee.statut == 'CLOTUREE' %}
+                    {% if tournee.ecart_caisse == 0 %}
+                        <span class="text-emerald-700">0 FCFA</span>
+                    {% elif tournee.ecart_caisse > 0 %}
+                        <span class="text-emerald-700">+{{ tournee.ecart_caisse|floatformat:0 }} FCFA (Surplus)</span>
+                    {% else %}
+                        <span class="text-red-600">{{ tournee.ecart_caisse|floatformat:0 }} FCFA (Déficit)</span>
+                    {% endif %}
+                {% else %}
+                    <span class="text-slate-400 text-sm">-</span>
+                {% endif %}
+            </div>
+            <span class="text-[11px] text-slate-500">Caisse déclarée - théorique</span>
+        </div>
+    </div>
+
+    <!-- Ordres de Missions & Consignes Assignées au Livreur -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h2 class="text-base font-bold text-slate-800">🎯 Ordres de Mission & Consignes Assignées (Instructions PDG)</h2>
+                <p class="text-xs text-slate-500">Objectifs de livraison, montants cibles et consignes particulières pour ce livreur</p>
+            </div>
+            {% if tournee.statut == 'EN_COURS' %}
+            <button @click="openMissionModal = true" class="text-xs font-bold text-blue-700 hover:underline">
+                + Ajouter une consigne
+            </button>
+            {% endif %}
+        </div>
+
+        <div class="divide-y divide-slate-100">
+            {% for m in missions %}
+            <div class="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-sm text-slate-900">{{ m.alimentation.nom }}</span>
+                        <span class="text-xs text-slate-500 font-medium">({{ m.alimentation.quartier }})</span>
+                        {% if m.statut == 'LIVRE' %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">✅ Livré & Conforme</span>
+                        {% else %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 animate-pulse">⏳ À faire</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-xs text-slate-700">
+                        📦 Produits exigés : <strong>{{ m.produits_consignes }}</strong>
+                    </div>
+                    {% if m.consigne_particuliere %}
+                    <div class="text-[11px] text-blue-800 bg-blue-50/70 p-1.5 rounded-lg border border-blue-100">
+                        💡 <strong>Consigne :</strong> {{ m.consigne_particuliere }}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="text-right">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 block">Montant Cible</span>
+                    <span class="text-base font-black text-slate-900">{{ m.montant_cible|floatformat:0 }} FCFA</span>
+                </div>
+            </div>
+            {% empty %}
+            <p class="py-4 text-center text-slate-400 italic text-xs">Aucun ordre de mission spécifique assigné pour cette tournée.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Rapprochement de Stock Embarqué -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+        <h2 class="text-base font-bold text-slate-800 mb-4 flex items-center justify-between">
+            <span>📦 Rapprochement & Suivi du Stock Embarqué</span>
+            <span class="text-xs text-slate-400">Dotation initiale vs Ventes terrain</span>
+        </h2>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-100">
+                    <tr>
+                        <th class="py-3 px-4">Produit</th>
+                        <th class="py-3 px-4 text-center">Quantité Départ</th>
+                        <th class="py-3 px-4 text-center">Quantité Vendue</th>
+                        <th class="py-3 px-4 text-center">Stock Restant Théorique</th>
+                        <th class="py-3 px-4 text-center">Retour Physique</th>
+                        <th class="py-3 px-4 text-center">Écart Stock</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for d in dotations %}
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3.5 px-4 font-bold text-slate-800">{{ d.produit.designation }}</td>
+                        <td class="py-3.5 px-4 text-center font-bold text-slate-700">{{ d.quantite_depart }} {{ d.produit.unite }}s</td>
+                        <td class="py-3.5 px-4 text-center font-bold text-emerald-700">{{ d.quantite_vendue }}</td>
+                        <td class="py-3.5 px-4 text-center font-bold text-slate-900 bg-slate-50">{{ d.stock_restant_theorique }}</td>
+                        <td class="py-3.5 px-4 text-center font-semibold text-slate-700">
+                            {% if tournee.statut == 'CLOTUREE' %}
+                                {{ d.quantite_retour }}
+                            {% else %}
+                                <span class="text-slate-400 italic">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 text-center">
+                            {% if tournee.statut == 'CLOTUREE' %}
+                                {% if d.ecart_stock == 0 %}
+                                <span class="text-emerald-700 font-bold">0 (Conforme)</span>
+                                {% elif d.ecart_stock > 0 %}
+                                <span class="text-blue-700 font-bold">+{{ d.ecart_stock }} (Surplus)</span>
+                                {% else %}
+                                <span class="text-red-600 font-bold">{{ d.ecart_stock }} (Manquant)</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-slate-400">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="py-6 text-center text-slate-400 italic">Aucune dotation de stock pour cette tournée.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Ventes & Livraisons Réalisées -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+        <h2 class="text-base font-bold text-slate-800 mb-4 flex items-center justify-between">
+            <span>🛒 Détail des Livraisons Réalisées</span>
+            <span class="text-xs text-slate-400 font-normal">{{ ventes.count }} vente(s)</span>
+        </h2>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-100">
+                    <tr>
+                        <th class="py-3 px-4">Heure</th>
+                        <th class="py-3 px-4">Alimentation</th>
+                        <th class="py-3 px-4">Produits Livrés</th>
+                        <th class="py-3 px-4">Montant Total</th>
+                        <th class="py-3 px-4">Montant Encaissé</th>
+                        <th class="py-3 px-4">Règlement</th>
+                        <th class="py-3 px-4">Statut</th>
+                        <th class="py-3 px-4 text-right">Reçu</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for v in ventes %}
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3.5 px-4 font-mono text-slate-500">{{ v.date_heure|date:"H:i" }}</td>
+                        <td class="py-3.5 px-4">
+                            <div class="font-bold text-slate-900">{{ v.alimentation.nom }}</div>
+                            <div class="text-[11px] text-slate-500">📍 {{ v.alimentation.quartier }}</div>
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-700">
+                            {% for ligne in v.lignes.all %}
+                            <span class="inline-block bg-slate-100 px-1.5 py-0.5 rounded text-[11px] mr-1 mb-1">
+                                {{ ligne.produit.designation }}: <strong>x{{ ligne.quantite }}</strong>
+                            </span>
+                            {% endfor %}
+                        </td>
+                        <td class="py-3.5 px-4 font-black text-slate-900">{{ v.montant_total|floatformat:0 }} FCFA</td>
+                        <td class="py-3.5 px-4 font-bold text-emerald-700">{{ v.montant_paye|floatformat:0 }} FCFA</td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-semibold">
+                                {{ v.get_mode_reglement_display }}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            {% if v.statut_paiement == 'PAYE' %}
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Payé</span>
+                            {% elif v.statut_paiement == 'PARTIEL' %}
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Acompte</span>
+                            {% else %}
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800">Crédit</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 text-right">
+                            <a href="{% url 'recu_vente' v.id %}" target="_blank"
+                               class="text-emerald-600 hover:text-emerald-800 font-bold">
+                                🧾 Reçu
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="py-8 text-center text-slate-400 italic">Aucune vente enregistrée pour cette tournée.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Clôture de Tournée -->
+    {% if tournee.statut == 'EN_COURS' %}
+    <div x-show="openClotureModal" style="display: none;"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto" @click.away="openClotureModal = false">
+            <h3 class="text-lg font-bold text-slate-900 mb-1">Clôturer la Tournée & Rapprochement de Caisse</h3>
+            <p class="text-xs text-slate-500 mb-4">Vérifiez les espèces physiques remises et les retours de produits restants</p>
+
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="cloturer">
+
+                <!-- Rapprochement Caisse -->
+                <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-blue-900">Caisse Théorique Espèces :</span>
+                        <span class="text-base font-black text-blue-800">{{ tournee.caisse_theorique|floatformat:0 }} FCFA</span>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-blue-900 mb-1">Caisse Déclarée (Espèces physiques reçues)</label>
+                        <input type="number" step="100" name="caisse_declaree" value="{{ tournee.caisse_theorique|floatformat:0 }}" required
+                               class="w-full px-3 py-2 border rounded-xl text-sm font-bold text-slate-900 bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                </div>
+
+                <!-- Retours de Stock Restants -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Retours Physiques de Stock Restant</h4>
+                    <div class="border rounded-xl divide-y divide-slate-100">
+                        {% for d in dotations %}
+                        <div class="p-3 flex items-center justify-between text-xs hover:bg-slate-50">
+                            <div>
+                                <div class="font-bold text-slate-800">{{ d.produit.designation }}</div>
+                                <div class="text-[11px] text-slate-500">
+                                    Départ: {{ d.quantite_depart }} • Vendu: {{ d.quantite_vendue }} • Théorique restant: <strong class="text-slate-800">{{ d.stock_restant_theorique }}</strong>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <label class="text-[11px] text-slate-500">Retour réel :</label>
+                                <input type="number" name="retour_{{ d.id }}" min="0" value="{{ d.stock_restant_theorique }}" required
+                                       class="w-16 px-2 py-1.5 border rounded-lg text-center font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-4 border-t">
+                    <button type="button" @click="openClotureModal = false" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Annuler</button>
+                    <button type="submit" class="px-5 py-2.5 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg">Confirmer la Clôture Définitive</button>
+    <!-- Modal Ajouter un Ordre de Mission / Consigne -->
+    <div x-show="openMissionModal" style="display: none;"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100" @click.away="openMissionModal = false">
+            <h3 class="text-lg font-bold text-slate-900 mb-1">Assigner une Consigne / Mission au Livreur</h3>
+            <p class="text-xs text-slate-500 mb-4">Fixez la boutique cible, les produits exigés, le montant et les consignes de règlement</p>
+
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="ajouter_mission">
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Boutique Ciblée</label>
+                    <select name="alimentation_id" required class="w-full px-3 py-2.5 border rounded-xl text-xs font-bold text-slate-800 bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">-- Sélectionner une boutique --</option>
+                        {% for a in alimentations %}
+                        <option value="{{ a.id }}">{{ a.nom }} ({{ a.quartier }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Articles / Produits Exigés</label>
+                    <input type="text" name="produits_consignes" required placeholder="Ex: 10 sachets mangue 100g, 5 pots miel 500g"
+                           class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Montant Cible à Réclamer (FCFA)</label>
+                    <input type="number" step="500" name="montant_cible" required placeholder="Ex: 22500"
+                           class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 font-bold">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Consigne Particulière du PDG</label>
+                    <textarea name="consigne_particuliere" rows="2" placeholder="Ex: Exiger paiement comptant en espèces ou Orange Money. Vérifier réassort."
+                              class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-4 border-t">
+                    <button type="button" @click="openMissionModal = false" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Annuler</button>
+                    <button type="submit" class="px-5 py-2.5 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-blue-600/30">Enregistrer la Consigne</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

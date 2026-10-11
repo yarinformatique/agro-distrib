@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Bordereau d'Expédition {{ expedition.numero_bordereau }} • Agro-Distrib{% endblock %}
+
+{% block main_class %}max-w-2xl mx-auto px-4 py-6{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+    <!-- Barre d'action hors impression -->
+    <div class="no-print flex items-center justify-between">
+        <a href="{% url 'expedition_detail' expedition.id %}" class="text-xs font-semibold text-slate-500 hover:text-blue-700">
+            &larr; Retour au dossier
+        </a>
+        <button onclick="window.print()" class="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-black transition flex items-center gap-1.5 shadow">
+            <span>🖨️</span> Imprimer la Lettre de Voiture / Bordereau
+        </button>
+    </div>
+
+    <!-- Bordereau Officiel Imprimable -->
+    <div id="printable-receipt" class="bg-white rounded-2xl p-8 shadow-md border border-slate-200 text-slate-800 space-y-6 font-sans text-xs">
+        <!-- En-tête officiel -->
+        <div class="flex items-start justify-between border-b-2 border-slate-900 pb-4">
+            <div>
+                <div class="text-2xl font-black text-slate-900 tracking-wider">AGRO-DISTRIB B2B</div>
+                <div class="text-xs text-slate-600 font-semibold">Direction Générale & Expéditions Régionales</div>
+                <div class="text-[11px] text-slate-500">Bobo-Dioulasso • Ouagadougou • Burkina Faso</div>
+            </div>
+            <div class="text-right">
+                <span class="inline-block bg-slate-900 text-white px-3 py-1 rounded text-xs font-mono font-bold tracking-wider">
+                    BORDEREAU D'EXPÉDITION
+                </span>
+                <div class="font-mono font-bold text-sm text-slate-800 mt-1">{{ expedition.numero_bordereau }}</div>
+                <div class="text-[11px] text-slate-500">Date : {{ expedition.date_expedition|date:"d/m/Y H:i" }}</div>
+            </div>
+        </div>
+
+        <!-- Trajet & Acteurs -->
+        <div class="grid grid-cols-2 gap-4 border p-3 rounded-xl bg-slate-50 text-[11px]">
+            <div class="space-y-1">
+                <div class="font-bold uppercase tracking-wider text-slate-500 text-[10px]">Expéditeur & Trajet :</div>
+                <div><strong>Départ :</strong> {{ expedition.ville_depart }}</div>
+                <div><strong>Destination :</strong> {{ expedition.ville_destination }}</div>
+                <div><strong>Émetteur :</strong> {{ expedition.cree_par.first_name|default:"Direction Agro-Distrib" }}</div>
+            </div>
+            <div class="space-y-1">
+                <div class="font-bold uppercase tracking-wider text-slate-500 text-[10px]">Transporteur & Relais :</div>
+                <div><strong>Transporteur :</strong> {{ expedition.transporteur_nom }} ({{ expedition.transporteur_telephone }})</div>
+                <div><strong>Destinataire relais :</strong> {{ expedition.destinataire_nom }} ({{ expedition.destinataire_telephone }})</div>
+                <div><strong>Frais de route :</strong> {{ expedition.frais_transport|floatformat:0 }} FCFA</div>
+            </div>
+        </div>
+
+        <!-- Consignes du PDG -->
+        {% if expedition.consignes_generales %}
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900">
+            <strong>Consignes générales de distribution :</strong> {{ expedition.consignes_generales }}
+        </div>
+        {% endif %}
+
+        <!-- Tableau des Marchandises -->
+        <div>
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b-2 border-slate-300 text-slate-600 text-[11px]">
+                        <th class="py-2">Article / Produit</th>
+                        <th class="py-2 text-center">Quantité & Unité</th>
+                        <th class="py-2 text-right">P.U Référence</th>
+                        <th class="py-2 text-right">Valeur Marchande</th>
+                        <th class="py-2 pl-3">Consigne Spécifique de Répartition</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 text-[11px]">
+                    {% for l in lignes %}
+                    <tr>
+                        <td class="py-2.5 font-bold text-slate-900">{{ l.produit.designation }}</td>
+                        <td class="py-2.5 text-center font-bold text-blue-900">{{ l.quantite }} {{ l.unite }}(s)</td>
+                        <td class="py-2.5 text-right font-mono">{{ l.valeur_unitaire|floatformat:0 }}</td>
+                        <td class="py-2.5 text-right font-mono font-bold">{{ l.sous_total|floatformat:0 }} FCFA</td>
+                        <td class="py-2.5 pl-3 text-slate-600 italic">
+                            {{ l.consigne_specifique|default:"Attribution van standard" }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="border-t-2 border-slate-900 text-xs font-black">
+                        <td class="py-3">TOTAL GÉNÉRAL :</td>
+                        <td class="py-3 text-center text-blue-900">{{ expedition.nombre_articles_total }} articles</td>
+                        <td></td>
+                        <td class="py-3 text-right text-slate-900 font-mono text-sm">{{ expedition.valeur_totale_marchandise|floatformat:0 }} FCFA</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Cadre des Signatures & Décharges -->
+        <div class="pt-6 border-t border-dashed border-slate-300 grid grid-cols-3 gap-4 text-center text-[10px] text-slate-600">
+            <div class="border rounded-xl p-3 h-28 flex flex-col justify-between">
+                <span class="font-bold">Visa Expéditeur (PDG)</span>
+                <span class="text-[9px] text-slate-400">Signature & Cachet</span>
+            </div>
+            <div class="border rounded-xl p-3 h-28 flex flex-col justify-between">
+                <span class="font-bold">Prise en charge Transporteur</span>
+                <span class="text-[9px] text-slate-400">Signature Chauffeur / Société</span>
+            </div>
+            <div class="border rounded-xl p-3 h-28 flex flex-col justify-between">
+                <span class="font-bold">Décharge Réception (Livreur Hub)</span>
+                <span class="text-[9px] text-slate-400">Date, Heure & Émargement</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

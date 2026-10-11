@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Paramètres & Passerelles de Paiement • {{ tenant.nom|default:"Agro-Distrib" }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- En-tête -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+        <div>
+            <div class="flex items-center space-x-2 text-xs font-bold text-emerald-700 uppercase tracking-wider mb-1">
+                <span>⚙️</span>
+                <span>Configuration de l'Entreprise</span>
+            </div>
+            <h1 class="text-2xl font-black text-slate-800 tracking-tight">Paramètres & Passerelles de Paiement</h1>
+            <p class="text-xs text-slate-400 mt-0.5">Configurez vos coordonnées d'entreprise, votre lien CinetPay et vos numéros Mobile Money (Orange Money, Moov Money).</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                🏢 Tenant : {{ tenant.nom }}
+            </span>
+        </div>
+    </div>
+
+    <form method="POST" action="{% url 'parametres' %}" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Bloc 1 : Coordonnées de l'Entreprise -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+            <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div class="w-10 h-10 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-lg">
+                    🏢
+                </div>
+                <div>
+                    <h2 class="text-base font-black text-slate-800">Informations Générales</h2>
+                    <p class="text-xs text-slate-400">Ces informations apparaissent sur les bordereaux et les reçus de vente remis aux clients.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Nom de l'Entreprise / Marque *</label>
+                    <input type="text" name="nom" value="{{ tenant.nom }}" required
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Ville du Siège / Dépôt Principal *</label>
+                    <input type="text" name="ville" value="{{ tenant.ville }}" required
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Adresse physique / Quartier</label>
+                    <input type="text" name="adresse" value="{{ tenant.adresse }}" placeholder="Ex: Bobo-Dioulasso, Zone Industrielle"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Téléphone de Contact Principal</label>
+                    <input type="text" name="contact_telephone" value="{{ tenant.contact_telephone }}" placeholder="Ex: +226 70 00 00 00"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Adresse Email Professionnelle</label>
+                    <input type="email" name="contact_email" value="{{ tenant.contact_email }}" placeholder="contact@entreprise.com"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+            </div>
+        </div>
+
+        <!-- Bloc 2 : Intégration CinetPay & Mobile Money -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+            <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg">
+                    💳
+                </div>
+                <div>
+                    <h2 class="text-base font-black text-slate-800">Passerelles de Paiement Digital (CinetPay & Mobile Money)</h2>
+                    <p class="text-xs text-slate-400">Permet à vos boutiques et clients de vous régler instantanément en ligne ou par QR code.</p>
+                </div>
+            </div>
+
+            <!-- Explication Didactique -->
+            <div class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 text-xs text-amber-900 space-y-2">
+                <div class="font-bold flex items-center gap-1.5 text-amber-800">
+                    <span>💡</span>
+                    <span>Comment fonctionne le paiement CinetPay dans le logiciel ?</span>
+                </div>
+                <p>
+                    Si vous possédez un compte marchand sur <strong>CinetPay</strong>, vous pouvez générer un <em>guichet / lien de paiement</em> direct (ou intégrer votre lien CinetPay Checkout). 
+                    Une fois ce lien renseigné ci-dessous :
+                </p>
+                <ul class="list-disc list-inside space-y-1 pl-2 text-[11px] text-amber-800">
+                    <li>Un bouton <strong>« Payer en ligne (CinetPay / Mobile Money) »</strong> s'affiche automatiquement sur l'application du livreur lors de la finalisation d'une vente.</li>
+                    <li>Un bouton de règlement direct est accessible dans l'<strong>Espace Boutique</strong> pour permettre aux gérants de solder leurs créances à distance.</li>
+                    <li>Le lien de paiement et vos numéros de caisse (Orange Money / Moov Money) sont automatiquement imprimés sur les reçus remis au client.</li>
+                </ul>
+            </div>
+
+            <div class="space-y-4 pt-2">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-bold text-[10px]">CinetPay</span>
+                        <span>Lien de Paiement CinetPay (URL Guichet / Checkout)</span>
+                    </label>
+                    <input type="url" name="lien_paiement_cinetpay" value="{{ tenant.lien_paiement_cinetpay|default:'' }}"
+                           placeholder="Ex: https://checkout.cinetpay.com/payment/votre-boutique"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-mono text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <p class="text-[11px] text-slate-400 mt-1">Collez ici l'URL de votre guichet CinetPay. Les clients pourront payer par carte bancaire ou Mobile Money.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded bg-orange-100 text-orange-700 font-bold text-[10px]">Orange Money</span>
+                            <span>Numéro Orange Money Entreprise / Marchand</span>
+                        </label>
+                        <input type="text" name="numero_orange_money" value="{{ tenant.numero_orange_money|default:'' }}"
+                               placeholder="Ex: +226 76 XX XX XX"
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-mono text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        <p class="text-[11px] text-slate-400 mt-1">Affiché sur les reçus pour les transferts directs.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-bold text-[10px]">Moov Money</span>
+                            <span>Numéro Moov Money Entreprise / Marchand</span>
+                        </label>
+                        <input type="text" name="numero_moov_money" value="{{ tenant.numero_moov_money|default:'' }}"
+                               placeholder="Ex: +226 70 XX XX XX"
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-mono text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        <p class="text-[11px] text-slate-400 mt-1">Affiché sur les reçus pour les transferts directs.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bouton de Sauvegarde -->
+        <div class="flex justify-end gap-3 pt-2">
+            <a href="{% url 'dashboard' %}" class="px-6 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+                Annuler
+            </a>
+            <button type="submit" class="px-8 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-600/20 transition flex items-center gap-2">
+                <span>💾</span>
+                <span>Enregistrer les Paramètres</span>
+            </button>
+        </div>
+    </form>
+
+</div>
+{% endblock %}
