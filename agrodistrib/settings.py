@@ -10,7 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
+from urllib.parse import urlparse, parse_qs
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,10 +22,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-n#v4m)mspbq47=1nsj4csl-tlo!!231m0==!vxt8+5(124kaxr'
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-n#v4m)mspbq47=1nsj4csl-tlo!!231m0==!vxt8+5(124kaxr'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() not in ('false', '0', 'no')
 
 ALLOWED_HOSTS = ['*']
 
@@ -75,6 +80,7 @@ MIDDLEWARE = [
 try:
     import whitenoise
     MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    WHITENOISE_USE_FINDERS = True
 except ImportError:
     pass
 
@@ -101,6 +107,7 @@ WSGI_APPLICATION = 'agrodistrib.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+# Persistance PostgreSQL via DATABASE_URL (Render / Production) avec fallback SQLite local
 
 DATABASES = {
     'default': {
@@ -108,6 +115,42 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
+if DATABASE_URL:
+    try:
+        import dj_database_url
+        DATABASES['default'] = dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    except ImportError:
+        # Fallback natif sans dépendance externe si dj-database-url n'est pas installé
+        parsed_db = urlparse(DATABASE_URL)
+        scheme = parsed_db.scheme.lower()
+        if scheme in ('postgres', 'postgresql', 'pgsql'):
+            query_params = parse_qs(parsed_db.query)
+            db_options = {}
+            if 'sslmode' in query_params:
+                db_options['sslmode'] = query_params['sslmode'][0]
+            DATABASES['default'] = {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': parsed_db.path.lstrip('/'),
+                'USER': parsed_db.username or '',
+                'PASSWORD': parsed_db.password or '',
+                'HOST': parsed_db.hostname or 'localhost',
+                'PORT': str(parsed_db.port or 5432),
+                'CONN_MAX_AGE': 600,
+                'CONN_HEALTH_CHECKS': True,
+                'OPTIONS': db_options,
+            }
+        elif scheme == 'sqlite':
+            sqlite_path = parsed_db.path.lstrip('/') or 'db.sqlite3'
+            DATABASES['default'] = {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / sqlite_path,
+            }
 
 
 # Password validation

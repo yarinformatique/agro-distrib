@@ -2,6 +2,12 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # Anti-mise en veille & Healthcheck ultra-léger (0 requête SQL)
+    path('healthz', views.healthz_view, name='healthz_no_slash'),
+    path('healthz/', views.healthz_view, name='healthz'),
+    path('ping', views.healthz_view, name='ping_no_slash'),
+    path('ping/', views.healthz_view, name='ping'),
+
     # Auth & redirection
     path('', views.home_redirect_view, name='home'),
     path('login/', views.login_view, name='login'),

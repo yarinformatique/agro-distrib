@@ -1,0 +1,18 @@
+name: Keep Render Awake (Anti Spin-Down)
+
+on:
+  schedule:
+    # Exécute un ping léger toutes les 10 minutes 24h/24 et 7j/7
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping-render:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render /healthz endpoint
+        env:
+          RENDER_APP_URL: ${{ vars.RENDER_APP_URL || 'https://agrodistrib.onrender.com' }}
+        run: |
+          echo "Pinging ${RENDER_APP_URL}/healthz ..."
+          curl -fsSL --max-time 15 "${RENDER_APP_URL}/healthz" || echo "Ping sent (service waking up or URL custom)"

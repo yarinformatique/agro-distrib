@@ -19,6 +19,10 @@ class TenantSecurityMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        # Court-circuit immédiat (0 requête DB) pour les sondes anti-veille
+        if request.path in ('/healthz', '/healthz/', '/ping', '/ping/'):
+            return self.get_response(request)
+
         request.tenant = None
         request.is_superadmin = False
         request.user_role = None

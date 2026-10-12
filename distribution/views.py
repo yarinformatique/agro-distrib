@@ -49,6 +49,18 @@ def get_local_ip():
 
 
 # ==============================================================================
+# HEALTHCHECK & ANTI-MISE EN VEILLE (KEEP-ALIVE RENDER)
+# ==============================================================================
+
+def healthz_view(request):
+    """
+    Route ultra-légère (/healthz et /ping) qui répond immédiatement HTTP 200
+    sans solliciter la base de données, pour empêcher le spin-down Render.
+    """
+    return HttpResponse("OK", content_type="text/plain", status=200)
+
+
+# ==============================================================================
 # AUTHENTIFICATION & ROUTAGE MULTI-TENANT
 # ==============================================================================
 

@@ -13,13 +13,21 @@ from distribution.models import (
 class Command(BaseCommand):
     help = "Peuple la base de données avec architecture Multi-Tenant : Superadmin, Promotrice Démo, Livreur Démo, Entreprise Suspendue"
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--force',
+            action='store_true',
+            help='Force la réinitialisation des mots de passe et des stocks de démonstration',
+        )
+
     def handle(self, *args, **options):
-        self.stdout.write("Initialisation de l'architecture Multi-Tenant SaaS Agro-Distrib...")
+        force = options.get('force', False)
+        self.stdout.write("Vérification / Initialisation de l'architecture Multi-Tenant SaaS Agro-Distrib...")
 
         # ======================================================================
         # 1. SUPERADMIN GLOBAL DE LA PLATEFORME (superadmin / admin123)
         # ======================================================================
-        superadmin_user, _ = User.objects.get_or_create(
+        superadmin_user, created = User.objects.get_or_create(
             username="superadmin",
             defaults={
                 "email": "superadmin@agrodistrib.com",
@@ -29,12 +37,13 @@ class Command(BaseCommand):
                 "is_superuser": True
             }
         )
-        superadmin_user.set_password("admin123")
-        superadmin_user.is_staff = True
-        superadmin_user.is_superuser = True
-        superadmin_user.save()
+        if created or force or not superadmin_user.has_usable_password():
+            superadmin_user.set_password("admin123")
+            superadmin_user.is_staff = True
+            superadmin_user.is_superuser = True
+            superadmin_user.save()
 
-        ProfilUtilisateur.objects.update_or_create(
+        ProfilUtilisateur.objects.get_or_create(
             user=superadmin_user,
             defaults={
                 "role": "SUPERADMIN",
@@ -42,12 +51,12 @@ class Command(BaseCommand):
                 "adresse": "Siège SaaS Central"
             }
         )
-        self.stdout.write(self.style.SUCCESS("[OK] Superadmin créé : superadmin / admin123"))
+        self.stdout.write(self.style.SUCCESS("[OK] Superadmin vérifié : superadmin"))
 
         # ======================================================================
         # 2. TENANT ACTIF : AGRO-DISTRIB FASO
         # ======================================================================
-        tenant_actif, _ = Entreprise.objects.get_or_create(
+        tenant_actif, tenant_created = Entreprise.objects.get_or_create(
             slug="agro-distrib-faso",
             defaults={
                 "nom": "Agro-Distrib Faso",
@@ -61,9 +70,10 @@ class Command(BaseCommand):
                 "actif": True
             }
         )
-        tenant_actif.statut_abonnement = 'actif'
-        tenant_actif.actif = True
-        tenant_actif.save()
+        if tenant_created or force:
+            tenant_actif.statut_abonnement = 'actif'
+            tenant_actif.actif = True
+            tenant_actif.save()
 
         # Société de livraison liée
         societe_livraison, _ = SocieteLivraison.objects.get_or_create(
@@ -78,7 +88,7 @@ class Command(BaseCommand):
         )
 
         # Compte Promotrice Démo (demo / 123)
-        promotrice_user, _ = User.objects.get_or_create(
+        promotrice_user, created = User.objects.get_or_create(
             username="demo",
             defaults={
                 "email": "demo@agrodistrib.bf",
@@ -88,11 +98,12 @@ class Command(BaseCommand):
                 "is_superuser": False
             }
         )
-        promotrice_user.set_password("123")
-        promotrice_user.is_staff = True
-        promotrice_user.save()
+        if created or force or not promotrice_user.has_usable_password():
+            promotrice_user.set_password("123")
+            promotrice_user.is_staff = True
+            promotrice_user.save()
 
-        ProfilUtilisateur.objects.update_or_create(
+        ProfilUtilisateur.objects.get_or_create(
             user=promotrice_user,
             defaults={
                 "entreprise": tenant_actif,
@@ -100,10 +111,10 @@ class Command(BaseCommand):
                 "telephone": "+226 70 12 34 56"
             }
         )
-        self.stdout.write(self.style.SUCCESS("[OK] Promotrice Démo créée : demo / 123 (Entreprise: Agro-Distrib Faso)"))
+        self.stdout.write(self.style.SUCCESS("[OK] Promotrice Démo vérifiée : demo (Entreprise: Agro-Distrib Faso)"))
 
         # Compte Livreur Démo (livreur_demo / 123)
-        livreur_user, _ = User.objects.get_or_create(
+        livreur_user, created = User.objects.get_or_create(
             username="livreur_demo",
             defaults={
                 "email": "livreur@agrodistrib.bf",
@@ -112,10 +123,11 @@ class Command(BaseCommand):
                 "is_staff": False
             }
         )
-        livreur_user.set_password("123")
-        livreur_user.save()
+        if created or force or not livreur_user.has_usable_password():
+            livreur_user.set_password("123")
+            livreur_user.save()
 
-        ProfilUtilisateur.objects.update_or_create(
+        ProfilUtilisateur.objects.get_or_create(
             user=livreur_user,
             defaults={
                 "entreprise": tenant_actif,
@@ -124,10 +136,10 @@ class Command(BaseCommand):
                 "telephone": "+226 76 99 88 77"
             }
         )
-        self.stdout.write(self.style.SUCCESS("[OK] Livreur Démo créé : livreur_demo / 123 (Entreprise: Agro-Distrib Faso)"))
+        self.stdout.write(self.style.SUCCESS("[OK] Livreur Démo vérifié : livreur_demo (Entreprise: Agro-Distrib Faso)"))
 
         # Boutique Wend-Kuni avec compte utilisateur
-        boutique_user, _ = User.objects.get_or_create(
+        boutique_user, created = User.objects.get_or_create(
             username="boutique_wendkuni",
             defaults={
                 "email": "wendkuni@boutique.bf",
@@ -136,10 +148,11 @@ class Command(BaseCommand):
                 "is_staff": False
             }
         )
-        boutique_user.set_password("123")
-        boutique_user.save()
+        if created or force or not boutique_user.has_usable_password():
+            boutique_user.set_password("123")
+            boutique_user.save()
 
-        ProfilUtilisateur.objects.update_or_create(
+        ProfilUtilisateur.objects.get_or_create(
             user=boutique_user,
             defaults={
                 "entreprise": tenant_actif,
@@ -148,7 +161,7 @@ class Command(BaseCommand):
             }
         )
 
-        # Produits bien approvisionnés pour Agro-Distrib Faso (au moins 3 bien distincts)
+        # Produits initiaux pour Agro-Distrib Faso (sans écraser les stocks existants en production)
         produits_data = [
             ("Mangues séchées Bio du Burkina (100g)", "sachet", 1000, 200),
             ("Miel pur de savane du Gourma (500g)", "pot", 2500, 120),
@@ -159,18 +172,29 @@ class Command(BaseCommand):
 
         produits_obj = {}
         for des, uni, px, stk in produits_data:
-            p, _ = Produit.objects.update_or_create(
-                entreprise=tenant_actif,
-                designation=des,
-                defaults={
-                    "unite": uni,
-                    "prix_unitaire_defaut": Decimal(px),
-                    "stock_entrepot": stk
-                }
-            )
+            if force:
+                p, _ = Produit.objects.update_or_create(
+                    entreprise=tenant_actif,
+                    designation=des,
+                    defaults={
+                        "unite": uni,
+                        "prix_unitaire_defaut": Decimal(px),
+                        "stock_entrepot": stk
+                    }
+                )
+            else:
+                p, _ = Produit.objects.get_or_create(
+                    entreprise=tenant_actif,
+                    designation=des,
+                    defaults={
+                        "unite": uni,
+                        "prix_unitaire_defaut": Decimal(px),
+                        "stock_entrepot": stk
+                    }
+                )
             produits_obj[des] = p
 
-        self.stdout.write(self.style.SUCCESS(f"[OK] {len(produits_obj)} Produits créés pour Agro-Distrib Faso."))
+        self.stdout.write(self.style.SUCCESS(f"[OK] {len(produits_obj)} Produits vérifiés pour Agro-Distrib Faso."))
 
         # Alimentations partenaires pour Agro-Distrib Faso
         alimentations_data = [
@@ -183,7 +207,7 @@ class Command(BaseCommand):
 
         boutiques_obj = []
         for nom, quartier, gerant, tel, lat, lon, panier, consignes, pin, u_acc in alimentations_data:
-            b, _ = Alimentation.objects.update_or_create(
+            b, _ = Alimentation.objects.get_or_create(
                 entreprise=tenant_actif,
                 nom=nom,
                 defaults={
@@ -201,43 +225,44 @@ class Command(BaseCommand):
             )
             boutiques_obj.append(b)
 
-        self.stdout.write(self.style.SUCCESS(f"[OK] {len(boutiques_obj)} Alimentations créées pour Agro-Distrib Faso."))
+        self.stdout.write(self.style.SUCCESS(f"[OK] {len(boutiques_obj)} Alimentations vérifiées pour Agro-Distrib Faso."))
 
-        # Tournée active du jour avec dotation pour TOUS les produits
-        aujourdhui = timezone.localdate()
-        tournee, _ = Tournee.objects.get_or_create(
-            entreprise=tenant_actif,
-            livreur=livreur_user,
-            date_tournee=aujourdhui,
-            defaults={
-                "statut": "EN_COURS",
-                "caisse_theorique": Decimal(0),
-                "caisse_declaree": Decimal(0)
-            }
-        )
-
-        for p_nom, p_obj in produits_obj.items():
-            LigneDotationStock.objects.update_or_create(
-                tournee=tournee,
-                produit=p_obj,
+        # Tournée initiale de démonstration (uniquement si aucune tournée n'existe encore ou si --force)
+        if force or not Tournee.objects.filter(entreprise=tenant_actif).exists():
+            aujourdhui = timezone.localdate()
+            tournee, _ = Tournee.objects.get_or_create(
+                entreprise=tenant_actif,
+                livreur=livreur_user,
+                date_tournee=aujourdhui,
                 defaults={
-                    "quantite_depart": 20,
-                    "quantite_retour": 0
+                    "statut": "EN_COURS",
+                    "caisse_theorique": Decimal(0),
+                    "caisse_declaree": Decimal(0)
                 }
             )
 
-        # Ordre de mission pour la tournée
-        OrdreMission.objects.get_or_create(
-            entreprise=tenant_actif,
-            tournee=tournee,
-            alimentation=boutiques_obj[0],
-            defaults={
-                "produits_consignes": "10 sachets mangue 100g, 5 pots miel savane",
-                "montant_cible": Decimal("22500"),
-                "consigne_particuliere": "Remettre le reçu avec signature du gérant",
-                "statut": "A_FAIRE"
-            }
-        )
+            for p_nom, p_obj in produits_obj.items():
+                LigneDotationStock.objects.get_or_create(
+                    tournee=tournee,
+                    produit=p_obj,
+                    defaults={
+                        "quantite_depart": 20,
+                        "quantite_retour": 0
+                    }
+                )
+
+            # Ordre de mission pour la tournée
+            OrdreMission.objects.get_or_create(
+                entreprise=tenant_actif,
+                tournee=tournee,
+                alimentation=boutiques_obj[0],
+                defaults={
+                    "produits_consignes": "10 sachets mangue 100g, 5 pots miel savane",
+                    "montant_cible": Decimal("22500"),
+                    "consigne_particuliere": "Remettre le reçu avec signature du gérant",
+                    "statut": "A_FAIRE"
+                }
+            )
 
         # Expédition Inter-Villes (Bobo -> Ouaga)
         expedition, _ = Expedition.objects.get_or_create(

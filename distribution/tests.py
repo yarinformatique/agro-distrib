@@ -558,5 +558,14 @@ class MultiTenantAgroDistribTestCase(TestCase):
         self.assertEqual(dotation.quantite_depart, 25)
         self.assertEqual(dotation.stock_restant_theorique, 25)
 
+    def test_healthz_and_ping_zero_db_queries(self):
+        """Les routes anti-mise en veille /healthz et /ping doivent répondre HTTP 200 immédiatement avec 0 requête SQL."""
+        for route in ['/healthz', '/healthz/', '/ping', '/ping/']:
+            with self.assertNumQueries(0):
+                res = self.client.get(route)
+                self.assertEqual(res.status_code, 200)
+                self.assertEqual(res.content.decode(), "OK")
+
+
 
 
