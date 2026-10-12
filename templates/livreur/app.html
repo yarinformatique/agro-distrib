@@ -69,12 +69,12 @@
             </span>
             <div>
                 <span class="font-bold text-slate-800" x-text="gpsStatusText">Localisation active</span>
-                <span class="block text-[10px] text-slate-400 font-mono" x-show="userLat" x-text="'GPS: ' + userLat.toFixed(4) + ', ' + userLon.toFixed(4)"></span>
+                <span class="block text-[10px] text-emerald-800 font-mono font-medium" x-show="userLat" x-text="'GPS: ' + userLat.toFixed(6) + ', ' + userLon.toFixed(6) + (gpsAccuracy ? ' (±' + gpsAccuracy + 'm)' : '')"></span>
             </div>
         </div>
         <button @click="activerGPS(true)"
-                class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-[11px] transition">
-            🔄 Réactualiser
+                class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg font-bold text-[11px] transition shadow-sm">
+            🎯 Réactualiser GPS
         </button>
     </div>
 
@@ -674,15 +674,38 @@ function livreurApp() {
             }
             this.gpsLoading = true;
 
-            // Détection automatique continue sans intervention utilisateur
-            navigator.geolocation.watchPosition(
+            if (this.gpsWatchId) {
+                navigator.geolocation.clearWatch(this.gpsWatchId);
+            }
+
+            // Détection continue haute précision avec satellite en temps réel
+            this.gpsWatchId = navigator.geolocation.watchPosition(
                 (pos) => {
                     this.userLat = pos.coords.latitude;
                     this.userLon = pos.coords.longitude;
+                    this.gpsAccuracy = Math.round(pos.coords.accuracy);
                     this.gpsActive = true;
                     this.gpsLoading = false;
-                    this.gpsStatusText = 'Signal GPS En direct (±' + Math.round(pos.coords.accuracy) + 'm)';
+
+                    if (this.gpsAccuracy <= 10) {
+                        this.gpsStatusText = '🎯 GPS Haute Précision (±' + this.gpsAccuracy + 'm)';
+                    } else if (this.gpsAccuracy <= 25) {
+                        this.gpsStatusText = '🛰️ Signal Satellite Bon (±' + this.gpsAccuracy + 'm)';
+                    } else {
+                        this.gpsStatusText = '📡 Recherche Signal Satellite (±' + this.gpsAccuracy + 'm)...';
+                    }
+
                     this.trierBoutiquesParProximite();
+
+                    // Mettre à jour la carte en direct si ouverte
+                    if (this.leafMap && this.livreurMarker) {
+                        const newPos = [this.userLat, this.userLon];
+                        this.livreurMarker.setLatLng(newPos);
+                        if (this.accuracyCircle) {
+                            this.accuracyCircle.setLatLng(newPos);
+                            this.accuracyCircle.setRadius(this.gpsAccuracy);
+                        }
+                    }
                 },
                 (err) => {
                     this.gpsLoading = false;
@@ -690,7 +713,7 @@ function livreurApp() {
                     this.gpsStatusText = 'GPS Ouagadougou';
                     this.trierBoutiquesParProximite();
                 },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
+                { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
             );
         },
 
@@ -736,15 +759,26 @@ function livreurApp() {
                 this.leafMap.remove();
             }
 
-            this.leafMap = L.map('live-map').setView([this.userLat, this.userLon], 14);
+            this.leafMap = L.map('live-map').setView([this.userLat, this.userLon], 15);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap'
             }).addTo(this.leafMap);
 
+            // Cercle de précision satellite
+            if (this.gpsAccuracy) {
+                this.accuracyCircle = L.circle([this.userLat, this.userLon], {
+                    radius: this.gpsAccuracy,
+                    color: '#059669',
+                    fillColor: '#10b981',
+                    fillOpacity: 0.15,
+                    weight: 1.5
+                }).addTo(this.leafMap);
+            }
+
             // Marqueur Livreur (Position de départ)
-            const livreurMarker = L.marker([this.userLat, this.userLon]).addTo(this.leafMap)
-                .bindPopup('<b>Votre position (Livreur)</b>').openPopup();
+            this.livreurMarker = L.marker([this.userLat, this.userLon]).addTo(this.leafMap)
+                .bindPopup('<b>Votre position (Livreur)</b><br>Précision : ±' + (this.gpsAccuracy || 10) + 'm').openPopup();
 
             // Marqueur Boutique Destinataire
             const destMarker = L.marker([boutique.latitude, boutique.longitude]).addTo(this.leafMap)
@@ -757,7 +791,7 @@ function livreurApp() {
             ], { color: '#059669', weight: 4, dashArray: '6, 8' }).addTo(this.leafMap);
 
             // Ajuster la vue pour voir les 2 points
-            this.leafMap.fitBounds(polyline.getBounds(), { padding: [30, 30] });
+            this.leafMap.fitBounds(polyline.getBounds(), { padding: [35, 35] });
         },
 
         fermerNavigation() {

@@ -234,36 +234,93 @@ function prospectionTerrainApp() {
             });
         },
 
-        updateMapMarker(lat, lon) {
+        updateMapMarker(lat, lon, acc = null) {
             if (this.marker && this.map) {
                 const newPos = [lat, lon];
                 this.marker.setLatLng(newPos);
-                this.map.setView(newPos, 16);
+                this.map.setView(newPos, 17);
+
+                if (acc) {
+                    if (this.accuracyCircle) {
+                        this.accuracyCircle.setLatLng(newPos);
+                        this.accuracyCircle.setRadius(acc);
+                    } else {
+                        this.accuracyCircle = L.circle(newPos, {
+                            radius: acc,
+                            color: '#059669',
+                            fillColor: '#10b981',
+                            fillOpacity: 0.15,
+                            weight: 1.5
+                        }).addTo(this.map);
+                    }
+                }
             }
         },
 
         capturerGps() {
             if (!navigator.geolocation) {
-                this.gpsStatus = 'GPS non supporté';
+                this.gpsStatus = 'GPS non supporté par ce navigateur';
                 return;
             }
             this.gpsLoading = true;
-            this.gpsStatus = 'Recherche satellite...';
+            this.gpsStatus = '🛰️ Connexion aux satellites GPS en cours...';
 
-            navigator.geolocation.getCurrentPosition(
+            if (this.gpsWatchId) {
+                navigator.geolocation.clearWatch(this.gpsWatchId);
+            }
+
+            let bestAccuracy = 999999;
+            let samples = 0;
+
+            this.gpsWatchId = navigator.geolocation.watchPosition(
                 (pos) => {
-                    this.lat = pos.coords.latitude.toFixed(6);
-                    this.lon = pos.coords.longitude.toFixed(6);
-                    this.gpsLoading = false;
-                    this.gpsStatus = 'Position GPS Verrouillée (±' + Math.round(pos.coords.accuracy) + 'm)';
-                    this.updateMapMarker(pos.coords.latitude, pos.coords.longitude);
+                    samples++;
+                    const acc = Math.round(pos.coords.accuracy);
+                    const latVal = pos.coords.latitude;
+                    const lonVal = pos.coords.longitude;
+
+                    if (acc <= bestAccuracy) {
+                        bestAccuracy = acc;
+                        this.lat = latVal.toFixed(6);
+                        this.lon = lonVal.toFixed(6);
+                        this.updateMapMarker(latVal, lonVal, acc);
+                    }
+
+                    if (acc <= 10) {
+                        this.gpsStatus = '🎯 GPS Haute Précision Verrouillé (±' + acc + 'm)';
+                        this.gpsLoading = false;
+                    } else if (acc <= 25) {
+                        this.gpsStatus = '🛰️ Précision Satellite Excellente (±' + acc + 'm)';
+                        this.gpsLoading = false;
+                    } else {
+                        this.gpsStatus = '📡 Affinement Signal Satellite (±' + acc + 'm)...';
+                    }
+
+                    if (samples >= 5 && acc <= 15) {
+                        this.gpsLoading = false;
+                        navigator.geolocation.clearWatch(this.gpsWatchId);
+                        this.gpsWatchId = null;
+                    }
                 },
                 (err) => {
                     this.gpsLoading = false;
-                    this.gpsStatus = 'GPS indisponible (mode manuel)';
+                    if (bestAccuracy < 999999) {
+                        this.gpsStatus = 'GPS fixé à ±' + bestAccuracy + 'm';
+                    } else {
+                        this.gpsStatus = 'GPS indisponible (Ajustez sur la carte)';
+                    }
                 },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
             );
+
+            setTimeout(() => {
+                if (this.gpsLoading) {
+                    this.gpsLoading = false;
+                    if (bestAccuracy < 999999) {
+                        this.gpsStatus = 'GPS Verrouillé (±' + bestAccuracy + 'm)';
+                    }
+                }
+            }, 8000);
         },
 
         parsePastedLocation() {

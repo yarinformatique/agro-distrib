@@ -811,9 +811,60 @@ def tournee_detail_view(request, pk):
         elif action == 'ajouter_mission':
             alim_id = request.POST.get('alimentation_id')
             alim = get_object_or_404(Alimentation, id=alim_id)
-            produits_consignes = request.POST.get('produits_consignes')
-            montant_cible = Decimal(request.POST.get('montant_cible', '0'))
-            consigne_particuliere = request.POST.get('consigne_particuliere', '')
+            consigne_particuliere = request.POST.get('consigne_particuliere', '').strip()
+
+            dotations_map = {str(d.produit.id): d for d in tournee.dotations.select_related('produit').all()}
+            articles_list = []
+            montant_calcule = Decimal('0')
+            contradiction_erreur = None
+
+            # Règle anti-contradiction : vérifier que la demande ne dépasse pas le stock réel du camion
+            for key, val in request.POST.items():
+                if key.startswith('mission_qte_'):
+                    prod_id = key.replace('mission_qte_', '')
+                    try:
+                        qte_demandee = int(val)
+                    except ValueError:
+                        qte_demandee = 0
+
+                    if qte_demandee > 0:
+                        d = dotations_map.get(prod_id)
+                        if not d:
+                            prod = Produit.objects.filter(id=prod_id).first()
+                            nom_p = prod.designation if prod else prod_id
+                            contradiction_erreur = f"Contradiction : L'article « {nom_p} » n'est pas embarqué dans le véhicule de ce livreur."
+                            break
+
+                        dispo_camion = d.stock_restant_theorique
+                        if qte_demandee > dispo_camion:
+                            contradiction_erreur = (
+                                f"Contradiction impossible : Le livreur ne dispose que de {dispo_camion} {d.produit.unite} "
+                                f"de « {d.produit.designation} » dans son véhicule (vous avez demandé {qte_demandee}). "
+                                f"Veuillez corriger la quantité ou réapprovisionner sa dotation."
+                            )
+                            break
+
+                        sous_total = Decimal(qte_demandee) * d.produit.prix_unitaire_defaut
+                        montant_calcule += sous_total
+                        articles_list.append(f"{qte_demandee}x {d.produit.designation}")
+
+            if contradiction_erreur:
+                messages.error(request, contradiction_erreur)
+                return redirect('tournee_detail', pk=tournee.id)
+
+            if articles_list:
+                produits_consignes = ", ".join(articles_list)
+            else:
+                produits_consignes = request.POST.get('produits_consignes', '').strip()
+                if not produits_consignes:
+                    messages.error(request, "Veuillez spécifier au moins un produit à livrer avec une quantité valide.")
+                    return redirect('tournee_detail', pk=tournee.id)
+
+            montant_cible_raw = request.POST.get('montant_cible', '').strip()
+            try:
+                montant_cible = Decimal(montant_cible_raw) if montant_cible_raw else montant_calcule
+            except Exception:
+                montant_cible = montant_calcule
 
             OrdreMission.objects.create(
                 entreprise=tournee.entreprise,
@@ -824,7 +875,39 @@ def tournee_detail_view(request, pk):
                 consigne_particuliere=consigne_particuliere,
                 statut='A_FAIRE'
             )
-            messages.success(request, f"Consigne de mission ajoutée pour l'alimentation {alim.nom} !")
+            messages.success(request, f"Consigne assignée avec succès pour {alim.nom} sans contradiction de stock !")
+            return redirect('tournee_detail', pk=tournee.id)
+
+        elif action == 'reapprovisionner':
+            produit_id = request.POST.get('produit_id')
+            produit = get_object_or_404(Produit, id=produit_id)
+            try:
+                qte_ajout = int(request.POST.get('quantite_ajout', '0'))
+            except ValueError:
+                qte_ajout = 0
+
+            if qte_ajout <= 0:
+                messages.error(request, "Veuillez entrer une quantité positive à allouer.")
+                return redirect('tournee_detail', pk=tournee.id)
+
+            if produit.stock_entrepot < qte_ajout:
+                messages.error(request, f"Stock entrepôt insuffisant : seulement {produit.stock_entrepot} {produit.unite} disponibles en réserve.")
+                return redirect('tournee_detail', pk=tournee.id)
+
+            with transaction.atomic():
+                produit.stock_entrepot -= qte_ajout
+                produit.save()
+
+                dotation, created = LigneDotationStock.objects.get_or_create(
+                    tournee=tournee,
+                    produit=produit,
+                    defaults={'quantite_depart': qte_ajout, 'quantite_retour': 0}
+                )
+                if not created:
+                    dotation.quantite_depart += qte_ajout
+                    dotation.save()
+
+            messages.success(request, f"Réapprovisionnement effectué : +{qte_ajout} {produit.designation} ajoutés au véhicule de {tournee.livreur.username}.")
             return redirect('tournee_detail', pk=tournee.id)
 
     tournee.recalculer_caisse_theorique()
@@ -836,12 +919,17 @@ def tournee_detail_view(request, pk):
     if tenant:
         alim_qs = alim_qs.filter(entreprise=tenant)
 
+    produits_entrepot = Produit.objects.all()
+    if tenant:
+        produits_entrepot = produits_entrepot.filter(entreprise=tenant)
+
     return render(request, 'dashboard/tournee_detail.html', {
         'tournee': tournee,
         'dotations': dotations,
         'ventes': ventes,
         'missions': missions,
         'alimentations': alim_qs,
+        'produits_entrepot': produits_entrepot,
     })
 
 

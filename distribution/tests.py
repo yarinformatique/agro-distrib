@@ -485,4 +485,78 @@ class MultiTenantAgroDistribTestCase(TestCase):
         # Redirigé vers la page de connexion boutique avec message d'erreur
         self.assertNotIn('boutique_id', self.client.session)
 
+    def test_anti_contradiction_mission_consignes(self):
+        """La promotrice ne peut pas assigner une consigne demandant plus de stock que ce dont le livreur dispose."""
+        self.client.login(username="demo", password="123")
+        tournee = Tournee.objects.create(
+            entreprise=self.tenant_a,
+            livreur=self.livreur_a,
+            statut='EN_COURS'
+        )
+        # Dotation : 10 pots de miel
+        LigneDotationStock.objects.create(
+            tournee=tournee,
+            produit=self.p_miel,
+            quantite_depart=10,
+            quantite_retour=0
+        )
+
+        # 1. Tentative d'assigner une consigne exigeant 20 pots (alors qu'il n'en a que 10) -> Rejeté
+        res_refus = self.client.post(f"/tournees/{tournee.id}/", {
+            "action": "ajouter_mission",
+            "alimentation_id": str(self.alim_koulouba.id),
+            f"mission_qte_{self.p_miel.id}": "20",
+            "consigne_particuliere": "Paiement cash"
+        }, follow=True)
+        self.assertEqual(res_refus.status_code, 200)
+        self.assertEqual(OrdreMission.objects.filter(tournee=tournee).count(), 0)
+        # Vérification message d'erreur
+        messages = list(res_refus.context['messages'])
+        self.assertTrue(any("Contradiction" in str(m) for m in messages))
+
+        # 2. Consigne exigeant 5 pots (conforme au stock disponible de 10) -> Validé
+        res_ok = self.client.post(f"/tournees/{tournee.id}/", {
+            "action": "ajouter_mission",
+            "alimentation_id": str(self.alim_koulouba.id),
+            f"mission_qte_{self.p_miel.id}": "5",
+            "consigne_particuliere": "Paiement cash"
+        }, follow=True)
+        self.assertEqual(res_ok.status_code, 200)
+        mission_creee = OrdreMission.objects.filter(tournee=tournee).first()
+        self.assertIsNotNone(mission_creee)
+        self.assertIn("5x Miel pur", mission_creee.produits_consignes)
+        self.assertEqual(mission_creee.montant_cible, Decimal("12500")) # 5 * 2500
+
+    def test_reapprovisionnement_vehicule_en_cours_de_tournee(self):
+        """Le promoteur peut réapprovisionner le véhicule d'un livreur depuis l'entrepôt pour augmenter son stock disponible."""
+        self.client.login(username="demo", password="123")
+        tournee = Tournee.objects.create(
+            entreprise=self.tenant_a,
+            livreur=self.livreur_a,
+            statut='EN_COURS'
+        )
+        dotation = LigneDotationStock.objects.create(
+            tournee=tournee,
+            produit=self.p_miel,
+            quantite_depart=10,
+            quantite_retour=0
+        )
+        stock_entrepot_initial = self.p_miel.stock_entrepot # 50
+
+        # Transfert de 15 pots supplémentaires vers le camion
+        res = self.client.post(f"/tournees/{tournee.id}/", {
+            "action": "reapprovisionner",
+            "produit_id": str(self.p_miel.id),
+            "quantite_ajout": "15"
+        }, follow=True)
+        self.assertEqual(res.status_code, 200)
+
+        self.p_miel.refresh_from_db()
+        dotation.refresh_from_db()
+
+        self.assertEqual(self.p_miel.stock_entrepot, stock_entrepot_initial - 15)
+        self.assertEqual(dotation.quantite_depart, 25)
+        self.assertEqual(dotation.stock_restant_theorique, 25)
+
+
 

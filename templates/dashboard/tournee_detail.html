@@ -3,7 +3,51 @@
 {% block title %}Tournée {{ tournee.livreur.get_full_name|default:tournee.livreur.username }} • Agro-Distrib B2B{% endblock %}
 
 {% block content %}
-<div class="space-y-6" x-data="{ openClotureModal: false, openMissionModal: false }">
+<div class="space-y-6" x-data="{
+    openClotureModal: false,
+    openMissionModal: false,
+    openReapproModal: false,
+    missionQuantities: {},
+    articlesPrices: {
+        {% for d in dotations %}
+        '{{ d.produit.id }}': {{ d.produit.prix_unitaire_defaut|floatformat:0 }},
+        {% endfor %}
+    },
+    articlesDispo: {
+        {% for d in dotations %}
+        '{{ d.produit.id }}': {{ d.stock_restant_theorique }},
+        {% endfor %}
+    },
+    calculatedMontantCible: 0,
+    hasContradiction: false,
+    contradictionMsg: '',
+
+    updateMissionCalcul() {
+        let total = 0;
+        let contradiction = false;
+        let msg = '';
+        let hasAnyItem = false;
+
+        for (let prodId in this.missionQuantities) {
+            let qte = parseInt(this.missionQuantities[prodId]) || 0;
+            let dispo = this.articlesDispo[prodId] !== undefined ? this.articlesDispo[prodId] : 0;
+            let prix = this.articlesPrices[prodId] || 0;
+
+            if (qte > dispo) {
+                contradiction = true;
+                msg = 'Contradiction : Quantité demandée (' + qte + ') dépasse le stock disponible dans le véhicule (' + dispo + ') !';
+            }
+            if (qte > 0) {
+                hasAnyItem = true;
+                total += qte * prix;
+            }
+        }
+
+        this.hasContradiction = contradiction;
+        this.contradictionMsg = msg;
+        this.calculatedMontantCible = total;
+    }
+}">
     <!-- En-tête Tournée -->
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -23,15 +67,19 @@
             <p class="text-xs text-slate-500">Date de la tournée : {{ tournee.date_tournee|date:"l d F Y" }}</p>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 flex-wrap">
             {% if tournee.statut == 'EN_COURS' %}
+            <button @click="openReapproModal = true"
+                    class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 px-3.5 rounded-xl shadow-md text-xs flex items-center gap-1.5 transition">
+                <span>📦</span> + Réapprovisionner Véhicule
+            </button>
             <button @click="openMissionModal = true"
-                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-md text-xs flex items-center gap-1.5">
-                <span>🎯</span> + Assigner une Consigne / Mission
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-3.5 rounded-xl shadow-md text-xs flex items-center gap-1.5 transition">
+                <span>🎯</span> + Assigner Consigne / Mission
             </button>
             <button @click="openClotureModal = true"
-                    class="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-md text-xs flex items-center gap-2">
-                <span>🏁</span> Clôturer la Tournée
+                    class="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-3.5 rounded-xl shadow-md text-xs flex items-center gap-1.5 transition">
+                <span>🏁</span> Clôturer Tournée
             </button>
             {% else %}
             <div class="px-3 py-1.5 bg-emerald-50 text-emerald-800 rounded-xl text-xs font-bold border border-emerald-200">
@@ -278,7 +326,7 @@
                     <div>
                         <label class="block text-xs font-semibold text-blue-900 mb-1">Caisse Déclarée (Espèces physiques reçues)</label>
                         <input type="number" step="100" name="caisse_declaree" value="{{ tournee.caisse_theorique|floatformat:0 }}" required
-                               class="w-full px-3 py-2 border rounded-xl text-sm font-bold text-slate-900 bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                                class="w-full px-3 py-2 border rounded-xl text-sm font-bold text-slate-900 bg-white focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
                 </div>
 
@@ -307,48 +355,159 @@
                 <div class="flex justify-end space-x-2 pt-4 border-t">
                     <button type="button" @click="openClotureModal = false" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Annuler</button>
                     <button type="submit" class="px-5 py-2.5 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg">Confirmer la Clôture Définitive</button>
-    <!-- Modal Ajouter un Ordre de Mission / Consigne -->
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Assigner un Ordre de Mission / Consigne (Indépendant & Anti-Contradiction) -->
     <div x-show="openMissionModal" style="display: none;"
          class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100" @click.away="openMissionModal = false">
-            <h3 class="text-lg font-bold text-slate-900 mb-1">Assigner une Consigne / Mission au Livreur</h3>
-            <p class="text-xs text-slate-500 mb-4">Fixez la boutique cible, les produits exigés, le montant et les consignes de règlement</p>
+        <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 max-h-[92vh] overflow-y-auto" @click.away="openMissionModal = false">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <span>🎯</span> Assigner une Consigne de Mission
+                </h3>
+                <button type="button" @click="openMissionModal = false" class="text-slate-400 hover:text-slate-600 text-sm">✕</button>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">
+                Définissez les objectifs précis de livraison. Les quantités sont strictement limitées au stock réel disponible à bord du véhicule.
+            </p>
 
             <form method="POST" class="space-y-4">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="ajouter_mission">
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Boutique Ciblée</label>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Boutique Ciblée *</label>
                     <select name="alimentation_id" required class="w-full px-3 py-2.5 border rounded-xl text-xs font-bold text-slate-800 bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">-- Sélectionner une boutique --</option>
+                        <option value="">-- Sélectionner l'alimentation cible --</option>
                         {% for a in alimentations %}
-                        <option value="{{ a.id }}">{{ a.nom }} ({{ a.quartier }})</option>
+                        <option value="{{ a.id }}">{{ a.nom }} ({{ a.quartier }}) - Plafond: {{ a.plafond_credit|floatformat:0 }} FCFA</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Sélection Anti-Contradiction des Produits selon Stock Camion -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                            Articles à Déposer (Limité au Stock Camion)
+                        </label>
+                        <span class="text-[10px] text-slate-400">Vérification temps réel</span>
+                    </div>
+
+                    <div class="border rounded-2xl divide-y divide-slate-100 max-h-56 overflow-y-auto bg-slate-50/50">
+                        {% for d in dotations %}
+                        <div class="p-3 flex items-center justify-between text-xs hover:bg-white transition">
+                            <div class="pr-2">
+                                <div class="font-bold text-slate-900">{{ d.produit.designation }}</div>
+                                <div class="text-[11px] text-slate-500">
+                                    Prix: <strong class="text-slate-700">{{ d.produit.prix_unitaire_defaut|floatformat:0 }} FCFA</strong> • 
+                                    Dispo dans le van : <span class="font-bold px-1.5 py-0.2 rounded text-[10px] {% if d.stock_restant_theorique > 0 %}bg-emerald-100 text-emerald-800{% else %}bg-red-100 text-red-700{% endif %}">
+                                        {{ d.stock_restant_theorique }} {{ d.produit.unite }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-1.5 shrink-0">
+                                <label class="text-[10px] font-semibold text-slate-500">Qté :</label>
+                                <input type="number" name="mission_qte_{{ d.produit.id }}" min="0" max="{{ d.stock_restant_theorique }}"
+                                       x-model="missionQuantities['{{ d.produit.id }}']"
+                                       @input="updateMissionCalcul()"
+                                       placeholder="0"
+                                       class="w-20 px-2 py-1.5 border rounded-xl text-center font-black text-slate-900 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                       {% if d.stock_restant_theorique == 0 %}disabled{% endif %}>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="p-4 text-center text-xs text-slate-400 italic">
+                            Aucun produit n'est actuellement doté dans ce véhicule.
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Alerte Rouge en cas de Contradiction Détectée -->
+                <div x-show="hasContradiction" style="display: none;"
+                     class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 flex items-start gap-2 shadow-sm animate-pulse">
+                    <span class="text-base">⚠️</span>
+                    <div>
+                        <strong class="font-bold">Contradiction impossible !</strong>
+                        <p class="text-[11px] mt-0.5" x-text="contradictionMsg"></p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">
+                            Montant Cible à Réclamer (FCFA)
+                        </label>
+                        <input type="number" step="100" name="montant_cible"
+                               :value="calculatedMontantCible"
+                               class="w-full px-3 py-2 border rounded-xl text-xs font-black text-blue-800 bg-blue-50/50 outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="text-[10px] text-slate-400 mt-0.5 block">Calculé automatiquement selon les articles</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Consigne Particulière du PDG</label>
+                        <input type="text" name="consigne_particuliere" placeholder="Ex: Paiement comptant ou Orange Money"
+                               class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-4 border-t">
+                    <button type="button" @click="openMissionModal = false" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Annuler</button>
+                    <button type="submit"
+                            :disabled="hasContradiction"
+                            :class="hasContradiction ? 'opacity-50 cursor-not-allowed bg-slate-400' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/30 shadow-lg'"
+                            class="px-5 py-2.5 text-xs font-bold text-white rounded-xl transition flex items-center gap-1.5">
+                        <span>🎯</span>
+                        <span>Enregistrer la Consigne</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Réapprovisionner Stock Camion en Cours de Tournée -->
+    <div x-show="openReapproModal" style="display: none;"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100" @click.away="openReapproModal = false">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <span>📦</span> Réapprovisionner le Camion
+                </h3>
+                <button type="button" @click="openReapproModal = false" class="text-slate-400 hover:text-slate-600 text-sm">✕</button>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">
+                Transférez du stock depuis l'entrepôt principal vers le véhicule de <strong>{{ tournee.livreur.username }}</strong> pour lui permettre de livrer plus.
+            </p>
+
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reapprovisionner">
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Produit à Transférer *</label>
+                    <select name="produit_id" required class="w-full px-3 py-2.5 border rounded-xl text-xs font-bold text-slate-800 bg-slate-50 outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="">-- Choisir un produit en entrepôt --</option>
+                        {% for p in produits_entrepot %}
+                        <option value="{{ p.id }}">{{ p.designation }} (Dispo Entrepôt : {{ p.stock_entrepot }} {{ p.unite }})</option>
                         {% endfor %}
                     </select>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Articles / Produits Exigés</label>
-                    <input type="text" name="produits_consignes" required placeholder="Ex: 10 sachets mangue 100g, 5 pots miel 500g"
-                           class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 font-medium">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Montant Cible à Réclamer (FCFA)</label>
-                    <input type="number" step="500" name="montant_cible" required placeholder="Ex: 22500"
-                           class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 font-bold">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Consigne Particulière du PDG</label>
-                    <textarea name="consigne_particuliere" rows="2" placeholder="Ex: Exiger paiement comptant en espèces ou Orange Money. Vérifier réassort."
-                              class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Quantité à Ajouter au Véhicule *</label>
+                    <input type="number" min="1" name="quantite_ajout" required placeholder="Ex: 50"
+                           class="w-full px-3 py-2.5 border rounded-xl text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
 
                 <div class="flex justify-end space-x-2 pt-4 border-t">
-                    <button type="button" @click="openMissionModal = false" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Annuler</button>
-                    <button type="submit" class="px-5 py-2.5 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-blue-600/30">Enregistrer la Consigne</button>
+                    <button type="button" @click="openReapproModal = false" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Annuler</button>
+                    <button type="submit" class="px-5 py-2.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg shadow-emerald-600/30">
+                        Valider le Transfert
+                    </button>
                 </div>
             </form>
         </div>
