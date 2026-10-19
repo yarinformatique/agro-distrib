@@ -48,6 +48,7 @@ urlpatterns = [
 
     # Mobile-First Livreur PWA
     path('livreur/', views.livreur_app_view, name='livreur_app'),
+    path('livreur/expeditions/<uuid:pk>/confirmer/', views.livreur_confirmer_reception_expedition, name='livreur_confirmer_reception_expedition'),
     path('vente/<uuid:pk>/recu/', views.recu_vente_view, name='recu_vente'),
 
     # API Endpoints pour Alpine.js / AJAX

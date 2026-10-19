@@ -485,7 +485,7 @@ def alimentations_view(request):
         return redirect('alimentations')
 
     quartier_filtre = request.GET.get('quartier', '')
-    alimentations = Alimentation.objects.all()
+    alimentations = Alimentation.objects.all().order_by('-id')
     if tenant:
         alimentations = alimentations.filter(entreprise=tenant)
 
@@ -547,7 +547,8 @@ def prospection_view(request):
     if tenant:
         alimentations = alimentations.filter(entreprise=tenant)
 
-    url_prospection_terrain = request.build_absolute_uri(reverse('prospection_terrain'))
+    base_url = request.build_absolute_uri(reverse('prospection_terrain'))
+    url_prospection_terrain = f"{base_url}?tenant={tenant.slug}" if (tenant and tenant.slug) else base_url
 
     return render(request, 'dashboard/prospection.html', {
         'alimentations': alimentations,
@@ -558,11 +559,21 @@ def prospection_view(request):
 def prospection_terrain_view(request):
     """
     Page publique pour agent terrain permettant d'enregistrer une boutique.
-    Rattache automatiquement la boutique à l'entreprise appropriée.
+    Rattache automatiquement la boutique à l'entreprise appropriée (Tenant).
     """
     success_alim = None
-    slug = request.GET.get('tenant')
-    tenant = Entreprise.objects.filter(slug=slug).first() if slug else Entreprise.objects.filter(statut_abonnement='actif').first()
+    slug = request.POST.get('tenant', '').strip() or request.GET.get('tenant', '').strip() or request.GET.get('t', '').strip()
+    tenant = None
+    if slug:
+        tenant = Entreprise.objects.filter(slug=slug).first()
+    if not tenant and hasattr(request, 'tenant') and request.tenant:
+        tenant = request.tenant
+    if not tenant and request.user.is_authenticated:
+        profil = getattr(request.user, 'profil_utilisateur', None)
+        if profil and profil.entreprise:
+            tenant = profil.entreprise
+    if not tenant:
+        tenant = Entreprise.objects.filter(statut_abonnement='actif').first()
 
     if request.method == 'POST':
         nom = request.POST.get('nom', '').strip()
@@ -601,6 +612,7 @@ def prospection_terrain_view(request):
 
     return render(request, 'dashboard/prospection_terrain.html', {
         'success_alim': success_alim,
+        'tenant': tenant,
     })
 
 
@@ -623,10 +635,20 @@ def expeditions_view(request):
             dest = request.POST.get('ville_destination', 'Ouagadougou')
             transporteur = request.POST.get('transporteur_nom')
             tel_transp = request.POST.get('transporteur_telephone', '')
-            destinataire = request.POST.get('destinataire_nom')
-            tel_dest = request.POST.get('destinataire_telephone', '')
+            livreur_dest_id = request.POST.get('livreur_destinataire_id', '').strip()
+            destinataire = request.POST.get('destinataire_nom', '').strip()
+            tel_dest = request.POST.get('destinataire_telephone', '').strip()
             frais = Decimal(request.POST.get('frais_transport', '0'))
             consignes = request.POST.get('consignes_generales', '')
+
+            livreur_dest = None
+            if livreur_dest_id:
+                livreur_dest = User.objects.filter(id=livreur_dest_id).first()
+                if livreur_dest:
+                    if not destinataire:
+                        destinataire = livreur_dest.get_full_name() or livreur_dest.username
+                    if not tel_dest and hasattr(livreur_dest, 'profil_utilisateur') and livreur_dest.profil_utilisateur:
+                        tel_dest = livreur_dest.profil_utilisateur.telephone or ''
 
             with transaction.atomic():
                 exp = Expedition.objects.create(
@@ -636,7 +658,8 @@ def expeditions_view(request):
                     ville_destination=dest,
                     transporteur_nom=transporteur,
                     transporteur_telephone=tel_transp,
-                    destinataire_nom=destinataire,
+                    livreur_destinataire=livreur_dest,
+                    destinataire_nom=destinataire or (livreur_dest.username if livreur_dest else "Livreur"),
                     destinataire_telephone=tel_dest,
                     frais_transport=frais,
                     consignes_generales=consignes,
@@ -657,6 +680,11 @@ def expeditions_view(request):
                         qte = 0
 
                     if qte > 0:
+                        # Sortie de l'entrepôt central
+                        if p.stock_entrepot >= qte:
+                            p.stock_entrepot -= qte
+                            p.save(update_fields=['stock_entrepot'])
+
                         st = qte * p.prix_unitaire_defaut
                         LigneExpedition.objects.create(
                             expedition=exp,
@@ -668,13 +696,13 @@ def expeditions_view(request):
                             consigne_specifique=consigne_spec
                         )
 
-            messages.success(request, f"Expédition {numero} enregistrée avec succès de {depart} vers {dest} !")
+            messages.success(request, f"Expédition {numero} enregistrée avec succès de {depart} vers {dest} (Attribuée à {destinataire}) !")
             return redirect('expedition_detail', pk=exp.id)
 
-    expeditions = Expedition.objects.prefetch_related('lignes__produit').all()
+    expeditions = Expedition.objects.select_related('livreur_destinataire').prefetch_related('lignes__produit').all()
     produits = Produit.objects.all()
     alimentations = Alimentation.objects.filter(actif=True)
-    livreurs = User.objects.filter(is_staff=False)
+    livreurs = User.objects.filter(is_staff=False, is_active=True).select_related('profil_utilisateur')
 
     if tenant:
         expeditions = expeditions.filter(entreprise=tenant)
@@ -1249,13 +1277,15 @@ def parametres_view(request):
 def mobile_link_view(request):
     host = request.get_host()
     scheme = 'https' if request.is_secure() or 'https' in request.build_absolute_uri() else 'http'
+    tenant = getattr(request, 'tenant', None)
+    tenant_param = f"?tenant={tenant.slug}" if (tenant and tenant.slug) else ""
 
     if host and not host.startswith('127.0.0.1') and not host.startswith('localhost') and not host.startswith('192.168.'):
         url_promotrice = f"{scheme}://{host}/login/?switch=1"
         url_dashboard = f"{scheme}://{host}/dashboard/"
         url_smartphone = f"{scheme}://{host}/livreur/"
         url_boutique = f"{scheme}://{host}/espace-boutique/connexion/"
-        url_recensement = f"{scheme}://{host}/prospection/terrain/"
+        url_recensement = f"{scheme}://{host}/prospection/terrain/{tenant_param}"
         is_online = True
         display_host = host
     else:
@@ -1265,7 +1295,7 @@ def mobile_link_view(request):
         url_dashboard = f"http://{ip}:{port}/dashboard/"
         url_smartphone = f"http://{ip}:{port}/livreur/"
         url_boutique = f"http://{ip}:{port}/espace-boutique/connexion/"
-        url_recensement = f"http://{ip}:{port}/prospection/terrain/"
+        url_recensement = f"http://{ip}:{port}/prospection/terrain/{tenant_param}"
         is_online = False
         display_host = f"{ip}:{port}"
 
@@ -1472,17 +1502,92 @@ def livreur_app_view(request):
     missions = tournee.missions.select_related('alimentation').all()
     ventes_recents = tournee.ventes.select_related('alimentation').prefetch_related('lignes__produit').order_by('-date_heure')
 
+    # Expéditions adressées à ce livreur (en transit et reçues récemment)
+    expeditions_en_cours = Expedition.objects.filter(
+        livreur_destinataire=request.user,
+        statut='EN_TRANSIT'
+    ).prefetch_related('lignes__produit').order_by('-date_expedition')
+
+    expeditions_recues = Expedition.objects.filter(
+        livreur_destinataire=request.user,
+        statut='RECEPTIONNE'
+    ).prefetch_related('lignes__produit').order_by('-date_reception')[:5]
+
     context = {
         'tournee': tournee,
         'alimentations_json': json.dumps(alimentations),
         'dotations_json': json.dumps(dotations_data),
         'ventes_recents': ventes_recents,
         'missions': missions,
+        'expeditions_en_cours': expeditions_en_cours,
+        'expeditions_recues': expeditions_recues,
         'user': request.user,
         'local_ip': get_local_ip(),
         'tenant': tenant,
     }
     return render(request, 'livreur/app.html', context)
+
+
+@login_required
+def livreur_confirmer_reception_expedition(request, pk):
+    """
+    Permet au livreur connecté d'accuser réception d'une expédition qui lui a été acheminée.
+    Passe le statut à RECEPTIONNE, horodate la réception et CRÉDITE AUTOMATIQUEMENT
+    le stock embarqué du livreur dans sa tournée en cours.
+    """
+    if request.method != 'POST':
+        return redirect('livreur_app')
+
+    exp = get_object_or_404(
+        Expedition.objects.prefetch_related('lignes__produit'),
+        id=pk,
+        livreur_destinataire=request.user
+    )
+
+    if exp.statut == 'RECEPTIONNE':
+        messages.info(request, f"L'expédition {exp.numero_bordereau} a déjà été réceptionnée.")
+        return redirect('livreur_app')
+
+    tenant = getattr(request, 'tenant', None) or exp.entreprise
+
+    with transaction.atomic():
+        exp.statut = 'RECEPTIONNE'
+        exp.date_reception = timezone.now()
+        exp.save(update_fields=['statut', 'date_reception'])
+
+        # Récupérer ou créer la tournée active du livreur
+        tournee = Tournee.objects.filter(livreur=request.user, statut='EN_COURS').order_by('-date_tournee', '-id').first()
+        if not tournee:
+            tournee = Tournee.objects.create(
+                entreprise=tenant,
+                livreur=request.user,
+                statut='EN_COURS',
+                caisse_theorique=0,
+                caisse_declaree=0
+            )
+
+        # Créditer automatiquement le stock véhicule du livreur
+        total_articles_ajoutes = 0
+        for ligne in exp.lignes.select_related('produit'):
+            dotation, created = LigneDotationStock.objects.get_or_create(
+                tournee=tournee,
+                produit=ligne.produit,
+                defaults={
+                    'quantite_depart': ligne.quantite,
+                    'quantite_retour': 0
+                }
+            )
+            if not created:
+                dotation.quantite_depart += ligne.quantite
+                dotation.save(update_fields=['quantite_depart'])
+            total_articles_ajoutes += ligne.quantite
+
+    messages.success(
+        request,
+        f"🎉 Colis de l'expédition {exp.numero_bordereau} confirmé reçu ! "
+        f"{total_articles_ajoutes} articles ont été ajoutés à votre inventaire embarqué."
+    )
+    return redirect('livreur_app')
 
 
 @login_required

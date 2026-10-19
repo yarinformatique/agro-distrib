@@ -411,6 +411,14 @@ class Expedition(models.Model):
     # Société de transport / Livreur relais
     transporteur_nom = models.CharField(max_length=150, help_text="Ex: TSR Transport, Rakieta, Transporteur Express")
     transporteur_telephone = models.CharField(max_length=50, blank=True)
+    livreur_destinataire = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="expeditions_recues",
+        help_text="Livreur assigné devant réceptionner le colis et l'intégrer à son stock"
+    )
     destinataire_nom = models.CharField(max_length=150, help_text="Ex: Moussa Sawadogo (Livreur Ouaga)")
     destinataire_telephone = models.CharField(max_length=50, blank=True)
 

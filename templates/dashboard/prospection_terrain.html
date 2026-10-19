@@ -19,6 +19,11 @@
             📍
         </div>
         <h1 class="text-xl font-black tracking-tight">Fiche de Recensement Terrain</h1>
+        {% if tenant %}
+        <div class="inline-block px-3 py-1 bg-white/15 rounded-full text-[11px] font-bold text-emerald-100 border border-white/20">
+            🏢 {{ tenant.nom }}
+        </div>
+        {% endif %}
         <p class="text-xs text-emerald-100 max-w-sm mx-auto">
             Enregistrez une boutique partenaire sur place avec sa position GPS exacte pour intégration immédiate au circuit de livraison.
         </p>
@@ -32,7 +37,7 @@
         </div>
         <div>
             <h2 class="text-lg font-black text-slate-900">Boutique Enregistrée avec Succès !</h2>
-            <p class="text-xs text-slate-500 mt-1">La boutique a été synchronisée en temps réel dans le système de la promotrice.</p>
+            <p class="text-xs text-slate-500 mt-1">La boutique a été synchronisée en temps réel dans le système de la promotrice{% if tenant %} (<strong>{{ tenant.nom }}</strong>){% endif %}.</p>
         </div>
 
         <div class="p-4 bg-slate-50 rounded-2xl border text-left text-xs space-y-2 font-mono">
@@ -58,7 +63,7 @@
             </div>
         </div>
 
-        <a href="{% url 'prospection_terrain' %}"
+        <a href="{% url 'prospection_terrain' %}{% if tenant %}?tenant={{ tenant.slug }}{% endif %}"
            class="inline-block w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl text-xs font-black shadow-lg transition">
             ➕ Recenser une Autre Boutique
         </a>
@@ -121,6 +126,7 @@
         <!-- Formulaire de Saisie des Détails Boutique -->
         <form method="POST" class="space-y-4">
             {% csrf_token %}
+            <input type="hidden" name="tenant" value="{{ tenant.slug|default:'' }}">
             <input type="hidden" name="latitude" :value="lat">
             <input type="hidden" name="longitude" :value="lon">
 

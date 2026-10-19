@@ -566,6 +566,95 @@ class MultiTenantAgroDistribTestCase(TestCase):
                 self.assertEqual(res.status_code, 200)
                 self.assertEqual(res.content.decode(), "OK")
 
+    def test_recensement_terrain_public_alimente_reseau_promotrice(self):
+        """Un recensement fait à distance via le lien public ?tenant=slug doit alimenter immédiatement la table de la promotrice."""
+        # 1. Requête anonyme (sans session connectée) sur le lien public
+        self.client.logout()
+        res_post = self.client.post(f"/prospection/terrain/?tenant={self.tenant_a.slug}", {
+            "tenant": self.tenant_a.slug,
+            "nom": "Alimentation Wend-Songda",
+            "ville": "Ouagadougou",
+            "quartier": "Somgandé",
+            "nom_gerant": "Pauline Ouedraogo",
+            "telephone_gerant": "+226 77 11 22 33",
+            "latitude": "12.389000",
+            "longitude": "-1.505000",
+            "panier_moyen_estime": "30000",
+            "consignes_reglement": "Règlement espèces",
+            "code_pin": "5678",
+        })
+        self.assertEqual(res_post.status_code, 200)
+
+        # Vérifier que la boutique a été créée pour tenant_a
+        alim_creee = Alimentation.objects.filter(nom="Alimentation Wend-Songda").first()
+        self.assertIsNotNone(alim_creee)
+        self.assertEqual(alim_creee.entreprise, self.tenant_a)
+        self.assertEqual(alim_creee.code_pin, "5678")
+
+        # 2. La promotrice se connecte et doit voir cette boutique dans son réseau
+        self.client.login(username="demo", password="123")
+        res_alims = self.client.get("/alimentations/")
+        self.assertEqual(res_alims.status_code, 200)
+        self.assertContains(res_alims, "Alimentation Wend-Songda")
+
+        res_prospection = self.client.get("/prospection/")
+        self.assertEqual(res_prospection.status_code, 200)
+        self.assertContains(res_prospection, "Alimentation Wend-Songda")
+
+    def test_expedition_assignee_livreur_et_confirmation_reception_stock(self):
+        """Une expédition assignée à un livreur doit être visible pour lui, et sa confirmation doit créditer son stock véhicule."""
+        # 1. La promotrice crée une expédition assignée au livreur
+        self.client.login(username="demo", password="123")
+        stock_entrepot_init = self.p_mangue.stock_entrepot # 100
+
+        res_exp = self.client.post("/expeditions/", {
+            "action": "creer",
+            "ville_depart": "Bobo-Dioulasso",
+            "ville_destination": "Ouagadougou",
+            "transporteur_nom": "TSR Express",
+            "transporteur_telephone": "+226 70 99 88 77",
+            "livreur_destinataire_id": str(self.livreur_a.id),
+            "destinataire_nom": "Moussa Livreur",
+            "destinataire_telephone": "+226 76 99 88 77",
+            "frais_transport": "5000",
+            "consignes_generales": "Livrer rapidement",
+            f"qte_{self.p_mangue.id}": "25",
+        })
+        self.assertEqual(res_exp.status_code, 302)
+
+        exp = Expedition.objects.filter(transporteur_nom="TSR Express").first()
+        self.assertIsNotNone(exp)
+        self.assertEqual(exp.livreur_destinataire, self.livreur_a)
+        self.assertEqual(exp.statut, 'EN_TRANSIT')
+
+        # Stock entrepôt débité
+        self.p_mangue.refresh_from_db()
+        self.assertEqual(self.p_mangue.stock_entrepot, stock_entrepot_init - 25)
+
+        # 2. Le livreur se connecte et consulte son application
+        self.client.login(username="livreur_demo", password="123")
+        res_livreur = self.client.get("/livreur/")
+        self.assertEqual(res_livreur.status_code, 200)
+        self.assertContains(res_livreur, exp.numero_bordereau)
+        self.assertContains(res_livreur, "TSR Express")
+
+        # 3. Le livreur confirme la réception du colis
+        res_reception = self.client.post(f"/livreur/expeditions/{exp.id}/confirmer/")
+        self.assertEqual(res_reception.status_code, 302)
+
+        exp.refresh_from_db()
+        self.assertEqual(exp.statut, 'RECEPTIONNE')
+        self.assertIsNotNone(exp.date_reception)
+
+        # Vérifier que le stock embarqué du livreur a bien été augmenté de 25 unités
+        tournee = Tournee.objects.filter(livreur=self.livreur_a, statut='EN_COURS').first()
+        self.assertIsNotNone(tournee)
+        dotation_mangue = tournee.dotations.filter(produit=self.p_mangue).first()
+        self.assertIsNotNone(dotation_mangue)
+        # La dotation contient les 25 unités reçues
+        self.assertGreaterEqual(dotation_mangue.quantite_depart, 25)
+
+
 
 
 

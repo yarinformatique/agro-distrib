@@ -79,6 +79,83 @@
     </div>
 
     <!-- ========================================================================= -->
+    <!-- ALERTE EXPÉDITIONS / COLIS EN TRANSIT DESTINÉS AU LIVREUR -->
+    <!-- ========================================================================= -->
+    {% if expeditions_en_cours %}
+    <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-800 text-white rounded-2xl p-4 shadow-xl border border-blue-400 space-y-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <span class="text-xl animate-bounce">📦</span>
+                <div>
+                    <h2 class="text-xs font-black uppercase tracking-wider text-amber-300">
+                        Expédition Inter-Villes en Cours ({{ expeditions_en_cours.count }})
+                    </h2>
+                    <p class="text-[11px] text-blue-100">Colis envoyé par la direction à réceptionner</p>
+                </div>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-400 text-slate-900 shadow">
+                En transit
+            </span>
+        </div>
+
+        <div class="space-y-3">
+            {% for exp in expeditions_en_cours %}
+            <div class="bg-white/10 backdrop-blur-sm p-3.5 rounded-xl border border-white/20 text-xs space-y-2.5">
+                <div class="flex items-center justify-between text-[11px]">
+                    <span class="font-mono font-bold text-amber-200">{{ exp.numero_bordereau }}</span>
+                    <span class="text-blue-200">{{ exp.ville_depart }} &rarr; {{ exp.ville_destination }}</span>
+                </div>
+
+                <div class="p-2 bg-black/20 rounded-lg space-y-1 text-[11px]">
+                    <div class="flex justify-between">
+                        <span class="text-blue-200">Transporteur :</span>
+                        <strong class="text-white">{{ exp.transporteur_nom }}</strong>
+                    </div>
+                    {% if exp.transporteur_telephone %}
+                    <div class="flex justify-between">
+                        <span class="text-blue-200">Contact Chauffeur :</span>
+                        <a href="tel:{{ exp.transporteur_telephone }}" class="text-amber-300 font-mono font-bold underline">
+                            📞 {{ exp.transporteur_telephone }}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if exp.consignes_generales %}
+                <div class="text-[11px] text-amber-100 bg-amber-500/20 p-2 rounded border border-amber-400/30">
+                    📢 <strong>Consigne PDG :</strong> {{ exp.consignes_generales }}
+                </div>
+                {% endif %}
+
+                <!-- Liste des articles dans le colis -->
+                <div class="space-y-1">
+                    <span class="text-[10px] uppercase font-bold text-blue-200 block">Contenu du colis :</span>
+                    <div class="grid grid-cols-1 gap-1 text-[11px]">
+                        {% for l in exp.lignes.all %}
+                        <div class="flex justify-between items-center bg-white/5 px-2 py-1 rounded">
+                            <span>{{ l.produit.designation }}</span>
+                            <span class="font-bold text-amber-300">{{ l.quantite }} {{ l.unite }}(s)</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Formulaire Accusé de Réception -->
+                <form method="POST" action="{% url 'livreur_confirmer_reception_expedition' exp.id %}" class="pt-1">
+                    {% csrf_token %}
+                    <button type="submit"
+                            onclick="return confirm('Confirmez-vous avoir reçu physiquement ce colis ? Les stocks seront directement ajoutés à votre camion.')"
+                            class="touch-btn w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-black text-xs rounded-xl shadow-lg transition flex items-center justify-center gap-1.5">
+                        <span>📥</span> CONFIRMER LA RÉCEPTION & CHARGER MON STOCK
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ========================================================================= -->
     <!-- SECTION MISSIONS & CONSIGNES DU PDG (OBJECTIFS DU JOUR) -->
     <!-- ========================================================================= -->
     {% if missions %}
@@ -442,6 +519,29 @@
                 </div>
             </template>
         </div>
+
+        <!-- Ravitaillements Récemment Reçus du PDG -->
+        {% if expeditions_recues %}
+        <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 space-y-2 mt-4">
+            <span class="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
+                <span>✅</span> Ravitaillements Reçus & Intégrés au Stock ({{ expeditions_recues.count }})
+            </span>
+            <div class="space-y-1.5">
+                {% for er in expeditions_recues %}
+                <div class="bg-white p-2.5 rounded-xl border border-emerald-100 text-xs flex items-center justify-between shadow-sm">
+                    <div>
+                        <strong class="text-slate-800 font-mono text-[11px]">{{ er.numero_bordereau }}</strong>
+                        <span class="text-[10px] text-slate-500 block">🚌 {{ er.transporteur_nom }} ({{ er.ville_depart }} &rarr; {{ er.ville_destination }})</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-emerald-700 font-bold block text-xs">+{{ er.nombre_articles_total }} articles</span>
+                        <span class="text-[10px] text-slate-400">{{ er.date_reception|date:"d/m/Y à H:i" }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <!-- ========================================================================= -->
@@ -574,9 +674,14 @@
 
             <button @click="currentTab = 'stock'"
                     :class="currentTab === 'stock' ? 'text-emerald-700 bg-emerald-50' : 'text-slate-500 hover:text-slate-800'"
-                    class="py-2 rounded-xl flex flex-col items-center justify-center">
+                    class="py-2 rounded-xl flex flex-col items-center justify-center relative">
                 <span class="text-lg">📦</span>
                 <span>Mon Stock</span>
+                {% if expeditions_en_cours %}
+                <span class="absolute top-1 right-2 px-1.5 py-0.2 bg-red-600 text-white rounded-full text-[9px] font-black animate-pulse shadow">
+                    {{ expeditions_en_cours.count }}
+                </span>
+                {% endif %}
             </button>
 
             <button @click="currentTab = 'bilan'"

@@ -54,9 +54,17 @@
         <!-- Destinataire -->
         <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-2 text-xs">
             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Destinataire (Livreur / Dépôt)</span>
-            <div class="text-sm font-black text-slate-800">🛵 {{ expedition.destinataire_nom }}</div>
+            <div class="text-sm font-black text-slate-800">🛵 {{ expedition.livreur_destinataire.get_full_name|default:expedition.destinataire_nom }}</div>
+            {% if expedition.livreur_destinataire %}
+            <div class="text-[10px] text-blue-600 font-bold">Livreur assigné : @{{ expedition.livreur_destinataire.username }}</div>
+            {% endif %}
             <div class="text-slate-600">Téléphone : <strong class="font-mono text-emerald-700">{{ expedition.destinataire_telephone }}</strong></div>
             <div class="text-slate-500">Ville : <strong class="text-slate-900">{{ expedition.ville_destination }}</strong></div>
+            {% if expedition.date_reception %}
+            <div class="mt-2 pt-2 border-t border-emerald-100 text-[11px] text-emerald-700 font-bold flex items-center gap-1">
+                <span>✅</span> Colis réceptionné le {{ expedition.date_reception|date:"d/m/Y à H:i" }}
+            </div>
+            {% endif %}
         </div>
 
         <!-- Valeur Marchandise -->

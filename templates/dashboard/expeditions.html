@@ -3,7 +3,7 @@
 {% block title %}Expéditions Inter-Villes & Sociétés de Livraison • Agro-Distrib{% endblock %}
 
 {% block content %}
-<div class="space-y-6" x-data="{ openNewExpModal: false }">
+<div class="space-y-6" x-data="{ openNewExpModal: false, destinataireNom: '', destinataireTel: '' }">
     <!-- En-tête -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
         <div>
@@ -57,7 +57,10 @@
                             <div class="text-[10px] text-slate-500 font-mono">{{ exp.transporteur_telephone }}</div>
                         </td>
                         <td class="py-3.5 px-4">
-                            <div class="font-bold text-slate-800">🛵 {{ exp.destinataire_nom }}</div>
+                            <div class="font-bold text-slate-800">🛵 {{ exp.livreur_destinataire.get_full_name|default:exp.destinataire_nom }}</div>
+                            {% if exp.livreur_destinataire %}
+                            <div class="text-[10px] text-blue-600 font-bold">Livreur système assigné</div>
+                            {% endif %}
                             <div class="text-[10px] text-slate-500 font-mono">{{ exp.destinataire_telephone }}</div>
                         </td>
                         <td class="py-3.5 px-4">
@@ -65,10 +68,14 @@
                             <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 animate-pulse">
                                 🟡 En Transit
                             </span>
+                            <div class="text-[10px] text-slate-400 mt-0.5">En cours d'acheminement</div>
                             {% elif exp.statut == 'RECEPTIONNE' %}
                             <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">
                                 🟢 Réceptionné
                             </span>
+                            {% if exp.date_reception %}
+                            <div class="text-[10px] text-emerald-700 font-bold mt-0.5">le {{ exp.date_reception|date:"d/m/Y à H:i" }}</div>
+                            {% endif %}
                             {% else %}
                             <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">
                                 ⚪ Préparé
@@ -127,6 +134,34 @@
                     </div>
                 </div>
 
+                <!-- Livreur Destinataire Assigné -->
+                <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 space-y-2">
+                    <label class="block text-xs font-bold text-amber-950">
+                        🛵 Livreur Destinataire (Chargé de réceptionner le colis & livrer aux boutiques) *
+                    </label>
+                    <select name="livreur_destinataire_id"
+                            @change="
+                                const opt = $event.target.selectedOptions[0];
+                                if (opt && opt.value) {
+                                    destinataireNom = opt.getAttribute('data-nom') || '';
+                                    destinataireTel = opt.getAttribute('data-tel') || '';
+                                }
+                            "
+                            class="w-full px-3 py-2.5 border rounded-xl text-xs font-bold bg-white text-slate-900 outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">-- Sélectionner un Livreur Enregistré --</option>
+                        {% for liv in livreurs %}
+                        <option value="{{ liv.id }}"
+                                data-nom="{{ liv.get_full_name|default:liv.username }}"
+                                data-tel="{{ liv.profil_utilisateur.telephone|default:'' }}">
+                            🛵 {{ liv.get_full_name|default:liv.username }} ({{ liv.username }}) {% if liv.profil_utilisateur.telephone %} - {{ liv.profil_utilisateur.telephone }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <p class="text-[11px] text-amber-800">
+                        💡 Dès validation, ce colis apparaîtra sur l'application smartphone de ce livreur. Il pourra <strong>confirmer la réception</strong> en 1 clic pour créditer son stock.
+                    </p>
+                </div>
+
                 <!-- Société de transport & Destinataire -->
                 <div class="grid grid-cols-2 gap-3">
                     <div>
@@ -143,13 +178,13 @@
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Destinataire (Livreur / Dépôt relais)</label>
-                        <input type="text" name="destinataire_nom" required placeholder="Ex: Moussa Sawadogo (Livreur Ouaga)"
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Nom Destinataire / Relais</label>
+                        <input type="text" name="destinataire_nom" x-model="destinataireNom" required placeholder="Ex: Moussa Sawadogo (Livreur Ouaga)"
                                class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1">Tél. Destinataire</label>
-                        <input type="text" name="destinataire_telephone" placeholder="+226 76 00 00 00"
+                        <input type="text" name="destinataire_telephone" x-model="destinataireTel" placeholder="+226 76 00 00 00"
                                class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
