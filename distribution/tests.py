@@ -813,8 +813,20 @@ class MultiTenantAgroDistribTestCase(TestCase):
         self.assertEqual(self.p_sesame.stock_entrepot, stock_init)
 
     def test_tournee_interdiction_sans_stock_et_missions_multi_boutiques(self):
-        """Vérifie l'impossibilité de créer une tournée sans stock et l'assignation multi-boutiques."""
+        """
+        Vérifie la gestion dynamique du stock par livreur :
+        1. Impossibilité d'allouer du stock à un livreur qui n'a reçu aucune expédition.
+        2. Impossibilité de créer une tournée avec 0 stock.
+        3. Alimentation dynamique du stock réel du livreur via expédition confirmée.
+        4. Interdiction stricte d'allouer une quantité supérieure au stock réel du livreur.
+        5. Création réussie d'une tournée dans la limite du stock réel disponible.
+        6. Règles anti-contradiction multi-boutiques basées sur le stock embarqué.
+        """
         self.client.login(username="demo", password="123")
+
+        # Création d'un second livreur sans stock pour tester la dynamique par livreur
+        livreur_b = User.objects.create_user(username="livreur_b_test", password="123", email="livreurb@agrodistrib.bf")
+        ProfilUtilisateur.objects.create(user=livreur_b, entreprise=self.tenant_a, role="LIVREUR")
 
         # 1. Tentative création tournée avec 0 stock
         res_zero_stock = self.client.post("/tournees/", {
@@ -826,8 +838,64 @@ class MultiTenantAgroDistribTestCase(TestCase):
         self.assertEqual(res_zero_stock.status_code, 302)
         self.assertFalse(Tournee.objects.filter(livreur=self.livreur_a, dotations__isnull=False).exists())
 
-        # 2. Création tournée avec stock valide
-        stock_miel_init = self.p_miel.stock_entrepot
+        # 2. Tentative d'allouer du stock à un livreur sans expédition reçue (stock réel = 0)
+        res_sans_expedition = self.client.post("/tournees/", {
+            "action": "creer",
+            "livreur_id": str(self.livreur_a.id),
+            f"qte_{self.p_miel.id}": "10",
+        })
+        self.assertEqual(res_sans_expedition.status_code, 302)
+        self.assertFalse(Tournee.objects.filter(livreur=self.livreur_a).exists())
+
+        # 3. La promotrice prépare et confirme une expédition de 20 miels pour le livreur A
+        stock_miel_init = self.p_miel.stock_entrepot  # 50
+        exp = Expedition.objects.create(
+            entreprise=self.tenant_a,
+            numero_bordereau="EXP-TEST-STOCK-DYN-01",
+            ville_depart="Bobo-Dioulasso",
+            ville_destination="Ouagadougou",
+            transporteur_nom="TSR Express Dyn",
+            livreur_destinataire=self.livreur_a,
+            destinataire_nom="Livreur Demo",
+            statut='PREPARE',
+            cree_par=self.promotrice_a
+        )
+        LigneExpedition.objects.create(
+            expedition=exp,
+            produit=self.p_miel,
+            quantite=20,
+            unite=self.p_miel.unite,
+            valeur_unitaire=self.p_miel.prix_unitaire_defaut,
+            sous_total=20 * self.p_miel.prix_unitaire_defaut
+        )
+        # Confirmation de l'envoi -> déduit le stock entrepôt (50 - 20 = 30)
+        res_conf = self.client.post("/expeditions/", {
+            "action": "confirmer_envoi",
+            "expedition_id": str(exp.id),
+        })
+        self.assertEqual(res_conf.status_code, 302)
+        self.p_miel.refresh_from_db()
+        self.assertEqual(self.p_miel.stock_entrepot, stock_miel_init - 20)
+
+        # 4. Le livreur B n'a toujours rien reçu -> allocation bloquée
+        res_bloque_b = self.client.post("/tournees/", {
+            "action": "creer",
+            "livreur_id": str(livreur_b.id),
+            f"qte_{self.p_miel.id}": "5",
+        })
+        self.assertEqual(res_bloque_b.status_code, 302)
+        self.assertFalse(Tournee.objects.filter(livreur=livreur_b).exists())
+
+        # 5. Le livreur A a 20 miels : tentative d'allouer 25 (> 20) -> bloqué par la sécurité
+        res_depassement = self.client.post("/tournees/", {
+            "action": "creer",
+            "livreur_id": str(self.livreur_a.id),
+            f"qte_{self.p_miel.id}": "25",
+        })
+        self.assertEqual(res_depassement.status_code, 302)
+        self.assertFalse(Tournee.objects.filter(livreur=self.livreur_a).exists())
+
+        # 6. Allocation valide pour livreur A : 10 miels (<= 20 disponible)
         res_tournee = self.client.post("/tournees/", {
             "action": "creer",
             "livreur_id": str(self.livreur_a.id),
@@ -836,10 +904,13 @@ class MultiTenantAgroDistribTestCase(TestCase):
         self.assertEqual(res_tournee.status_code, 302)
         tournee = Tournee.objects.filter(livreur=self.livreur_a, statut='EN_COURS').first()
         self.assertIsNotNone(tournee)
+        dotation = tournee.dotations.filter(produit=self.p_miel).first()
+        self.assertEqual(dotation.quantite_depart, 10)
+        # Le stock entrepôt reste intact car déjà débité lors de l'expédition
         self.p_miel.refresh_from_db()
-        self.assertEqual(self.p_miel.stock_entrepot, stock_miel_init - 10)
+        self.assertEqual(self.p_miel.stock_entrepot, stock_miel_init - 20)
 
-        # 3. Assignation multi-boutiques avec anti-contradiction
+        # 7. Assignation multi-boutiques avec anti-contradiction
         # Le van a 10 miels. Si on assigne 6 miels à 2 boutiques = 12 > 10 -> Contradiction bloquée !
         res_contradiction = self.client.post(f"/tournees/{tournee.id}/", {
             "action": "ajouter_mission",

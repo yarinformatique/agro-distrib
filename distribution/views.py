@@ -918,6 +918,119 @@ def expedition_bordereau_view(request, pk):
 
 
 # ==============================================================================
+# CALCUL DU STOCK RÉEL PHYSIQUE PAR LIVREUR (EXPÉDITIONS REÇUES - LIVRAISONS FAITES)
+# ==============================================================================
+
+def get_stocks_par_livreur(tenant=None, livreurs_qs=None, produits_qs=None):
+    """
+    Calcule dynamiquement le stock réel physique disponible au niveau de chaque livreur.
+    Règle impérative :
+    - Entrées : Colis et marchandises expédiées et confirmées (statut EN_TRANSIT ou RECEPTIONNE) pour ce livreur.
+    - Sorties : Livraisons et ventes déjà effectuées par le livreur auprès des alimentations.
+    - Stock Réel Livreur = max(0, Entrées - Sorties).
+    - Dotations directes antérieures prises en compte en repli si aucune expédition n'existe.
+    """
+    if livreurs_qs is None:
+        livreurs_qs = User.objects.filter(is_staff=False)
+        if tenant:
+            livreurs_qs = livreurs_qs.filter(profil_utilisateur__entreprise=tenant)
+
+    if produits_qs is None:
+        produits_qs = Produit.objects.all().order_by('designation')
+        if tenant:
+            produits_qs = produits_qs.filter(entreprise=tenant)
+
+    livreur_ids = list(livreurs_qs.values_list('id', flat=True))
+    produit_ids = list(produits_qs.values_list('id', flat=True))
+
+    # 1. Total expédié par (livreur_id, produit_id) pour les expéditions confirmées ou réceptionnées
+    exp_qs = LigneExpedition.objects.filter(
+        expedition__livreur_destinataire_id__in=livreur_ids,
+        expedition__statut__in=['EN_TRANSIT', 'RECEPTIONNE'],
+        produit_id__in=produit_ids
+    )
+    if tenant:
+        exp_qs = exp_qs.filter(expedition__entreprise=tenant)
+    exp_data = exp_qs.values(
+        'expedition__livreur_destinataire_id', 'produit_id'
+    ).annotate(total_exp=Sum('quantite'))
+
+    exp_map = {
+        (item['expedition__livreur_destinataire_id'], item['produit_id']): item['total_exp']
+        for item in exp_data
+    }
+
+    # Prise en compte éventuelle des expéditions dont le destinataire_nom correspond au livreur si FK non renseignée
+    exp_orphan_qs = LigneExpedition.objects.filter(
+        expedition__livreur_destinataire__isnull=True,
+        expedition__statut__in=['EN_TRANSIT', 'RECEPTIONNE'],
+        produit_id__in=produit_ids
+    ).select_related('expedition')
+    if tenant:
+        exp_orphan_qs = exp_orphan_qs.filter(expedition__entreprise=tenant)
+    for ligne in exp_orphan_qs:
+        nom_dest = (ligne.expedition.destinataire_nom or '').lower()
+        for liv in livreurs_qs:
+            liv_user = (liv.username or '').lower()
+            liv_last = (liv.last_name or '').lower()
+            if (liv_user and liv_user in nom_dest) or (liv_last and liv_last in nom_dest):
+                key = (liv.id, ligne.produit_id)
+                exp_map[key] = exp_map.get(key, 0) + ligne.quantite
+
+    # 2. Total vendu/livré par ce livreur (toutes tournées confondues)
+    ventes_qs = LigneLivraisonVente.objects.filter(
+        vente__tournee__livreur_id__in=livreur_ids,
+        produit_id__in=produit_ids
+    )
+    if tenant:
+        ventes_qs = ventes_qs.filter(vente__entreprise=tenant)
+    ventes_data = ventes_qs.values(
+        'vente__tournee__livreur_id', 'produit_id'
+    ).annotate(total_vendu=Sum('quantite'))
+
+    ventes_map = {
+        (item['vente__tournee__livreur_id'], item['produit_id']): item['total_vendu']
+        for item in ventes_data
+    }
+
+    # 3. Total dotations directes (fallback de sécurité si dotation enregistrée directement sans expédition)
+    dot_qs = LigneDotationStock.objects.filter(
+        tournee__livreur_id__in=livreur_ids,
+        produit_id__in=produit_ids
+    )
+    if tenant:
+        dot_qs = dot_qs.filter(tournee__entreprise=tenant)
+    dot_data = dot_qs.values(
+        'tournee__livreur_id', 'produit_id'
+    ).annotate(total_dot=Sum('quantite_depart'))
+
+    dot_map = {
+        (item['tournee__livreur_id'], item['produit_id']): item['total_dot']
+        for item in dot_data
+    }
+
+    result = {}
+    for liv_id in livreur_ids:
+        liv_key = str(liv_id)
+        result[liv_key] = {}
+        for p in produits_qs:
+            p_key = str(p.id)
+            exp = exp_map.get((liv_id, p.id), 0)
+            dot = dot_map.get((liv_id, p.id), 0)
+            vendu = ventes_map.get((liv_id, p.id), 0)
+            entree = max(exp, dot)
+            dispo = max(0, entree - vendu)
+            result[liv_key][p_key] = {
+                'dispo': dispo,
+                'expedie': exp,
+                'vendu': vendu,
+                'unite': p.unite or "unité",
+                'designation': p.designation
+            }
+    return result
+
+
+# ==============================================================================
 # TOURNÉES & ORDRES DE MISSIONS ASSIGNÉS
 # ==============================================================================
 
@@ -931,11 +1044,23 @@ def tournees_view(request):
     if tenant:
         produits_qs = produits_qs.filter(entreprise=tenant)
 
+    livreurs = User.objects.filter(is_staff=False).order_by('username')
+    if tenant:
+        livreurs = livreurs.filter(profil_utilisateur__entreprise=tenant)
+
     if request.method == 'POST':
         action = request.POST.get('action')
         if action == 'creer':
             livreur_id = request.POST.get('livreur_id')
             livreur = get_object_or_404(User, id=livreur_id)
+
+            # Calculer le stock réel physique actuellement chez ce livreur
+            stocks_livreurs = get_stocks_par_livreur(
+                tenant=tenant,
+                livreurs_qs=User.objects.filter(id=livreur.id),
+                produits_qs=produits_qs
+            )
+            stocks_ce_livreur = stocks_livreurs.get(str(livreur.id), {})
 
             total_stock_alloue = 0
             allocations = []
@@ -948,15 +1073,26 @@ def tournees_view(request):
                     qte = 0
 
                 if qte > 0:
-                    if qte > p.stock_entrepot:
-                        messages.error(request, f"Stock entrepôt insuffisant pour « {p.designation} » ({p.stock_entrepot} disponible(s), vous avez demandé {qte}).")
+                    stock_info = stocks_ce_livreur.get(str(p.id), {})
+                    dispo_livreur = stock_info.get('dispo', 0)
+                    if qte > dispo_livreur:
+                        messages.error(
+                            request,
+                            f"Stock insuffisant chez le livreur {livreur.get_full_name() or livreur.username} "
+                            f"pour « {p.designation} » : {dispo_livreur} disponible(s) en stock réel "
+                            f"(expéditions reçues - livraisons faites), vous avez demandé d'allouer {qte}."
+                        )
                         return redirect('tournees')
                     allocations.append((p, qte))
                     total_stock_alloue += qte
 
             # Règle impérative : impossible de valider une tournée sans stock !
             if total_stock_alloue <= 0:
-                messages.error(request, "Impossible de valider une tournée sans stock. Veuillez allouer au moins un produit.")
+                messages.error(
+                    request,
+                    "Impossible de valider une tournée sans stock. "
+                    "Veuillez allouer au moins un produit disponible chez ce livreur."
+                )
                 return redirect('tournees')
 
             with transaction.atomic():
@@ -969,8 +1105,6 @@ def tournees_view(request):
                 )
 
                 for p, qte in allocations:
-                    p.stock_entrepot -= qte
-                    p.save(update_fields=['stock_entrepot'])
                     LigneDotationStock.objects.create(
                         tournee=tournee,
                         produit=p,
@@ -978,33 +1112,33 @@ def tournees_view(request):
                         quantite_retour=0
                     )
 
-            messages.success(request, f"Tournée créée avec succès pour {livreur.get_full_name() or livreur.username} avec {total_stock_alloue} articles embarqués !")
+            messages.success(
+                request,
+                f"Tournée créée avec succès pour {livreur.get_full_name() or livreur.username} "
+                f"avec {total_stock_alloue} articles embarqués !"
+            )
             return redirect('tournee_detail', pk=tournee.id)
 
         elif action == 'supprimer':
             tournee_id = request.POST.get('tournee_id')
             tournee = get_object_or_404(Tournee, id=tournee_id)
-            with transaction.atomic():
-                if tournee.statut == 'EN_COURS':
-                    for d in tournee.dotations.select_related('produit').all():
-                        restant = d.stock_restant_theorique
-                        if restant > 0:
-                            d.produit.stock_entrepot += restant
-                            d.produit.save(update_fields=['stock_entrepot'])
-                tournee.delete()
-            messages.success(request, "Tournée supprimée avec succès (stock restant du véhicule réintégré à l'entrepôt).")
+            tournee.delete()
+            messages.success(request, "Tournée supprimée avec succès.")
             return redirect('tournees')
 
     tournees = Tournee.objects.select_related('livreur').prefetch_related('dotations', 'ventes').order_by('-date_tournee', '-id')
-    livreurs = User.objects.filter(is_staff=False)
     if tenant:
         tournees = tournees.filter(entreprise=tenant)
-        livreurs = livreurs.filter(profil_utilisateur__entreprise=tenant)
+
+    stocks_livreurs = get_stocks_par_livreur(tenant=tenant, livreurs_qs=livreurs, produits_qs=produits_qs)
+    stocks_livreurs_json = json.dumps(stocks_livreurs)
 
     return render(request, 'dashboard/tournees.html', {
         'tournees': tournees,
         'livreurs': livreurs,
         'produits': produits_qs,
+        'stocks_livreurs': stocks_livreurs,
+        'stocks_livreurs_json': stocks_livreurs_json,
     })
 
 
@@ -1837,6 +1971,15 @@ def api_tri_distance(request):
         b.pop('obj', None)
 
     return JsonResponse({'alimentations': boutiques})
+
+
+@login_required
+def api_stock_livreur(request, livreur_id):
+    """Retourne le stock réel physique d'un livreur en JSON."""
+    tenant = getattr(request, 'tenant', None)
+    livreur = get_object_or_404(User, id=livreur_id)
+    stocks = get_stocks_par_livreur(tenant=tenant, livreurs_qs=User.objects.filter(id=livreur.id))
+    return JsonResponse({'livreur_id': str(livreur.id), 'stocks': stocks.get(str(livreur.id), {})})
 
 
 @csrf_exempt

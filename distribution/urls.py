@@ -53,6 +53,7 @@ urlpatterns = [
 
     # API Endpoints pour Alpine.js / AJAX
     path('api/tri-distance/', views.api_tri_distance, name='api_tri_distance'),
+    path('api/livreurs/<int:livreur_id>/stock/', views.api_stock_livreur, name='api_stock_livreur'),
     path('api/ventes/creer/', views.api_enregistrer_vente, name='api_enregistrer_vente'),
     path('api/tournees/cloturer/', views.api_cloturer_tournee, name='api_cloturer_tournee'),
 ]
