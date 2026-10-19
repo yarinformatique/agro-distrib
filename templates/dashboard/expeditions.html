@@ -3,7 +3,7 @@
 {% block title %}Expéditions Inter-Villes & Sociétés de Livraison • Agro-Distrib{% endblock %}
 
 {% block content %}
-<div class="space-y-6" x-data="{ openNewExpModal: false, destinataireNom: '', destinataireTel: '' }">
+<div class="space-y-6" x-data="{ openNewExpModal: false, openEditModal: false, destinataireNom: '', destinataireTel: '', editExp: { lignes: {} } }">
     <!-- En-tête -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
         <div>
@@ -12,7 +12,7 @@
                 <span class="text-xs font-bold uppercase tracking-wider text-blue-700">Logistique & Transferts Inter-Villes</span>
             </div>
             <h1 class="text-2xl font-black text-slate-800 tracking-tight mt-1">Expéditions vers Sociétés de Livraison & Hubs</h1>
-            <p class="text-xs text-slate-500">Envois de marchandises (Ex: Bobo-Dioulasso &rarr; Ouagadougou) avec valeur exacte et consignes de distribution</p>
+            <p class="text-xs text-slate-500">Envois de marchandises (Ex: Bobo-Dioulasso &rarr; Ouagadougou) avec valeur exacte, flux de validation et contrôle dynamique des stocks</p>
         </div>
         <div class="flex items-center gap-3">
             <button @click="openNewExpModal = true"
@@ -64,11 +64,16 @@
                             <div class="text-[10px] text-slate-500 font-mono">{{ exp.destinataire_telephone }}</div>
                         </td>
                         <td class="py-3.5 px-4">
-                            {% if exp.statut == 'EN_TRANSIT' %}
+                            {% if exp.statut == 'PREPARE' %}
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                ⚪ Préparé (En attente confirmation)
+                            </span>
+                            <div class="text-[10px] text-blue-600 font-semibold mt-0.5">Modifiable</div>
+                            {% elif exp.statut == 'EN_TRANSIT' %}
                             <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 animate-pulse">
                                 🟡 En Transit
                             </span>
-                            <div class="text-[10px] text-slate-400 mt-0.5">En cours d'acheminement</div>
+                            <div class="text-[10px] text-slate-400 mt-0.5">Stock déduit de l'entrepôt</div>
                             {% elif exp.statut == 'RECEPTIONNE' %}
                             <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">
                                 🟢 Réceptionné
@@ -78,7 +83,7 @@
                             {% endif %}
                             {% else %}
                             <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">
-                                ⚪ Préparé
+                                {{ exp.get_statut_display }}
                             </span>
                             {% endif %}
                         </td>
@@ -88,15 +93,69 @@
                         <td class="py-3.5 px-4 text-slate-600">
                             {{ exp.nombre_articles_total }} unités
                         </td>
-                        <td class="py-3.5 px-4 text-right space-x-1.5">
+                        <td class="py-3.5 px-4 text-right space-x-1.5 whitespace-nowrap">
                             <a href="{% url 'expedition_bordereau' exp.id %}" target="_blank"
-                               class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition inline-flex items-center gap-1">
-                                🖨️ Bordereau
+                               title="Imprimer le bordereau"
+                               class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition inline-flex items-center gap-1">
+                                🖨️
                             </a>
                             <a href="{% url 'expedition_detail' exp.id %}"
-                               class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-lg text-xs transition inline-flex items-center gap-1">
-                                Détails &rarr;
+                               title="Détails"
+                               class="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-lg text-xs transition inline-flex items-center gap-1">
+                                👁️ Détails
                             </a>
+
+                            {% if exp.statut == 'PREPARE' %}
+                            <!-- Bouton Confirmer l'envoi -->
+                            <form method="POST" class="inline"
+                                  onsubmit="return confirm('Confirmez-vous l\'envoi effectif de l\'expédition {{ exp.numero_bordereau }} ?\n\nLe stock sera déduit de votre entrepôt et l\'envoi ne pourra plus être modifié.');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="confirmer_envoi">
+                                <input type="hidden" name="expedition_id" value="{{ exp.id }}">
+                                <button type="submit"
+                                        title="Confirmer et lancer l'envoi"
+                                        class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition inline-flex items-center gap-1 shadow-sm">
+                                    🚀 Envoyer
+                                </button>
+                            </form>
+
+                            <!-- Bouton Modifier (uniquement si PREPARE) -->
+                            <button @click="editExp = {
+                                        id: '{{ exp.id }}',
+                                        numero: '{{ exp.numero_bordereau|escapejs }}',
+                                        ville_depart: '{{ exp.ville_depart|escapejs }}',
+                                        ville_destination: '{{ exp.ville_destination|escapejs }}',
+                                        transporteur_nom: '{{ exp.transporteur_nom|escapejs }}',
+                                        transporteur_telephone: '{{ exp.transporteur_telephone|escapejs }}',
+                                        livreur_destinataire_id: '{{ exp.livreur_destinataire.id|default:'' }}',
+                                        destinataire_nom: '{{ exp.destinataire_nom|escapejs }}',
+                                        destinataire_telephone: '{{ exp.destinataire_telephone|escapejs }}',
+                                        frais_transport: '{{ exp.frais_transport|floatformat:0 }}',
+                                        consignes_generales: '{{ exp.consignes_generales|escapejs }}',
+                                        lignes: {
+                                            {% for l in exp.lignes.all %}
+                                            '{{ l.produit.id }}': { qte: {{ l.quantite }}, consigne: '{{ l.consigne_specifique|escapejs }}' },
+                                            {% endfor %}
+                                        }
+                                    }; openEditModal = true"
+                                    title="Modifier cette expédition"
+                                    class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold rounded-lg text-xs transition inline-flex items-center gap-1 border border-amber-200">
+                                ✏️
+                            </button>
+                            {% endif %}
+
+                            <!-- Bouton Supprimer (toujours disponible avec réintégration du stock si EN_TRANSIT) -->
+                            <form method="POST" class="inline"
+                                  onsubmit="return confirm('Confirmez-vous la suppression de l\'expédition {{ exp.numero_bordereau }} ?\n\n{% if exp.statut == 'EN_TRANSIT' %}Le stock débité sera automatiquement recrédité dans l\'entrepôt central.{% endif %}');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="supprimer">
+                                <input type="hidden" name="expedition_id" value="{{ exp.id }}">
+                                <button type="submit"
+                                        title="Supprimer cette expédition"
+                                        class="px-2 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-lg text-xs transition border border-red-100">
+                                    🗑️
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     {% empty %}
@@ -114,7 +173,7 @@
          class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto" @click.away="openNewExpModal = false">
             <h3 class="text-lg font-bold text-slate-900 mb-1">Créer un Ordre d'Expédition Inter-Villes</h3>
-            <p class="text-xs text-slate-500 mb-4">Envoi de produits depuis le centre de production (ex: Bobo) vers un relais de livraison</p>
+            <p class="text-xs text-slate-500 mb-4">Préparez l'expédition. Le stock entrepôt sera déduit lors de la confirmation finale d'envoi.</p>
 
             <form method="POST" class="space-y-4">
                 {% csrf_token %}
@@ -158,7 +217,7 @@
                         {% endfor %}
                     </select>
                     <p class="text-[11px] text-amber-800">
-                        💡 Dès validation, ce colis apparaîtra sur l'application smartphone de ce livreur. Il pourra <strong>confirmer la réception</strong> en 1 clic pour créditer son stock.
+                        💡 Dès confirmation d'envoi, ce colis apparaîtra sur le smartphone de ce livreur pour validation en 1 clic.
                     </p>
                 </div>
 
@@ -189,18 +248,24 @@
                     </div>
                 </div>
 
-                <!-- Produits & Consignes spécifiques -->
+                <!-- Produits & Consignes spécifiques avec contrôle dynamique du stock -->
                 <div>
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Articles Expédiés & Consignes de Livraison</h4>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Articles Expédiés (Limité au Stock Réel)</h4>
                     <div class="border rounded-xl divide-y divide-slate-100 max-h-56 overflow-y-auto">
                         {% for p in produits %}
                         <div class="p-3 text-xs hover:bg-slate-50 space-y-1.5">
                             <div class="flex items-center justify-between">
-                                <span class="font-bold text-slate-800">{{ p.designation }}</span>
+                                <div>
+                                    <span class="font-bold text-slate-800">{{ p.designation }}</span>
+                                    <span class="text-[11px] text-slate-500 block">
+                                        Dispo en entrepôt : <strong class="{% if p.stock_entrepot <= 0 %}text-red-600{% else %}text-emerald-700{% endif %}">{{ p.stock_entrepot }} {{ p.unite }}s</strong>
+                                    </span>
+                                </div>
                                 <div class="flex items-center gap-2">
                                     <span class="text-slate-500 font-mono text-[11px]">{{ p.prix_unitaire_defaut|floatformat:0 }} FCFA/{{ p.unite }}</span>
-                                    <input type="number" name="qte_{{ p.id }}" min="0" value="0"
-                                           class="w-16 px-2 py-1 border rounded-lg text-center font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                                    <input type="number" name="qte_{{ p.id }}" min="0" max="{{ p.stock_entrepot }}" value="0"
+                                           class="w-20 px-2 py-1 border rounded-lg text-center font-bold outline-none focus:ring-2 focus:ring-blue-500"
+                                           {% if p.stock_entrepot <= 0 %}disabled{% endif %}>
                                     <span class="text-[11px] text-slate-500">{{ p.unite }}</span>
                                 </div>
                             </div>
@@ -227,7 +292,126 @@
 
                 <div class="flex justify-end space-x-2 pt-4 border-t">
                     <button type="button" @click="openNewExpModal = false" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Annuler</button>
-                    <button type="submit" class="px-5 py-2.5 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-blue-600/30">Valider & Expédier</button>
+                    <button type="submit" class="px-5 py-2.5 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-blue-600/30">Enregistrer l'Expédition</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Modifier Expédition (Statut PREPARE uniquement) -->
+    <div x-show="openEditModal" style="display: none;"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto" @click.away="openEditModal = false">
+            <h3 class="text-lg font-bold text-slate-900 mb-1">Modifier l'Expédition <span x-text="editExp.numero"></span></h3>
+            <p class="text-xs text-slate-500 mb-4">Ajustez les coordonnées, le livreur ou les quantités avant la confirmation d'envoi.</p>
+
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="modifier">
+                <input type="hidden" name="expedition_id" :value="editExp.id">
+
+                <!-- Trajet -->
+                <div class="grid grid-cols-2 gap-3 p-3 bg-blue-50/60 rounded-xl border border-blue-100">
+                    <div>
+                        <label class="block text-xs font-bold text-blue-900 mb-1">Ville de Départ</label>
+                        <input type="text" name="ville_depart" x-model="editExp.ville_depart" required
+                               class="w-full px-3 py-2 border rounded-xl text-xs font-semibold bg-white outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-blue-900 mb-1">Ville de Destination</label>
+                        <input type="text" name="ville_destination" x-model="editExp.ville_destination" required
+                               class="w-full px-3 py-2 border rounded-xl text-xs font-semibold bg-white outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <!-- Livreur Destinataire Assigné -->
+                <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 space-y-2">
+                    <label class="block text-xs font-bold text-amber-950">
+                        🛵 Livreur Destinataire Assigné
+                    </label>
+                    <select name="livreur_destinataire_id" x-model="editExp.livreur_destinataire_id"
+                            class="w-full px-3 py-2.5 border rounded-xl text-xs font-bold bg-white text-slate-900 outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">-- Sélectionner un Livreur Enregistré --</option>
+                        {% for liv in livreurs %}
+                        <option value="{{ liv.id }}">
+                            🛵 {{ liv.get_full_name|default:liv.username }} ({{ liv.username }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Société de transport & Destinataire -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Société de Transport</label>
+                        <input type="text" name="transporteur_nom" x-model="editExp.transporteur_nom" required
+                               class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tél. Transporteur</label>
+                        <input type="text" name="transporteur_telephone" x-model="editExp.transporteur_telephone"
+                               class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Nom Destinataire / Relais</label>
+                        <input type="text" name="destinataire_nom" x-model="editExp.destinataire_nom" required
+                               class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tél. Destinataire</label>
+                        <input type="text" name="destinataire_telephone" x-model="editExp.destinataire_telephone"
+                               class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <!-- Produits & Consignes spécifiques -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Modifier les Quantités (Contrôle Stock Réel)</h4>
+                    <div class="border rounded-xl divide-y divide-slate-100 max-h-56 overflow-y-auto">
+                        {% for p in produits %}
+                        <div class="p-3 text-xs hover:bg-slate-50 space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="font-bold text-slate-800">{{ p.designation }}</span>
+                                    <span class="text-[11px] text-slate-500 block">
+                                        Dispo en entrepôt : <strong class="text-emerald-700">{{ p.stock_entrepot }} {{ p.unite }}s</strong>
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" name="qte_{{ p.id }}" min="0" max="{{ p.stock_entrepot }}"
+                                           :value="editExp.lignes && editExp.lignes['{{ p.id }}'] ? editExp.lignes['{{ p.id }}'].qte : 0"
+                                           class="w-20 px-2 py-1 border rounded-lg text-center font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                                    <span class="text-[11px] text-slate-500">{{ p.unite }}</span>
+                                </div>
+                            </div>
+                            <input type="text" name="consigne_{{ p.id }}"
+                                   :value="editExp.lignes && editExp.lignes['{{ p.id }}'] ? editExp.lignes['{{ p.id }}'].consigne : ''"
+                                   placeholder="Consigne spécifique..."
+                                   class="w-full px-2.5 py-1 border rounded-lg text-[11px] bg-white text-slate-600 outline-none">
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Frais de Transport (FCFA)</label>
+                        <input type="number" name="frais_transport" x-model="editExp.frais_transport" step="500"
+                               class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Consignes Générales</label>
+                        <input type="text" name="consignes_generales" x-model="editExp.consignes_generales"
+                               class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-4 border-t">
+                    <button type="button" @click="openEditModal = false" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Annuler</button>
+                    <button type="submit" class="px-5 py-2.5 text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-lg">Sauvegarder les Modifications</button>
                 </div>
             </form>
         </div>

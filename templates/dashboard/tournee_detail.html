@@ -7,6 +7,8 @@
     openClotureModal: false,
     openMissionModal: false,
     openReapproModal: false,
+    selectedAlims: [],
+    selectAllAlims: false,
     missionQuantities: {},
     articlesPrices: {
         {% for d in dotations %}
@@ -22,30 +24,39 @@
     hasContradiction: false,
     contradictionMsg: '',
 
+    toggleSelectAll() {
+        if (this.selectAllAlims) {
+            this.selectedAlims = [{% for a in alimentations %}'{{ a.id }}',{% endfor %}];
+        } else {
+            this.selectedAlims = [];
+        }
+        this.updateMissionCalcul();
+    },
+
     updateMissionCalcul() {
-        let total = 0;
+        let totalPerBoutique = 0;
         let contradiction = false;
         let msg = '';
-        let hasAnyItem = false;
+        let nbBoutiques = this.selectedAlims.length > 0 ? this.selectedAlims.length : 1;
 
         for (let prodId in this.missionQuantities) {
             let qte = parseInt(this.missionQuantities[prodId]) || 0;
             let dispo = this.articlesDispo[prodId] !== undefined ? this.articlesDispo[prodId] : 0;
             let prix = this.articlesPrices[prodId] || 0;
 
-            if (qte > dispo) {
+            let totalBesoin = qte * nbBoutiques;
+            if (totalBesoin > dispo) {
                 contradiction = true;
-                msg = 'Contradiction : Quantité demandée (' + qte + ') dépasse le stock disponible dans le véhicule (' + dispo + ') !';
+                msg = 'Contradiction impossible : Pour ' + nbBoutiques + ' boutique(s) avec ' + qte + ' unité(s) chacune, il faut ' + totalBesoin + ' unités, mais le véhicule n\'en a que ' + dispo + ' !';
             }
             if (qte > 0) {
-                hasAnyItem = true;
-                total += qte * prix;
+                totalPerBoutique += qte * prix;
             }
         }
 
         this.hasContradiction = contradiction;
         this.contradictionMsg = msg;
-        this.calculatedMontantCible = total;
+        this.calculatedMontantCible = totalPerBoutique;
     }
 }">
     <!-- En-tête Tournée -->
@@ -170,9 +181,21 @@
                     </div>
                     {% endif %}
                 </div>
-                <div class="text-right">
-                    <span class="text-[10px] uppercase font-bold text-slate-400 block">Montant Cible</span>
-                    <span class="text-base font-black text-slate-900">{{ m.montant_cible|floatformat:0 }} FCFA</span>
+                <div class="flex items-center gap-3 self-end sm:self-center">
+                    <div class="text-right">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Montant Cible</span>
+                        <span class="text-base font-black text-slate-900">{{ m.montant_cible|floatformat:0 }} FCFA</span>
+                    </div>
+                    <form method="POST" class="inline" onsubmit="return confirm('Confirmez-vous la suppression de cette consigne de mission pour « {{ m.alimentation.nom|escapejs }} » ?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="supprimer_mission">
+                        <input type="hidden" name="mission_id" value="{{ m.id }}">
+                        <button type="submit"
+                                title="Supprimer cette consigne"
+                                class="px-2 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-lg text-xs transition border border-red-100">
+                            🗑️
+                        </button>
+                    </form>
                 </div>
             </div>
             {% empty %}
@@ -362,7 +385,7 @@
 
     <!-- Modal Assigner un Ordre de Mission / Consigne (Indépendant & Anti-Contradiction) -->
     <div x-show="openMissionModal" style="display: none;"
-         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+         class="fixed inset-0 z-[60] overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 max-h-[92vh] overflow-y-auto" @click.away="openMissionModal = false">
             <div class="flex items-center justify-between mb-2">
                 <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -371,21 +394,39 @@
                 <button type="button" @click="openMissionModal = false" class="text-slate-400 hover:text-slate-600 text-sm">✕</button>
             </div>
             <p class="text-xs text-slate-500 mb-4">
-                Définissez les objectifs précis de livraison. Les quantités sont strictement limitées au stock réel disponible à bord du véhicule.
+                Sélectionnez une ou plusieurs boutiques à livrer. Les quantités indiquées seront assignées à chaque boutique sélectionnée, strictement limitées au stock disponible dans le véhicule.
             </p>
 
             <form method="POST" class="space-y-4">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="ajouter_mission">
 
+                <!-- Sélection Multi-Boutiques -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Boutique Ciblée *</label>
-                    <select name="alimentation_id" required class="w-full px-3 py-2.5 border rounded-xl text-xs font-bold text-slate-800 bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">-- Sélectionner l'alimentation cible --</option>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-bold text-slate-700">
+                            Boutique(s) Cible(s) * (<span x-text="selectedAlims.length"></span> sélectionnée(s))
+                        </label>
+                        <label class="text-[11px] font-bold text-blue-700 cursor-pointer flex items-center gap-1 select-none">
+                            <input type="checkbox" x-model="selectAllAlims" @change="toggleSelectAll()" class="rounded text-blue-600">
+                            <span>Tout sélectionner</span>
+                        </label>
+                    </div>
+                    <div class="border rounded-xl divide-y divide-slate-100 max-h-44 overflow-y-auto bg-slate-50/50 p-2 space-y-1">
                         {% for a in alimentations %}
-                        <option value="{{ a.id }}">{{ a.nom }} ({{ a.quartier }}) - Plafond: {{ a.plafond_credit|floatformat:0 }} FCFA</option>
+                        <label class="flex items-center justify-between p-1.5 hover:bg-white rounded-lg text-xs cursor-pointer">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" name="alimentation_ids" value="{{ a.id }}"
+                                       x-model="selectedAlims" @change="updateMissionCalcul()"
+                                       class="rounded text-blue-600 focus:ring-blue-500">
+                                <span class="font-bold text-slate-800">{{ a.nom }}</span>
+                                <span class="text-slate-500 text-[11px]">({{ a.quartier }})</span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 font-mono">Plafond: {{ a.plafond_credit|floatformat:0 }} F</span>
+                        </label>
                         {% endfor %}
-                    </select>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-1">💡 Cochez toutes les boutiques de la tournée qui doivent recevoir cette consigne.</p>
                 </div>
 
                 <!-- Sélection Anti-Contradiction des Produits selon Stock Camion -->

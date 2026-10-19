@@ -89,11 +89,21 @@
                                 <span class="text-slate-400">-</span>
                             {% endif %}
                         </td>
-                        <td class="py-3.5 px-4 text-right">
+                        <td class="py-3.5 px-4 text-right space-x-1.5 whitespace-nowrap">
                             <a href="{% url 'tournee_detail' t.id %}"
                                class="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold rounded-lg transition inline-flex items-center gap-1">
                                 Détails & Suivi &rarr;
                             </a>
+                            <form method="POST" class="inline" onsubmit="return confirm('Confirmez-vous la suppression définitive de cette tournée ?\n\nLe stock physique restant dans le camion sera réintégré à l\'entrepôt.');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="supprimer">
+                                <input type="hidden" name="tournee_id" value="{{ t.id }}">
+                                <button type="submit"
+                                        title="Supprimer la tournée"
+                                        class="px-2 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-lg text-xs transition">
+                                    🗑️
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     {% empty %}

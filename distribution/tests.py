@@ -602,8 +602,8 @@ class MultiTenantAgroDistribTestCase(TestCase):
         self.assertContains(res_prospection, "Alimentation Wend-Songda")
 
     def test_expedition_assignee_livreur_et_confirmation_reception_stock(self):
-        """Une expédition assignée à un livreur doit être visible pour lui, et sa confirmation doit créditer son stock véhicule."""
-        # 1. La promotrice crée une expédition assignée au livreur
+        """Une expédition est d'abord préparée, confirmée pour expédition, puis réceptionnée par le livreur."""
+        # 1. La promotrice crée une expédition assignée au livreur (statut initial PREPARE)
         self.client.login(username="demo", password="123")
         stock_entrepot_init = self.p_mangue.stock_entrepot # 100
 
@@ -625,20 +625,33 @@ class MultiTenantAgroDistribTestCase(TestCase):
         exp = Expedition.objects.filter(transporteur_nom="TSR Express").first()
         self.assertIsNotNone(exp)
         self.assertEqual(exp.livreur_destinataire, self.livreur_a)
+        self.assertEqual(exp.statut, 'PREPARE')
+
+        # À la préparation, le stock entrepôt n'a pas encore été débité
+        self.p_mangue.refresh_from_db()
+        self.assertEqual(self.p_mangue.stock_entrepot, stock_entrepot_init)
+
+        # 2. La promotrice confirme l'envoi de l'expédition
+        res_confirm = self.client.post("/expeditions/", {
+            "action": "confirmer_envoi",
+            "expedition_id": str(exp.id),
+        })
+        self.assertEqual(res_confirm.status_code, 302)
+        exp.refresh_from_db()
         self.assertEqual(exp.statut, 'EN_TRANSIT')
 
-        # Stock entrepôt débité
+        # Maintenant le stock entrepôt est débité
         self.p_mangue.refresh_from_db()
         self.assertEqual(self.p_mangue.stock_entrepot, stock_entrepot_init - 25)
 
-        # 2. Le livreur se connecte et consulte son application
+        # 3. Le livreur se connecte et consulte son application
         self.client.login(username="livreur_demo", password="123")
         res_livreur = self.client.get("/livreur/")
         self.assertEqual(res_livreur.status_code, 200)
         self.assertContains(res_livreur, exp.numero_bordereau)
         self.assertContains(res_livreur, "TSR Express")
 
-        # 3. Le livreur confirme la réception du colis
+        # 4. Le livreur confirme la réception du colis
         res_reception = self.client.post(f"/livreur/expeditions/{exp.id}/confirmer/")
         self.assertEqual(res_reception.status_code, 302)
 
@@ -651,8 +664,209 @@ class MultiTenantAgroDistribTestCase(TestCase):
         self.assertIsNotNone(tournee)
         dotation_mangue = tournee.dotations.filter(produit=self.p_mangue).first()
         self.assertIsNotNone(dotation_mangue)
-        # La dotation contient les 25 unités reçues
         self.assertGreaterEqual(dotation_mangue.quantite_depart, 25)
+
+    def test_modifier_et_supprimer_produits_et_boutiques(self):
+        """Test des actions modifier et supprimer pour produits et boutiques."""
+        self.client.login(username="demo", password="123")
+
+        # 1. Modification d'un produit
+        res_mod_p = self.client.post("/produits/", {
+            "action": "modifier",
+            "produit_id": str(self.p_miel.id),
+            "designation": "Miel Sauvage de l'Est (500g)",
+            "unite": "pot",
+            "prix": "2800",
+            "stock": "60",
+        })
+        self.assertEqual(res_mod_p.status_code, 302)
+        self.p_miel.refresh_from_db()
+        self.assertEqual(self.p_miel.designation, "Miel Sauvage de l'Est (500g)")
+        self.assertEqual(self.p_miel.prix_unitaire_defaut, Decimal("2800"))
+        self.assertEqual(self.p_miel.stock_entrepot, 60)
+
+        # 2. Suppression d'un produit
+        prod_temp = Produit.objects.create(
+            entreprise=self.tenant_a,
+            designation="Produit Test Suppr",
+            unite="sachet",
+            prix_unitaire_defaut=Decimal("500"),
+            stock_entrepot=10
+        )
+        res_del_p = self.client.post("/produits/", {
+            "action": "supprimer",
+            "produit_id": str(prod_temp.id),
+        })
+        self.assertEqual(res_del_p.status_code, 302)
+        self.assertFalse(Produit.objects.filter(id=prod_temp.id).exists())
+
+        # 3. Modification d'une alimentation
+        res_mod_a = self.client.post("/alimentations/", {
+            "action": "modifier",
+            "alim_id": str(self.alim_koulouba.id),
+            "nom": "Wend-Kuni Plus",
+            "ville": "Ouagadougou",
+            "quartier": "Koulouba Centre",
+            "nom_gerant": "Mme Guira",
+            "telephone_gerant": "+226 76 99 99 99",
+            "latitude": "12.369000",
+            "longitude": "-1.528000",
+            "panier_moyen_estime": "35000",
+            "consignes_reglement": "Orange Money",
+            "code_pin": "9999",
+        })
+        self.assertEqual(res_mod_a.status_code, 302)
+        self.alim_koulouba.refresh_from_db()
+        self.assertEqual(self.alim_koulouba.nom, "Wend-Kuni Plus")
+        self.assertEqual(self.alim_koulouba.code_pin, "9999")
+
+        # 4. Suppression d'une alimentation
+        alim_temp = Alimentation.objects.create(
+            entreprise=self.tenant_a,
+            nom="Boutique Suppr",
+            ville="Ouagadougou",
+            quartier="Dassasgho",
+            nom_gerant="Test",
+            telephone_gerant="123",
+            latitude=Decimal("12.35"),
+            longitude=Decimal("-1.50")
+        )
+        res_del_a = self.client.post("/alimentations/", {
+            "action": "supprimer",
+            "alim_id": str(alim_temp.id),
+        })
+        self.assertEqual(res_del_a.status_code, 302)
+        self.assertFalse(Alimentation.objects.filter(id=alim_temp.id).exists())
+
+    def test_expedition_securite_stock_et_suppression_avec_restitution(self):
+        """Vérifie le blocage si stock insuffisant, le verrouillage après envoi, et la restitution lors de suppression."""
+        self.client.login(username="demo", password="123")
+        stock_init = self.p_sesame.stock_entrepot # 40
+
+        # Tentative d'expédition avec quantité supérieure au stock
+        res_depassement = self.client.post("/expeditions/", {
+            "action": "creer",
+            "ville_depart": "Bobo",
+            "ville_destination": "Ouaga",
+            "transporteur_nom": "TSR",
+            "destinataire_nom": "Relais",
+            f"qte_{self.p_sesame.id}": "100", # > 40
+        })
+        self.assertEqual(res_depassement.status_code, 302)
+        self.assertFalse(Expedition.objects.filter(transporteur_nom="TSR").exists())
+
+        # Création conforme
+        res_creer = self.client.post("/expeditions/", {
+            "action": "creer",
+            "ville_depart": "Bobo",
+            "ville_destination": "Ouaga",
+            "transporteur_nom": "TSR Valide",
+            "destinataire_nom": "Relais",
+            f"qte_{self.p_sesame.id}": "15",
+        })
+        self.assertEqual(res_creer.status_code, 302)
+        exp = Expedition.objects.filter(transporteur_nom="TSR Valide").first()
+        self.assertEqual(exp.statut, 'PREPARE')
+
+        # Modification autorisée tant que PREPARE
+        res_mod = self.client.post("/expeditions/", {
+            "action": "modifier",
+            "expedition_id": str(exp.id),
+            "ville_depart": "Bobo-Dioulasso",
+            "ville_destination": "Koudougou",
+            "transporteur_nom": "Rakieta",
+            "destinataire_nom": "Relais Koudougou",
+            f"qte_{self.p_sesame.id}": "20",
+        })
+        self.assertEqual(res_mod.status_code, 302)
+        exp.refresh_from_db()
+        self.assertEqual(exp.ville_destination, "Koudougou")
+        self.assertEqual(exp.lignes.first().quantite, 20)
+
+        # Confirmer l'envoi -> déduit le stock
+        res_conf = self.client.post("/expeditions/", {
+            "action": "confirmer_envoi",
+            "expedition_id": str(exp.id),
+        })
+        self.assertEqual(res_conf.status_code, 302)
+        exp.refresh_from_db()
+        self.assertEqual(exp.statut, 'EN_TRANSIT')
+        self.p_sesame.refresh_from_db()
+        self.assertEqual(self.p_sesame.stock_entrepot, stock_init - 20)
+
+        # Modification désormais impossible
+        res_mod_bloque = self.client.post("/expeditions/", {
+            "action": "modifier",
+            "expedition_id": str(exp.id),
+            "transporteur_nom": "Autre",
+        })
+        self.assertEqual(res_mod_bloque.status_code, 302)
+
+        # Suppression pendant transit -> RESTITUE le stock entrepôt
+        res_suppr = self.client.post("/expeditions/", {
+            "action": "supprimer",
+            "expedition_id": str(exp.id),
+        })
+        self.assertEqual(res_suppr.status_code, 302)
+        self.assertFalse(Expedition.objects.filter(id=exp.id).exists())
+        self.p_sesame.refresh_from_db()
+        self.assertEqual(self.p_sesame.stock_entrepot, stock_init)
+
+    def test_tournee_interdiction_sans_stock_et_missions_multi_boutiques(self):
+        """Vérifie l'impossibilité de créer une tournée sans stock et l'assignation multi-boutiques."""
+        self.client.login(username="demo", password="123")
+
+        # 1. Tentative création tournée avec 0 stock
+        res_zero_stock = self.client.post("/tournees/", {
+            "action": "creer",
+            "livreur_id": str(self.livreur_a.id),
+            f"qte_{self.p_mangue.id}": "0",
+            f"qte_{self.p_miel.id}": "0",
+        })
+        self.assertEqual(res_zero_stock.status_code, 302)
+        self.assertFalse(Tournee.objects.filter(livreur=self.livreur_a, dotations__isnull=False).exists())
+
+        # 2. Création tournée avec stock valide
+        stock_miel_init = self.p_miel.stock_entrepot
+        res_tournee = self.client.post("/tournees/", {
+            "action": "creer",
+            "livreur_id": str(self.livreur_a.id),
+            f"qte_{self.p_miel.id}": "10",
+        })
+        self.assertEqual(res_tournee.status_code, 302)
+        tournee = Tournee.objects.filter(livreur=self.livreur_a, statut='EN_COURS').first()
+        self.assertIsNotNone(tournee)
+        self.p_miel.refresh_from_db()
+        self.assertEqual(self.p_miel.stock_entrepot, stock_miel_init - 10)
+
+        # 3. Assignation multi-boutiques avec anti-contradiction
+        # Le van a 10 miels. Si on assigne 6 miels à 2 boutiques = 12 > 10 -> Contradiction bloquée !
+        res_contradiction = self.client.post(f"/tournees/{tournee.id}/", {
+            "action": "ajouter_mission",
+            "alimentation_ids": [str(self.alim_koulouba.id), str(self.alim_ouaga2000.id)],
+            f"mission_qte_{self.p_miel.id}": "6",
+        })
+        self.assertEqual(res_contradiction.status_code, 302)
+        self.assertEqual(tournee.missions.count(), 0)
+
+        # Assignation multi-boutiques valide : 4 miels x 2 boutiques = 8 <= 10
+        res_mission_ok = self.client.post(f"/tournees/{tournee.id}/", {
+            "action": "ajouter_mission",
+            "alimentation_ids": [str(self.alim_koulouba.id), str(self.alim_ouaga2000.id)],
+            f"mission_qte_{self.p_miel.id}": "4",
+            "consigne_particuliere": "Consigne multi-test",
+        })
+        self.assertEqual(res_mission_ok.status_code, 302)
+        self.assertEqual(tournee.missions.count(), 2)
+
+        # Suppression d'une consigne de mission
+        m1 = tournee.missions.first()
+        res_del_m = self.client.post(f"/tournees/{tournee.id}/", {
+            "action": "supprimer_mission",
+            "mission_id": str(m1.id),
+        })
+        self.assertEqual(res_del_m.status_code, 302)
+        self.assertEqual(tournee.missions.count(), 1)
 
 
 

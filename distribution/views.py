@@ -443,6 +443,12 @@ def produits_view(request):
             p.stock_entrepot = int(request.POST.get('stock', '0'))
             p.save()
             messages.success(request, f"Produit '{p.designation}' modifié avec succès.")
+        elif action == 'supprimer':
+            prod_id = request.POST.get('produit_id')
+            p = get_object_or_404(Produit, id=prod_id)
+            nom = p.designation
+            p.delete()
+            messages.success(request, f"Produit '{nom}' supprimé avec succès.")
         return redirect('produits')
 
     produits = Produit.objects.all().order_by('designation')
@@ -467,8 +473,13 @@ def alimentations_view(request):
             quartier = request.POST.get('quartier')
             nom_gerant = request.POST.get('nom_gerant')
             tel = request.POST.get('telephone_gerant')
-            lat = Decimal(request.POST.get('latitude', '12.3714'))
-            lon = Decimal(request.POST.get('longitude', '-1.5197'))
+            lat_str = request.POST.get('latitude', '12.3714').replace(',', '.')
+            lon_str = request.POST.get('longitude', '-1.5197').replace(',', '.')
+            try:
+                lat = Decimal(lat_str)
+                lon = Decimal(lon_str)
+            except Exception:
+                lat, lon = Decimal('12.3714'), Decimal('-1.5197')
             panier = Decimal(request.POST.get('panier_moyen_estime', '0'))
             consignes = request.POST.get('consignes_reglement', '')
             pin = request.POST.get('code_pin', '1234')
@@ -482,6 +493,36 @@ def alimentations_view(request):
                 code_pin=pin, actif=True
             )
             messages.success(request, f"Boutique '{nom}' ajoutée avec succès (Code PIN: {pin}).")
+        elif action == 'modifier':
+            alim_id = request.POST.get('alim_id')
+            alim = get_object_or_404(Alimentation, id=alim_id)
+            alim.nom = request.POST.get('nom', alim.nom)
+            alim.ville = request.POST.get('ville', alim.ville)
+            alim.quartier = request.POST.get('quartier', alim.quartier)
+            alim.nom_gerant = request.POST.get('nom_gerant', alim.nom_gerant)
+            alim.telephone_gerant = request.POST.get('telephone_gerant', alim.telephone_gerant)
+            lat_str = request.POST.get('latitude', str(alim.latitude)).replace(',', '.')
+            lon_str = request.POST.get('longitude', str(alim.longitude)).replace(',', '.')
+            try:
+                alim.latitude = Decimal(lat_str)
+                alim.longitude = Decimal(lon_str)
+            except Exception:
+                pass
+            panier_str = request.POST.get('panier_moyen_estime', str(alim.panier_moyen_estime)).replace(',', '.')
+            try:
+                alim.panier_moyen_estime = Decimal(panier_str)
+            except Exception:
+                pass
+            alim.consignes_reglement = request.POST.get('consignes_reglement', alim.consignes_reglement)
+            alim.code_pin = request.POST.get('code_pin', alim.code_pin)
+            alim.save()
+            messages.success(request, f"Boutique '{alim.nom}' modifiée avec succès.")
+        elif action == 'supprimer':
+            alim_id = request.POST.get('alim_id')
+            alim = get_object_or_404(Alimentation, id=alim_id)
+            nom = alim.nom
+            alim.delete()
+            messages.success(request, f"Boutique '{nom}' supprimée avec succès.")
         return redirect('alimentations')
 
     quartier_filtre = request.GET.get('quartier', '')
@@ -626,20 +667,26 @@ def expeditions_view(request):
         return redirect('livreur_app')
 
     tenant = getattr(request, 'tenant', None)
+    produits_qs = Produit.objects.all()
+    if tenant:
+        produits_qs = produits_qs.filter(entreprise=tenant)
 
     if request.method == 'POST':
         action = request.POST.get('action')
+
         if action == 'creer':
-            numero = f"EXP-{timezone.now().strftime('%Y%m%d%H%M')}"
-            depart = request.POST.get('ville_depart', 'Bobo-Dioulasso')
-            dest = request.POST.get('ville_destination', 'Ouagadougou')
-            transporteur = request.POST.get('transporteur_nom')
-            tel_transp = request.POST.get('transporteur_telephone', '')
+            depart = request.POST.get('ville_depart', 'Bobo-Dioulasso').strip()
+            dest = request.POST.get('ville_destination', 'Ouagadougou').strip()
+            transporteur = request.POST.get('transporteur_nom', '').strip()
+            tel_transp = request.POST.get('transporteur_telephone', '').strip()
             livreur_dest_id = request.POST.get('livreur_destinataire_id', '').strip()
             destinataire = request.POST.get('destinataire_nom', '').strip()
             tel_dest = request.POST.get('destinataire_telephone', '').strip()
-            frais = Decimal(request.POST.get('frais_transport', '0'))
-            consignes = request.POST.get('consignes_generales', '')
+            try:
+                frais = Decimal(request.POST.get('frais_transport', '0'))
+            except Exception:
+                frais = Decimal('0')
+            consignes = request.POST.get('consignes_generales', '').strip()
 
             livreur_dest = None
             if livreur_dest_id:
@@ -650,6 +697,31 @@ def expeditions_view(request):
                     if not tel_dest and hasattr(livreur_dest, 'profil_utilisateur') and livreur_dest.profil_utilisateur:
                         tel_dest = livreur_dest.profil_utilisateur.telephone or ''
 
+            items_to_create = []
+            total_articles = 0
+
+            for p in produits_qs:
+                qte_str = request.POST.get(f'qte_{p.id}', '0')
+                consigne_spec = request.POST.get(f'consigne_{p.id}', '').strip()
+                try:
+                    qte = int(qte_str)
+                except ValueError:
+                    qte = 0
+
+                if qte > 0:
+                    # Contrôle strict du stock : la quantité ne doit pas dépasser le stock entrepôt
+                    if qte > p.stock_entrepot:
+                        messages.error(request, f"Stock entrepôt insuffisant pour « {p.designation} » : {p.stock_entrepot} disponible(s), vous avez demandé {qte}.")
+                        return redirect('expeditions')
+
+                    items_to_create.append((p, qte, consigne_spec))
+                    total_articles += qte
+
+            if total_articles <= 0:
+                messages.error(request, "Veuillez allouer au moins un produit avec une quantité supérieure à 0.")
+                return redirect('expeditions')
+
+            numero = f"EXP-{timezone.now().strftime('%Y%m%d%H%M')}"
             with transaction.atomic():
                 exp = Expedition.objects.create(
                     entreprise=tenant,
@@ -663,41 +735,137 @@ def expeditions_view(request):
                     destinataire_telephone=tel_dest,
                     frais_transport=frais,
                     consignes_generales=consignes,
-                    statut='EN_TRANSIT',
+                    statut='PREPARE',
                     cree_par=request.user
                 )
 
-                produits = Produit.objects.all()
-                if tenant:
-                    produits = produits.filter(entreprise=tenant)
+                for p, qte, consigne_spec in items_to_create:
+                    st = qte * p.prix_unitaire_defaut
+                    LigneExpedition.objects.create(
+                        expedition=exp,
+                        produit=p,
+                        quantite=qte,
+                        unite=p.unite,
+                        valeur_unitaire=p.prix_unitaire_defaut,
+                        sous_total=st,
+                        consigne_specifique=consigne_spec
+                    )
 
-                for p in produits:
-                    qte_str = request.POST.get(f'qte_{p.id}', '0')
-                    consigne_spec = request.POST.get(f'consigne_{p.id}', '')
-                    try:
-                        qte = int(qte_str)
-                    except ValueError:
-                        qte = 0
+            messages.success(request, f"📦 Expédition {numero} enregistrée en attente (Préparée). Vous pouvez la modifier ou confirmer son envoi.")
+            return redirect('expeditions')
 
-                    if qte > 0:
-                        # Sortie de l'entrepôt central
-                        if p.stock_entrepot >= qte:
-                            p.stock_entrepot -= qte
-                            p.save(update_fields=['stock_entrepot'])
+        elif action == 'modifier':
+            exp_id = request.POST.get('expedition_id')
+            exp = get_object_or_404(Expedition, id=exp_id)
+            if exp.statut != 'PREPARE':
+                messages.error(request, "Impossible de modifier cette expédition : elle a déjà été confirmée ou expédiée.")
+                return redirect('expeditions')
 
-                        st = qte * p.prix_unitaire_defaut
-                        LigneExpedition.objects.create(
-                            expedition=exp,
-                            produit=p,
-                            quantite=qte,
-                            unite=p.unite,
-                            valeur_unitaire=p.prix_unitaire_defaut,
-                            sous_total=st,
-                            consigne_specifique=consigne_spec
-                        )
+            depart = request.POST.get('ville_depart', exp.ville_depart).strip()
+            dest = request.POST.get('ville_destination', exp.ville_destination).strip()
+            transporteur = request.POST.get('transporteur_nom', exp.transporteur_nom).strip()
+            tel_transp = request.POST.get('transporteur_telephone', exp.transporteur_telephone).strip()
+            livreur_dest_id = request.POST.get('livreur_destinataire_id', '').strip()
+            destinataire = request.POST.get('destinataire_nom', exp.destinataire_nom).strip()
+            tel_dest = request.POST.get('destinataire_telephone', exp.destinataire_telephone).strip()
+            try:
+                frais = Decimal(request.POST.get('frais_transport', str(exp.frais_transport)))
+            except Exception:
+                frais = exp.frais_transport
+            consignes = request.POST.get('consignes_generales', exp.consignes_generales).strip()
 
-            messages.success(request, f"Expédition {numero} enregistrée avec succès de {depart} vers {dest} (Attribuée à {destinataire}) !")
-            return redirect('expedition_detail', pk=exp.id)
+            livreur_dest = exp.livreur_destinataire
+            if livreur_dest_id:
+                livreur_dest = User.objects.filter(id=livreur_dest_id).first()
+                if livreur_dest and not destinataire:
+                    destinataire = livreur_dest.get_full_name() or livreur_dest.username
+
+            items_to_create = []
+            total_articles = 0
+            for p in produits_qs:
+                qte_str = request.POST.get(f'qte_{p.id}', '0')
+                consigne_spec = request.POST.get(f'consigne_{p.id}', '').strip()
+                try:
+                    qte = int(qte_str)
+                except ValueError:
+                    qte = 0
+                if qte > 0:
+                    if qte > p.stock_entrepot:
+                        messages.error(request, f"Stock entrepôt insuffisant pour « {p.designation} » : {p.stock_entrepot} disponible(s), vous avez demandé {qte}.")
+                        return redirect('expeditions')
+                    items_to_create.append((p, qte, consigne_spec))
+                    total_articles += qte
+
+            if total_articles <= 0:
+                messages.error(request, "Veuillez allouer au moins un produit avec une quantité supérieure à 0.")
+                return redirect('expeditions')
+
+            with transaction.atomic():
+                exp.ville_depart = depart
+                exp.ville_destination = dest
+                exp.transporteur_nom = transporteur
+                exp.transporteur_telephone = tel_transp
+                exp.livreur_destinataire = livreur_dest
+                exp.destinataire_nom = destinataire
+                exp.destinataire_telephone = tel_dest
+                exp.frais_transport = frais
+                exp.consignes_generales = consignes
+                exp.save()
+
+                exp.lignes.all().delete()
+                for p, qte, consigne_spec in items_to_create:
+                    st = qte * p.prix_unitaire_defaut
+                    LigneExpedition.objects.create(
+                        expedition=exp,
+                        produit=p,
+                        quantite=qte,
+                        unite=p.unite,
+                        valeur_unitaire=p.prix_unitaire_defaut,
+                        sous_total=st,
+                        consigne_specifique=consigne_spec
+                    )
+
+            messages.success(request, f"Expédition {exp.numero_bordereau} modifiée avec succès.")
+            return redirect('expeditions')
+
+        elif action == 'confirmer_envoi':
+            exp_id = request.POST.get('expedition_id')
+            exp = get_object_or_404(Expedition, id=exp_id)
+            if exp.statut != 'PREPARE':
+                messages.info(request, "Cette expédition a déjà été confirmée.")
+                return redirect('expeditions')
+
+            with transaction.atomic():
+                # Re-vérification stricte du stock disponible
+                for ligne in exp.lignes.select_related('produit').all():
+                    if ligne.quantite > ligne.produit.stock_entrepot:
+                        messages.error(request, f"Stock insuffisant pour « {ligne.produit.designation} » : {ligne.produit.stock_entrepot} en réserve vs {ligne.quantite} nécessaires.")
+                        return redirect('expeditions')
+
+                # Déduction dynamique du stock entrepôt
+                for ligne in exp.lignes.select_related('produit').all():
+                    ligne.produit.stock_entrepot -= ligne.quantite
+                    ligne.produit.save(update_fields=['stock_entrepot'])
+
+                exp.statut = 'EN_TRANSIT'
+                exp.save(update_fields=['statut'])
+
+            messages.success(request, f"🚀 Envoi confirmé pour l'expédition {exp.numero_bordereau} ! Le stock entrepôt a été débité et le colis est en transit.")
+            return redirect('expeditions')
+
+        elif action == 'supprimer':
+            exp_id = request.POST.get('expedition_id')
+            exp = get_object_or_404(Expedition, id=exp_id)
+            with transaction.atomic():
+                # Si l'expédition était en cours d'acheminement, restituer le stock en entrepôt
+                if exp.statut == 'EN_TRANSIT':
+                    for ligne in exp.lignes.select_related('produit').all():
+                        ligne.produit.stock_entrepot += ligne.quantite
+                        ligne.produit.save(update_fields=['stock_entrepot'])
+                num = exp.numero_bordereau
+                exp.delete()
+            messages.success(request, f"Expédition {num} supprimée avec succès (stock entrepôt restauré si nécessaire).")
+            return redirect('expeditions')
 
     expeditions = Expedition.objects.select_related('livreur_destinataire').prefetch_related('lignes__produit').all()
     produits = Produit.objects.all()
@@ -759,12 +927,37 @@ def tournees_view(request):
         return redirect('livreur_app')
 
     tenant = getattr(request, 'tenant', None)
+    produits_qs = Produit.objects.all().order_by('designation')
+    if tenant:
+        produits_qs = produits_qs.filter(entreprise=tenant)
 
     if request.method == 'POST':
         action = request.POST.get('action')
         if action == 'creer':
             livreur_id = request.POST.get('livreur_id')
             livreur = get_object_or_404(User, id=livreur_id)
+
+            total_stock_alloue = 0
+            allocations = []
+
+            for p in produits_qs:
+                qte_str = request.POST.get(f'qte_{p.id}', '0')
+                try:
+                    qte = int(qte_str)
+                except ValueError:
+                    qte = 0
+
+                if qte > 0:
+                    if qte > p.stock_entrepot:
+                        messages.error(request, f"Stock entrepôt insuffisant pour « {p.designation} » ({p.stock_entrepot} disponible(s), vous avez demandé {qte}).")
+                        return redirect('tournees')
+                    allocations.append((p, qte))
+                    total_stock_alloue += qte
+
+            # Règle impérative : impossible de valider une tournée sans stock !
+            if total_stock_alloue <= 0:
+                messages.error(request, "Impossible de valider une tournée sans stock. Veuillez allouer au moins un produit.")
+                return redirect('tournees')
 
             with transaction.atomic():
                 tournee = Tournee.objects.create(
@@ -775,44 +968,43 @@ def tournees_view(request):
                     caisse_declaree=0
                 )
 
-                produits = Produit.objects.all()
-                if tenant:
-                    produits = produits.filter(entreprise=tenant)
+                for p, qte in allocations:
+                    p.stock_entrepot -= qte
+                    p.save(update_fields=['stock_entrepot'])
+                    LigneDotationStock.objects.create(
+                        tournee=tournee,
+                        produit=p,
+                        quantite_depart=qte,
+                        quantite_retour=0
+                    )
 
-                for p in produits:
-                    qte_str = request.POST.get(f'qte_{p.id}', '0')
-                    try:
-                        qte = int(qte_str)
-                    except ValueError:
-                        qte = 0
-
-                    if qte > 0:
-                        if p.stock_entrepot >= qte:
-                            p.stock_entrepot -= qte
-                            p.save()
-                        LigneDotationStock.objects.create(
-                            tournee=tournee,
-                            produit=p,
-                            quantite_depart=qte,
-                            quantite_retour=0
-                        )
-
-            messages.success(request, f"Tournée créée avec succès pour {livreur.get_full_name() or livreur.username} !")
+            messages.success(request, f"Tournée créée avec succès pour {livreur.get_full_name() or livreur.username} avec {total_stock_alloue} articles embarqués !")
             return redirect('tournee_detail', pk=tournee.id)
+
+        elif action == 'supprimer':
+            tournee_id = request.POST.get('tournee_id')
+            tournee = get_object_or_404(Tournee, id=tournee_id)
+            with transaction.atomic():
+                if tournee.statut == 'EN_COURS':
+                    for d in tournee.dotations.select_related('produit').all():
+                        restant = d.stock_restant_theorique
+                        if restant > 0:
+                            d.produit.stock_entrepot += restant
+                            d.produit.save(update_fields=['stock_entrepot'])
+                tournee.delete()
+            messages.success(request, "Tournée supprimée avec succès (stock restant du véhicule réintégré à l'entrepôt).")
+            return redirect('tournees')
 
     tournees = Tournee.objects.select_related('livreur').prefetch_related('dotations', 'ventes').order_by('-date_tournee', '-id')
     livreurs = User.objects.filter(is_staff=False)
-    produits = Produit.objects.all().order_by('designation')
-
     if tenant:
         tournees = tournees.filter(entreprise=tenant)
         livreurs = livreurs.filter(profil_utilisateur__entreprise=tenant)
-        produits = produits.filter(entreprise=tenant)
 
     return render(request, 'dashboard/tournees.html', {
         'tournees': tournees,
         'livreurs': livreurs,
-        'produits': produits,
+        'produits': produits_qs,
     })
 
 
@@ -849,8 +1041,17 @@ def tournee_detail_view(request, pk):
             return redirect('tournee_detail', pk=tournee.id)
 
         elif action == 'ajouter_mission':
-            alim_id = request.POST.get('alimentation_id')
-            alim = get_object_or_404(Alimentation, id=alim_id)
+            alim_ids = request.POST.getlist('alimentation_ids')
+            if not alim_ids:
+                single_id = request.POST.get('alimentation_id')
+                if single_id:
+                    alim_ids = [single_id]
+
+            if not alim_ids:
+                messages.error(request, "Veuillez sélectionner au moins une boutique cible.")
+                return redirect('tournee_detail', pk=tournee.id)
+
+            nb_boutiques = len(alim_ids)
             consigne_particuliere = request.POST.get('consigne_particuliere', '').strip()
 
             dotations_map = {str(d.produit.id): d for d in tournee.dotations.select_related('produit').all()}
@@ -858,7 +1059,7 @@ def tournee_detail_view(request, pk):
             montant_calcule = Decimal('0')
             contradiction_erreur = None
 
-            # Règle anti-contradiction : vérifier que la demande ne dépasse pas le stock réel du camion
+            # Règle anti-contradiction : vérifier que la demande cumulée ne dépasse pas le stock réel du camion
             for key, val in request.POST.items():
                 if key.startswith('mission_qte_'):
                     prod_id = key.replace('mission_qte_', '')
@@ -876,11 +1077,13 @@ def tournee_detail_view(request, pk):
                             break
 
                         dispo_camion = d.stock_restant_theorique
-                        if qte_demandee > dispo_camion:
+                        total_besoin = qte_demandee * nb_boutiques
+                        if total_besoin > dispo_camion:
                             contradiction_erreur = (
-                                f"Contradiction impossible : Le livreur ne dispose que de {dispo_camion} {d.produit.unite} "
-                                f"de « {d.produit.designation} » dans son véhicule (vous avez demandé {qte_demandee}). "
-                                f"Veuillez corriger la quantité ou réapprovisionner sa dotation."
+                                f"Contradiction impossible : Pour {nb_boutiques} boutique(s) avec {qte_demandee} unité(s) chacune, "
+                                f"il faut {total_besoin} {d.produit.unite}(s) de « {d.produit.designation} », "
+                                f"mais le livreur ne dispose que de {dispo_camion} dans son véhicule. "
+                                f"Veuillez ajuster la quantité ou réapprovisionner la dotation."
                             )
                             break
 
@@ -906,16 +1109,28 @@ def tournee_detail_view(request, pk):
             except Exception:
                 montant_cible = montant_calcule
 
-            OrdreMission.objects.create(
-                entreprise=tournee.entreprise,
-                tournee=tournee,
-                alimentation=alim,
-                produits_consignes=produits_consignes,
-                montant_cible=montant_cible,
-                consigne_particuliere=consigne_particuliere,
-                statut='A_FAIRE'
-            )
-            messages.success(request, f"Consigne assignée avec succès pour {alim.nom} sans contradiction de stock !")
+            with transaction.atomic():
+                for alim_id in alim_ids:
+                    alim = get_object_or_404(Alimentation, id=alim_id)
+                    OrdreMission.objects.create(
+                        entreprise=tournee.entreprise,
+                        tournee=tournee,
+                        alimentation=alim,
+                        produits_consignes=produits_consignes,
+                        montant_cible=montant_cible,
+                        consigne_particuliere=consigne_particuliere,
+                        statut='A_FAIRE'
+                    )
+
+            messages.success(request, f"🎯 Consigne assignée avec succès pour {nb_boutiques} boutique(s) sans contradiction de stock !")
+            return redirect('tournee_detail', pk=tournee.id)
+
+        elif action == 'supprimer_mission':
+            mission_id = request.POST.get('mission_id')
+            mission = get_object_or_404(OrdreMission, id=mission_id, tournee=tournee)
+            alim_nom = mission.alimentation.nom
+            mission.delete()
+            messages.success(request, f"Consigne de mission pour « {alim_nom} » supprimée avec succès.")
             return redirect('tournee_detail', pk=tournee.id)
 
         elif action == 'reapprovisionner':

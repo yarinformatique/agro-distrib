@@ -196,14 +196,18 @@
                 {% endif %}
 
                 {% if m.statut == 'A_FAIRE' %}
-                <div class="pt-1 flex gap-2">
-                    <button @click="demarrerGuidageDirect({ id: '{{ m.alimentation.id }}', nom: '{{ m.alimentation.nom|escapejs }}', quartier: '{{ m.alimentation.quartier|escapejs }}', latitude: {{ m.alimentation.latitude }}, longitude: {{ m.alimentation.longitude }} })"
+                <div class="pt-1 flex gap-1.5 items-center">
+                    <button @click="lancerNavigationMission('{{ m.alimentation.id }}')"
                             class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-[11px] shadow transition flex items-center justify-center gap-1">
-                        <span>🚀</span> Démarrer Navigation GPS
+                        <span>🚀</span> Navigation GPS
                     </button>
+                    <a href="{{ m.alimentation.google_maps_url }}" target="_blank"
+                       class="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-[11px] transition flex items-center gap-1 shadow-sm">
+                        <span>🗺️</span> Maps
+                    </a>
                     <button @click="preparerVente({ id: '{{ m.alimentation.id }}', nom: '{{ m.alimentation.nom|escapejs }}' })"
                             class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[11px] shadow transition flex items-center justify-center gap-1">
-                        <span>🛒</span> Enregistrer Vente
+                        <span>🛒</span> Vente
                     </button>
                 </div>
                 {% endif %}
@@ -836,6 +840,16 @@ function livreurApp() {
             });
 
             this.boutiques.sort((a, b) => a.distance_km - b.distance_km);
+        },
+
+        // Navigation dédiée aux missions
+        lancerNavigationMission(alimId) {
+            let b = this.boutiques.find(item => String(item.id) === String(alimId));
+            if (b) {
+                this.demarrerGuidageDirect(b);
+            } else {
+                window.open('https://www.google.com/maps/dir/?api=1&destination=' + alimId, '_blank');
+            }
         },
 
         // Démarrage instantané du guidage GPS Turn-by-Turn
