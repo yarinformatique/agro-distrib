@@ -824,6 +824,14 @@ class MultiTenantAgroDistribTestCase(TestCase):
         """
         self.client.login(username="demo", password="123")
 
+        # Vérification du rendu sans corruption de syntaxe HTML
+        res_page = self.client.get("/tournees/")
+        self.assertEqual(res_page.status_code, 200)
+        self.assertContains(res_page, 'x-data="tourneesDashboardApp()"')
+        self.assertContains(res_page, 'openNewTourneeModal = true')
+        self.assertContains(res_page, 'function tourneesDashboardApp()')
+        self.assertNotContains(res_page, 'max) { this.quantites')
+
         # Création d'un second livreur sans stock pour tester la dynamique par livreur
         livreur_b = User.objects.create_user(username="livreur_b_test", password="123", email="livreurb@agrodistrib.bf")
         ProfilUtilisateur.objects.create(user=livreur_b, entreprise=self.tenant_a, role="LIVREUR")

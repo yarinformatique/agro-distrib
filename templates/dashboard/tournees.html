@@ -3,39 +3,7 @@
 {% block title %}Tournées & Dotations de Stock • Agro-Distrib B2B{% endblock %}
 
 {% block content %}
-<div class="space-y-6" x-data="{
-    openNewTourneeModal: false,
-    selectedLivreurId: '{{ livreurs.0.id|default:"" }}',
-    stocksData: {{ stocks_livreurs_json|safe }},
-    quantites: {},
-    getStockDispo(prodId) {
-        if (!this.selectedLivreurId || !this.stocksData || !this.stocksData[this.selectedLivreurId]) return 0;
-        const item = this.stocksData[this.selectedLivreurId][prodId];
-        return item ? (item.dispo || 0) : 0;
-    },
-    getStockDetail(prodId) {
-        if (!this.selectedLivreurId || !this.stocksData || !this.stocksData[this.selectedLivreurId]) {
-            return { dispo: 0, expedie: 0, vendu: 0 };
-        }
-        const item = this.stocksData[this.selectedLivreurId][prodId];
-        return item || { dispo: 0, expedie: 0, vendu: 0 };
-    },
-    onLivreurChange() {
-        for (let prodId in this.quantites) {
-            const max = this.getStockDispo(prodId);
-            if (this.quantites[prodId] > max) {
-                this.quantites[prodId] = max;
-            }
-        }
-    },
-    clampQuantite(prodId) {
-        const max = this.getStockDispo(prodId);
-        let val = parseInt(this.quantites[prodId]);
-        if (isNaN(val) || val < 0) val = 0;
-        if (val > max) val = max;
-        this.quantites[prodId] = val;
-    }
-}">
+<div class="space-y-6" x-data="tourneesDashboardApp()">
     <!-- En-tête -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
         <div>
@@ -191,24 +159,24 @@
                     <div class="border rounded-xl divide-y divide-slate-100 max-h-72 overflow-y-auto">
                         {% for p in produits %}
                         <div class="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs transition-colors"
-                             :class="getStockDispo('{{ p.id }}') > 0 ? 'bg-white hover:bg-slate-50' : 'bg-slate-50/60 opacity-85'">
+                             :class="hasStockDispo('{{ p.id }}') ? 'bg-white hover:bg-slate-50' : 'bg-slate-50/60 opacity-85'">
                             <div class="space-y-1">
                                 <div class="font-bold text-slate-800 flex items-center gap-2">
                                     <span>{{ p.designation }}</span>
                                     <span class="text-[10px] font-normal px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{{ p.unite }}</span>
                                 </div>
                                 <div class="flex flex-wrap items-center gap-2 text-[11px]">
-                                    <template x-if="getStockDispo('{{ p.id }}') > 0">
+                                    <template x-if="hasStockDispo('{{ p.id }}')">
                                         <span class="inline-flex items-center gap-1 font-bold text-emerald-800 bg-emerald-100/80 px-2.5 py-0.5 rounded-md border border-emerald-200">
                                             📦 Stock réel disponible : <span x-text="getStockDispo('{{ p.id }}')"></span> {{ p.unite }}(s)
                                         </span>
                                     </template>
-                                    <template x-if="getStockDispo('{{ p.id }}') <= 0">
+                                    <template x-if="!hasStockDispo('{{ p.id }}')">
                                         <span class="inline-flex items-center gap-1 font-semibold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-md border border-rose-200">
                                             ⚠️ 0 disponible (Livreur sans stock)
                                         </span>
                                     </template>
-                                    <span class="text-slate-400 text-[10px]" x-show="getStockDetail('{{ p.id }}').expedie > 0 || getStockDetail('{{ p.id }}').vendu > 0">
+                                    <span class="text-slate-400 text-[10px]" x-show="hasStockHistory('{{ p.id }}')">
                                         (Expédié : <strong class="text-slate-600" x-text="getStockDetail('{{ p.id }}').expedie"></strong> • Vendu/Livré : <strong class="text-slate-600" x-text="getStockDetail('{{ p.id }}').vendu"></strong>)
                                     </span>
                                 </div>
@@ -222,8 +190,8 @@
                                        :max="getStockDispo('{{ p.id }}')"
                                        x-model.number="quantites['{{ p.id }}']"
                                        @input="clampQuantite('{{ p.id }}')"
-                                       :disabled="getStockDispo('{{ p.id }}') <= 0"
-                                       :class="getStockDispo('{{ p.id }}') <= 0 ? 'bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200' : 'bg-white text-slate-900 border-slate-300 focus:ring-2 focus:ring-emerald-500 font-bold'"
+                                       :disabled="!hasStockDispo('{{ p.id }}')"
+                                       :class="!hasStockDispo('{{ p.id }}') ? 'bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200' : 'bg-white text-slate-900 border-slate-300 focus:ring-2 focus:ring-emerald-500 font-bold'"
                                        class="w-24 px-2 py-1.5 border rounded-lg text-center text-sm outline-none transition-all shadow-inner">
                                 <span class="text-[11px] text-slate-500 font-medium">{{ p.unite }}</span>
                             </div>
@@ -244,4 +212,61 @@
         </div>
     </div>
 </div>
+
+<script>
+function tourneesDashboardApp() {
+    return {
+        openNewTourneeModal: false,
+        selectedLivreurId: '{{ livreurs.0.id|default:"" }}',
+        stocksData: {{ stocks_livreurs_json|default:"{}"|safe }},
+        quantites: {},
+
+        getStockDispo(prodId) {
+            if (!this.selectedLivreurId || !this.stocksData || !this.stocksData[this.selectedLivreurId]) {
+                return 0;
+            }
+            const item = this.stocksData[this.selectedLivreurId][prodId];
+            return item ? (item.dispo || 0) : 0;
+        },
+
+        hasStockDispo(prodId) {
+            return this.getStockDispo(prodId) > 0;
+        },
+
+        getStockDetail(prodId) {
+            if (!this.selectedLivreurId || !this.stocksData || !this.stocksData[this.selectedLivreurId]) {
+                return { dispo: 0, expedie: 0, vendu: 0 };
+            }
+            const item = this.stocksData[this.selectedLivreurId][prodId];
+            return item || { dispo: 0, expedie: 0, vendu: 0 };
+        },
+
+        hasStockHistory(prodId) {
+            const d = this.getStockDetail(prodId);
+            return (d.expedie > 0 || d.vendu > 0);
+        },
+
+        onLivreurChange() {
+            for (let prodId in this.quantites) {
+                const max = this.getStockDispo(prodId);
+                if (this.quantites[prodId] > max) {
+                    this.quantites[prodId] = max;
+                }
+            }
+        },
+
+        clampQuantite(prodId) {
+            const max = this.getStockDispo(prodId);
+            let val = parseInt(this.quantites[prodId]);
+            if (isNaN(val) || val < 0) {
+                val = 0;
+            }
+            if (val > max) {
+                val = max;
+            }
+            this.quantites[prodId] = val;
+        }
+    };
+}
+</script>
 {% endblock %}
