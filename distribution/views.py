@@ -923,12 +923,13 @@ def expedition_bordereau_view(request, pk):
 
 def get_stocks_par_livreur(tenant=None, livreurs_qs=None, produits_qs=None):
     """
-    Calcule dynamiquement le stock réel physique disponible au niveau de chaque livreur.
-    Règle impérative :
-    - Entrées : Colis et marchandises expédiées et confirmées (statut EN_TRANSIT ou RECEPTIONNE) pour ce livreur.
-    - Sorties : Livraisons et ventes déjà effectuées par le livreur auprès des alimentations.
-    - Stock Réel Livreur = max(0, Entrées - Sorties).
-    - Dotations directes antérieures prises en compte en repli si aucune expédition n'existe.
+    Calcule dynamiquement et strictement le stock réel physique disponible au niveau de chaque livreur.
+    Règle absolue :
+    - Entrées : UNIQUEMENT les expéditions confirmées ou réceptionnées (statut EN_TRANSIT ou RECEPTIONNE) pour ce livreur.
+      (Ce stock réel provient des expéditions qu'on fait à ce livreur).
+    - Sorties : Les livraisons / ventes effectivement faites par le livreur auprès des boutiques (LivraisonVente).
+    - Stock Réel Livreur = max(0, Entrées Expéditions - Sorties Livraisons).
+    - Les dotations de tournée n'augmentent en aucun cas le stock réel : elles ne font qu'embarquer du stock existant.
     """
     if livreurs_qs is None:
         livreurs_qs = User.objects.filter(is_staff=False)
@@ -940,42 +941,40 @@ def get_stocks_par_livreur(tenant=None, livreurs_qs=None, produits_qs=None):
         if tenant:
             produits_qs = produits_qs.filter(entreprise=tenant)
 
-    livreur_ids = list(livreurs_qs.values_list('id', flat=True))
+    livreurs_list = list(livreurs_qs)
+    livreur_ids = [liv.id for liv in livreurs_list]
     produit_ids = list(produits_qs.values_list('id', flat=True))
 
     # 1. Total expédié par (livreur_id, produit_id) pour les expéditions confirmées ou réceptionnées
     exp_qs = LigneExpedition.objects.filter(
-        expedition__livreur_destinataire_id__in=livreur_ids,
-        expedition__statut__in=['EN_TRANSIT', 'RECEPTIONNE'],
-        produit_id__in=produit_ids
-    )
-    if tenant:
-        exp_qs = exp_qs.filter(expedition__entreprise=tenant)
-    exp_data = exp_qs.values(
-        'expedition__livreur_destinataire_id', 'produit_id'
-    ).annotate(total_exp=Sum('quantite'))
-
-    exp_map = {
-        (item['expedition__livreur_destinataire_id'], item['produit_id']): item['total_exp']
-        for item in exp_data
-    }
-
-    # Prise en compte éventuelle des expéditions dont le destinataire_nom correspond au livreur si FK non renseignée
-    exp_orphan_qs = LigneExpedition.objects.filter(
-        expedition__livreur_destinataire__isnull=True,
         expedition__statut__in=['EN_TRANSIT', 'RECEPTIONNE'],
         produit_id__in=produit_ids
     ).select_related('expedition')
     if tenant:
-        exp_orphan_qs = exp_orphan_qs.filter(expedition__entreprise=tenant)
-    for ligne in exp_orphan_qs:
-        nom_dest = (ligne.expedition.destinataire_nom or '').lower()
-        for liv in livreurs_qs:
-            liv_user = (liv.username or '').lower()
-            liv_last = (liv.last_name or '').lower()
-            if (liv_user and liv_user in nom_dest) or (liv_last and liv_last in nom_dest):
-                key = (liv.id, ligne.produit_id)
-                exp_map[key] = exp_map.get(key, 0) + ligne.quantite
+        exp_qs = exp_qs.filter(expedition__entreprise=tenant)
+
+    exp_map = {}  # (livreur_id, produit_id) -> quantite_totale
+    for ligne in exp_qs:
+        exp = ligne.expedition
+        cible_id = exp.livreur_destinataire_id
+        if not cible_id:
+            # Chercher correspondance par nom si FK non renseignée
+            dest_lower = (exp.destinataire_nom or '').strip().lower()
+            if dest_lower:
+                for liv in livreurs_list:
+                    uname = (liv.username or '').strip().lower()
+                    fname = (liv.first_name or '').strip().lower()
+                    lname = (liv.last_name or '').strip().lower()
+                    fullname = f"{fname} {lname}".strip()
+                    if (uname and uname in dest_lower) or \
+                       (fullname and fullname in dest_lower) or \
+                       (lname and len(lname) >= 3 and lname in dest_lower) or \
+                       (fname and len(fname) >= 3 and fname in dest_lower):
+                        cible_id = liv.id
+                        break
+        if cible_id and cible_id in livreur_ids:
+            key = (cible_id, ligne.produit_id)
+            exp_map[key] = exp_map.get(key, 0) + ligne.quantite
 
     # 2. Total vendu/livré par ce livreur (toutes tournées confondues)
     ventes_qs = LigneLivraisonVente.objects.filter(
@@ -993,33 +992,16 @@ def get_stocks_par_livreur(tenant=None, livreurs_qs=None, produits_qs=None):
         for item in ventes_data
     }
 
-    # 3. Total dotations directes (fallback de sécurité si dotation enregistrée directement sans expédition)
-    dot_qs = LigneDotationStock.objects.filter(
-        tournee__livreur_id__in=livreur_ids,
-        produit_id__in=produit_ids
-    )
-    if tenant:
-        dot_qs = dot_qs.filter(tournee__entreprise=tenant)
-    dot_data = dot_qs.values(
-        'tournee__livreur_id', 'produit_id'
-    ).annotate(total_dot=Sum('quantite_depart'))
-
-    dot_map = {
-        (item['tournee__livreur_id'], item['produit_id']): item['total_dot']
-        for item in dot_data
-    }
-
     result = {}
-    for liv_id in livreur_ids:
-        liv_key = str(liv_id)
+    for liv in livreurs_list:
+        liv_key = str(liv.id)
         result[liv_key] = {}
         for p in produits_qs:
             p_key = str(p.id)
-            exp = exp_map.get((liv_id, p.id), 0)
-            dot = dot_map.get((liv_id, p.id), 0)
-            vendu = ventes_map.get((liv_id, p.id), 0)
-            entree = max(exp, dot)
-            dispo = max(0, entree - vendu)
+            exp = exp_map.get((liv.id, p.id), 0)
+            vendu = ventes_map.get((liv.id, p.id), 0)
+            # RÈGLE DU STOCK RÉEL : Provient des expéditions, se déduit uniquement des livraisons faites
+            dispo = max(0, exp - vendu)
             result[liv_key][p_key] = {
                 'dispo': dispo,
                 'expedie': exp,
@@ -1559,12 +1541,25 @@ def livreurs_view(request):
     if tenant:
         profils = profils.filter(entreprise=tenant)
 
+    produits_qs = Produit.objects.all().order_by('designation')
+    if tenant:
+        produits_qs = produits_qs.filter(entreprise=tenant)
+
+    livreurs_users = [prof.user for prof in profils]
+    stocks_livreurs = get_stocks_par_livreur(
+        tenant=tenant,
+        livreurs_qs=User.objects.filter(id__in=[u.id for u in livreurs_users]),
+        produits_qs=produits_qs
+    )
+
     livreurs_data = []
     for prof in profils:
         tournees_total = prof.user.tournees.count()
         tournees_actives = prof.user.tournees.filter(statut='EN_COURS').count()
         ventes_total = LivraisonVente.objects.filter(tournee__livreur=prof.user).count()
         ca_total = LivraisonVente.objects.filter(tournee__livreur=prof.user).aggregate(s=Sum('montant_total'))['s'] or Decimal(0)
+        stock_liv_dict = stocks_livreurs.get(str(prof.user.id), {})
+        total_articles_dispo = sum(item.get('dispo', 0) for item in stock_liv_dict.values())
         livreurs_data.append({
             'user': prof.user,
             'profil': prof,
@@ -1572,12 +1567,16 @@ def livreurs_view(request):
             'tournees_actives': tournees_actives,
             'ventes_total': ventes_total,
             'ca_total': ca_total,
+            'stock_reel': stock_liv_dict,
+            'total_articles_dispo': total_articles_dispo,
         })
 
     return render(request, 'dashboard/livreurs.html', {
         'livreurs_data': livreurs_data,
         'societes': societes,
         'tenant': tenant,
+        'stocks_livreurs_json': json.dumps(stocks_livreurs),
+        'produits': produits_qs,
     })
 
 
@@ -1795,15 +1794,22 @@ def livreur_app_view(request):
     existing_prod_ids = set(tournee.dotations.values_list('produit_id', flat=True))
     for p in produits_qs:
         if p.id not in existing_prod_ids:
-            qte_auto = min(15, p.stock_entrepot) if p.stock_entrepot > 0 else 0
             LigneDotationStock.objects.create(
                 tournee=tournee,
                 produit=p,
-                quantite_depart=qte_auto,
+                quantite_depart=0,
                 quantite_retour=0
             )
 
     tournee.recalculer_caisse_theorique()
+
+    # Stock réel physique disponible chez ce livreur (Expéditions reçues - Livraisons faites)
+    stocks_dict = get_stocks_par_livreur(
+        tenant=tenant,
+        livreurs_qs=User.objects.filter(id=request.user.id),
+        produits_qs=produits_qs
+    )
+    stock_reel_ce_livreur = stocks_dict.get(str(request.user.id), {})
 
     # Alimentations avec coordonnées GPS & statut des créances (optimisé sans requêtes N+1)
     alim_qs = Alimentation.objects.filter(actif=True).prefetch_related('achats')
@@ -1866,6 +1872,7 @@ def livreur_app_view(request):
         'tournee': tournee,
         'alimentations_json': json.dumps(alimentations),
         'dotations_json': json.dumps(dotations_data),
+        'stock_reel_ce_livreur': stock_reel_ce_livreur,
         'ventes_recents': ventes_recents,
         'missions': missions,
         'expeditions_en_cours': expeditions_en_cours,

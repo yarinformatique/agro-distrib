@@ -918,6 +918,11 @@ class MultiTenantAgroDistribTestCase(TestCase):
         self.p_miel.refresh_from_db()
         self.assertEqual(self.p_miel.stock_entrepot, stock_miel_init - 20)
 
+        # Règle cruciale : rouvrir le formulaire avant livraison ne doit PAS s'ajouter au stock réel (reste à 20)
+        res_page2 = self.client.get("/tournees/")
+        stocks_data = json.loads(res_page2.context['stocks_livreurs_json'])
+        self.assertEqual(stocks_data[str(self.livreur_a.id)][str(self.p_miel.id)]['dispo'], 20)
+
         # 7. Assignation multi-boutiques avec anti-contradiction
         # Le van a 10 miels. Si on assigne 6 miels à 2 boutiques = 12 > 10 -> Contradiction bloquée !
         res_contradiction = self.client.post(f"/tournees/{tournee.id}/", {
@@ -946,6 +951,34 @@ class MultiTenantAgroDistribTestCase(TestCase):
         })
         self.assertEqual(res_del_m.status_code, 302)
         self.assertEqual(tournee.missions.count(), 1)
+
+        # 8. Simulation d'une livraison effective faite par le livreur (vente de 6 miels)
+        vente = LivraisonVente.objects.create(
+            entreprise=self.tenant_a,
+            tournee=tournee,
+            alimentation=self.alim_koulouba,
+            montant_total=Decimal("15000"),
+            montant_paye=Decimal("15000"),
+            statut_paiement='PAYE'
+        )
+        LigneLivraisonVente.objects.create(
+            vente=vente,
+            produit=self.p_miel,
+            quantite=6,
+            prix_unitaire=Decimal("2500"),
+            sous_total=Decimal("15000")
+        )
+
+        # Règle cruciale : après livraison effective, le stock réel est déduit automatiquement (20 - 6 = 14)
+        res_page3 = self.client.get("/tournees/")
+        stocks_data3 = json.loads(res_page3.context['stocks_livreurs_json'])
+        self.assertEqual(stocks_data3[str(self.livreur_a.id)][str(self.p_miel.id)]['dispo'], 14)
+
+        # Règle cruciale : sur la page des livreurs, on retrouve exactement ce même stock réel (14)
+        res_livreurs = self.client.get("/livreurs/")
+        self.assertEqual(res_livreurs.status_code, 200)
+        stocks_livreurs_page = json.loads(res_livreurs.context['stocks_livreurs_json'])
+        self.assertEqual(stocks_livreurs_page[str(self.livreur_a.id)][str(self.p_miel.id)]['dispo'], 14)
 
 
 

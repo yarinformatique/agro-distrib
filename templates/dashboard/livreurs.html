@@ -3,7 +3,7 @@
 {% block title %}Gestion des Livreurs • {{ tenant.nom|default:"Agro-Distrib" }}{% endblock %}
 
 {% block content %}
-<div class="space-y-6" x-data="{ modalCreer: false, modalMdp: false, selectedLivreur: {} }">
+<div class="space-y-6" x-data="{ modalCreer: false, modalMdp: false, modalStock: false, selectedLivreur: {}, activeStockLivreur: '', activeStockData: {}, stocksData: {{ stocks_livreurs_json|default:'{}'|safe }} }">
 
     <!-- En-tête -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
@@ -40,6 +40,7 @@
                         <th class="py-3.5 px-4">Identifiant & Contact</th>
                         <th class="py-3.5 px-4">Société de Relais</th>
                         <th class="py-3.5 px-4 text-center">Statut</th>
+                        <th class="py-3.5 px-4 text-center">Stock Réel Disponible</th>
                         <th class="py-3.5 px-4 text-center">Activité / Tournées</th>
                         <th class="py-3.5 px-4 text-right">CA Réalisé</th>
                         <th class="py-3.5 px-4 text-center">Actions</th>
@@ -97,6 +98,15 @@
                         </td>
 
                         <td class="py-4 px-4 text-center">
+                            <button type="button"
+                                    @click="activeStockLivreur = '{{ item.user.get_full_name|default:item.user.username }}'; activeStockData = stocksData['{{ item.user.id }}'] || {}; modalStock = true"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm {% if item.total_articles_dispo > 0 %}bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300{% else %}bg-slate-100 text-slate-500 hover:bg-slate-200 border border-slate-200{% endif %}">
+                                <span>📦</span>
+                                <span>{{ item.total_articles_dispo }} article(s)</span>
+                            </button>
+                        </td>
+
+                        <td class="py-4 px-4 text-center">
                             <div class="text-[11px] text-slate-600">
                                 <span class="font-bold text-slate-800">{{ item.tournees_total }}</span> tournée(s)
                                 {% if item.tournees_actives > 0 %}
@@ -136,7 +146,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="py-8 text-center text-slate-400">
+                        <td colspan="8" class="py-8 text-center text-slate-400">
                             Aucun livreur enregistré pour le moment. Cliquez sur "Nouveau Livreur" pour en ajouter un.
                         </td>
                     </tr>
@@ -264,6 +274,50 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL STOCK RÉEL DU LIVREUR (COLIS REÇUS - LIVRAISONS FAITES) -->
+    <div x-show="modalStock" style="display: none;"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4" @click.away="modalStock = false">
+            <div class="flex items-center justify-between border-b pb-3">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">📦 Stock Réel Disponible</h3>
+                    <p class="text-xs text-slate-500">Livreur : <strong class="text-emerald-700" x-text="activeStockLivreur"></strong></p>
+                </div>
+                <button type="button" @click="modalStock = false" class="text-slate-400 hover:text-slate-600 text-lg font-bold p-1">✕</button>
+            </div>
+
+            <p class="text-xs text-slate-600 bg-emerald-50/70 p-3 rounded-2xl border border-emerald-200">
+                💡 <strong>Règle du stock réel :</strong> Ce stock provient des colis et expéditions confirmées reçues par ce livreur, et se déduit uniquement des livraisons et ventes qu'il effectue sur le terrain.
+            </p>
+
+            <div class="border rounded-2xl divide-y divide-slate-100 max-h-72 overflow-y-auto">
+                <template x-for="(st, prodId) in activeStockData" :key="prodId">
+                    <div class="p-3 flex items-center justify-between text-xs hover:bg-slate-50">
+                        <div>
+                            <div class="font-bold text-slate-800" x-text="st.designation"></div>
+                            <div class="text-[11px] text-slate-500">
+                                Reçu expédié : <span class="font-semibold text-slate-700" x-text="st.expedie"></span> • Livré aux boutiques : <span class="font-semibold text-slate-700" x-text="st.vendu"></span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg font-black text-sm"
+                                  :class="st.dispo > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-50 text-rose-700 border border-rose-200'"
+                                  x-text="st.dispo + ' ' + st.unite + '(s)'">
+                            </span>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button type="button" @click="modalStock = false"
+                        class="px-5 py-2.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition">
+                    Fermer
+                </button>
+            </div>
         </div>
     </div>
 
