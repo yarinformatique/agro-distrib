@@ -979,6 +979,30 @@ class MultiTenantAgroDistribTestCase(TestCase):
         self.assertEqual(res_livreurs.status_code, 200)
         stocks_livreurs_page = json.loads(res_livreurs.context['stocks_livreurs_json'])
         self.assertEqual(stocks_livreurs_page[str(self.livreur_a.id)][str(self.p_miel.id)]['dispo'], 14)
+        self.assertContains(res_livreurs, "livreursDashboardApp()")
+
+        # 9. Test création nouveau livreur via le bouton / modal
+        res_creer_liv = self.client.post("/livreurs/", {
+            "action": "creer",
+            "username": "livreur_test_nouveau",
+            "password": "Password123!",
+            "first_name": "Karim",
+            "last_name": "Ouedraogo",
+            "telephone": "+22670112233"
+        })
+        self.assertEqual(res_creer_liv.status_code, 302)
+        nouveau_u = User.objects.filter(username="livreur_test_nouveau").first()
+        self.assertIsNotNone(nouveau_u)
+        self.assertEqual(nouveau_u.first_name, "Karim")
+
+        # 10. Test instantanéité et priorité de la tournée pour le livreur (pas de blocage par tournée vide)
+        self.client.force_login(self.livreur_a)
+        res_app = self.client.get("/livreur/")
+        self.assertEqual(res_app.status_code, 200)
+        self.assertEqual(res_app.context['tournee'].id, tournee.id)
+        # Vérifier que les données des missions contiennent les lignes de produits
+        missions_json = json.loads(res_app.context['missions_json'])
+        self.assertIn(str(tournee.missions.first().id), missions_json)
 
 
 

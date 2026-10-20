@@ -1078,6 +1078,15 @@ def tournees_view(request):
                 return redirect('tournees')
 
             with transaction.atomic():
+                # Nettoyage automatique des éventuelles tournées fantômes vides (sans ventes ni missions)
+                Tournee.objects.filter(
+                    entreprise=tenant,
+                    livreur=livreur,
+                    statut='EN_COURS',
+                    missions__isnull=True,
+                    ventes__isnull=True
+                ).delete()
+
                 tournee = Tournee.objects.create(
                     entreprise=tenant,
                     livreur=livreur,
@@ -1172,6 +1181,7 @@ def tournee_detail_view(request, pk):
 
             dotations_map = {str(d.produit.id): d for d in tournee.dotations.select_related('produit').all()}
             articles_list = []
+            articles_dict = {}
             montant_calcule = Decimal('0')
             contradiction_erreur = None
 
@@ -1206,6 +1216,7 @@ def tournee_detail_view(request, pk):
                         sous_total = Decimal(qte_demandee) * d.produit.prix_unitaire_defaut
                         montant_calcule += sous_total
                         articles_list.append(f"{qte_demandee}x {d.produit.designation}")
+                        articles_dict[str(prod_id)] = qte_demandee
 
             if contradiction_erreur:
                 messages.error(request, contradiction_erreur)
@@ -1233,6 +1244,7 @@ def tournee_detail_view(request, pk):
                         tournee=tournee,
                         alimentation=alim,
                         produits_consignes=produits_consignes,
+                        donnees_produits=articles_dict,
                         montant_cible=montant_cible,
                         consigne_particuliere=consigne_particuliere,
                         statut='A_FAIRE'
@@ -1775,9 +1787,23 @@ def livreur_app_view(request):
     tournee_qs = Tournee.objects.filter(livreur=request.user, statut='EN_COURS')
     if tenant:
         tournee_qs = tournee_qs.filter(entreprise=tenant)
-    tournee = tournee_qs.order_by('-date_tournee', '-id').first()
 
-    if not tournee:
+    # Récupération prioritaire et instantanée de la tournée active :
+    # 1. En priorité absolue, la tournée contenant des missions assignées par le promoteur ou du stock embarqué
+    # 2. Tri chronologique strict par date de création (la plus récente d'abord)
+    tournees_candidates = list(tournee_qs.order_by('-date_creation', '-date_tournee'))
+    tournee = None
+    for t in tournees_candidates:
+        if t.missions.exists() or t.dotations.filter(quantite_depart__gt=0).exists():
+            tournee = t
+            break
+    if not tournee and tournees_candidates:
+        tournee = tournees_candidates[0]
+
+    if tournee:
+        # Nettoyage automatique des éventuelles tournées fantômes vides orphelines
+        tournee_qs.exclude(id=tournee.id).filter(missions__isnull=True, ventes__isnull=True).delete()
+    else:
         tournee = Tournee.objects.create(
             entreprise=tenant,
             livreur=request.user,
@@ -1855,6 +1881,19 @@ def livreur_app_view(request):
         })
 
     missions = tournee.missions.select_related('alimentation').all()
+    missions_data = {}
+    for m in missions:
+        missions_data[str(m.id)] = {
+            'id': str(m.id),
+            'alim_id': str(m.alimentation.id),
+            'alim_nom': m.alimentation.nom,
+            'statut': m.statut,
+            'produits_consignes': m.produits_consignes,
+            'montant_cible': float(m.montant_cible),
+            'consigne_particuliere': m.consigne_particuliere,
+            'lignes': m.get_lignes_dict(),
+        }
+
     ventes_recents = tournee.ventes.select_related('alimentation').prefetch_related('lignes__produit').order_by('-date_heure')
 
     # Expéditions adressées à ce livreur (en transit et reçues récemment)
@@ -1872,6 +1911,7 @@ def livreur_app_view(request):
         'tournee': tournee,
         'alimentations_json': json.dumps(alimentations),
         'dotations_json': json.dumps(dotations_data),
+        'missions_json': json.dumps(missions_data),
         'stock_reel_ce_livreur': stock_reel_ce_livreur,
         'ventes_recents': ventes_recents,
         'missions': missions,

@@ -3,7 +3,7 @@
 {% block title %}Gestion des Livreurs • {{ tenant.nom|default:"Agro-Distrib" }}{% endblock %}
 
 {% block content %}
-<div class="space-y-6" x-data="{ modalCreer: false, modalMdp: false, modalStock: false, selectedLivreur: {}, activeStockLivreur: '', activeStockData: {}, stocksData: {{ stocks_livreurs_json|default:'{}'|safe }} }">
+<div class="space-y-6" x-data="livreursDashboardApp()">
 
     <!-- En-tête -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
@@ -99,7 +99,7 @@
 
                         <td class="py-4 px-4 text-center">
                             <button type="button"
-                                    @click="activeStockLivreur = '{{ item.user.get_full_name|default:item.user.username }}'; activeStockData = stocksData['{{ item.user.id }}'] || {}; modalStock = true"
+                                    @click="openStock('{{ item.user.id }}', '{{ item.user.get_full_name|default:item.user.username|escapejs }}')"
                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm {% if item.total_articles_dispo > 0 %}bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300{% else %}bg-slate-100 text-slate-500 hover:bg-slate-200 border border-slate-200{% endif %}">
                                 <span>📦</span>
                                 <span>{{ item.total_articles_dispo }} article(s)</span>
@@ -124,7 +124,7 @@
                             <div class="flex items-center justify-center space-x-1">
                                 <!-- Réinitialiser mot de passe -->
                                 <button type="button"
-                                        @click="selectedLivreur = { id: '{{ item.user.id }}', username: '{{ item.user.username }}' }; modalMdp = true"
+                                        @click="openMdp('{{ item.user.id }}', '{{ item.user.username|escapejs }}')"
                                         class="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 text-xs transition"
                                         title="Changer mot de passe">
                                     🔑
@@ -322,4 +322,29 @@
     </div>
 
 </div>
+
+<script>
+function livreursDashboardApp() {
+    return {
+        modalCreer: false,
+        modalMdp: false,
+        modalStock: false,
+        selectedLivreur: {},
+        activeStockLivreur: '',
+        activeStockData: {},
+        stocksData: {{ stocks_livreurs_json|default:'{}'|safe }},
+
+        openStock(userId, userName) {
+            this.activeStockLivreur = userName;
+            this.activeStockData = this.stocksData[userId] || {};
+            this.modalStock = true;
+        },
+
+        openMdp(userId, username) {
+            this.selectedLivreur = { id: userId, username: username };
+            this.modalMdp = true;
+        }
+    };
+}
+</script>
 {% endblock %}

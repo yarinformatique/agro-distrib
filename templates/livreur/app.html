@@ -156,71 +156,70 @@
     {% endif %}
 
     <!-- ========================================================================= -->
-    <!-- SECTION MISSIONS & CONSIGNES DU PDG (OBJECTIFS DU JOUR) -->
-    <!-- ========================================================================= -->
-    {% if missions %}
-    <div class="bg-blue-50/80 border border-blue-200 rounded-2xl p-3.5 space-y-2">
-        <div class="flex items-center justify-between">
-            <span class="text-xs font-black uppercase tracking-wider text-blue-900 flex items-center gap-1.5">
-                <span>🎯</span> Missions & Consignes du PDG ({{ missions.count }})
-            </span>
-            <span class="text-[10px] text-blue-700 font-bold">Priorités du jour</span>
-        </div>
-        <div class="space-y-2">
-            {% for m in missions %}
-            <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm space-y-1.5 text-xs">
-                <div class="flex items-start justify-between">
-                    <div>
-                        <strong class="text-slate-900 font-bold">{{ m.alimentation.nom }}</strong>
-                        <span class="text-[11px] text-slate-500 block">📍 {{ m.alimentation.quartier }}</span>
-                    </div>
-                    <div>
-                        {% if m.statut == 'LIVRE' %}
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">✅ Livré</span>
-                        {% else %}
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 animate-pulse">⏳ À faire</span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="text-[11px] text-slate-700">
-                    📦 À livrer : <strong>{{ m.produits_consignes }}</strong>
-                </div>
-                <div class="text-[11px] text-slate-700 flex justify-between">
-                    <span>Montant cible :</span>
-                    <strong class="font-black text-slate-900">{{ m.montant_cible|floatformat:0 }} FCFA</strong>
-                </div>
-                {% if m.consigne_particuliere %}
-                <div class="text-[11px] text-amber-800 bg-amber-50 p-1.5 rounded border border-amber-100">
-                    💡 <strong>Consigne :</strong> {{ m.consigne_particuliere }}
-                </div>
-                {% endif %}
-
-                {% if m.statut == 'A_FAIRE' %}
-                <div class="pt-1 flex gap-1.5 items-center">
-                    <button @click="lancerNavigationMission('{{ m.alimentation.id }}')"
-                            class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-[11px] shadow transition flex items-center justify-center gap-1">
-                        <span>🚀</span> Navigation GPS
-                    </button>
-                    <a href="{{ m.alimentation.google_maps_url }}" target="_blank"
-                       class="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-[11px] transition flex items-center gap-1 shadow-sm">
-                        <span>🗺️</span> Maps
-                    </a>
-                    <button @click="preparerVente({ id: '{{ m.alimentation.id }}', nom: '{{ m.alimentation.nom|escapejs }}' })"
-                            class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[11px] shadow transition flex items-center justify-center gap-1">
-                        <span>🛒</span> Vente
-                    </button>
-                </div>
-                {% endif %}
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- ========================================================================= -->
     <!-- ONGLET 1 : TOURNÉE & BOUTIQUES PARTENAIRES (TRI GPS AUTOMATIQUE) -->
     <!-- ========================================================================= -->
     <div x-show="currentTab === 'boutiques'" class="space-y-3">
+
+        <!-- SECTION MISSIONS & CONSIGNES DU PDG (OBJECTIFS DU JOUR) -->
+        {% if missions %}
+        <div class="bg-blue-50/80 border border-blue-200 rounded-2xl p-3.5 space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-black uppercase tracking-wider text-blue-900 flex items-center gap-1.5">
+                    <span>🎯</span> Missions & Consignes du PDG ({{ missions.count }})
+                </span>
+                <span class="text-[10px] text-blue-700 font-bold">Priorités du jour</span>
+            </div>
+            <div class="space-y-2">
+                {% for m in missions %}
+                <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm space-y-1.5 text-xs">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <strong class="text-slate-900 font-bold">{{ m.alimentation.nom }}</strong>
+                            <span class="text-[11px] text-slate-500 block">📍 {{ m.alimentation.quartier }}</span>
+                        </div>
+                        <div>
+                            {% if m.statut == 'LIVRE' %}
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">✅ Livré</span>
+                            {% else %}
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 animate-pulse">⏳ À faire</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="text-[11px] text-slate-700">
+                        📦 À livrer : <strong>{{ m.produits_consignes }}</strong>
+                    </div>
+                    <div class="text-[11px] text-slate-700 flex justify-between">
+                        <span>Montant cible :</span>
+                        <strong class="font-black text-slate-900">{{ m.montant_cible|floatformat:0 }} FCFA</strong>
+                    </div>
+                    {% if m.consigne_particuliere %}
+                    <div class="text-[11px] text-amber-800 bg-amber-50 p-1.5 rounded border border-amber-100">
+                        💡 <strong>Consigne :</strong> {{ m.consigne_particuliere }}
+                    </div>
+                    {% endif %}
+
+                    {% if m.statut == 'A_FAIRE' %}
+                    <div class="pt-1 flex gap-1.5 items-center">
+                        <button @click="lancerNavigationMission('{{ m.alimentation.id }}')"
+                                class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-[11px] shadow transition flex items-center justify-center gap-1">
+                            <span>🚀</span> Navigation GPS
+                        </button>
+                        <a href="{{ m.alimentation.google_maps_url }}" target="_blank"
+                           class="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-[11px] transition flex items-center gap-1 shadow-sm">
+                            <span>🗺️</span> Maps
+                        </a>
+                        <button @click="preparerVenteMission('{{ m.id }}')"
+                                class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[11px] shadow transition flex items-center justify-center gap-1">
+                            <span>🛒</span> Livrer / Encaisser
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         <div class="flex items-center justify-between px-1">
             <h2 class="text-xs font-black uppercase tracking-wider text-slate-500">
                 Alimentations à proximité (<span x-text="boutiques.length"></span>)
@@ -328,173 +327,215 @@
     </div>
 
     <!-- ========================================================================= -->
+    <!-- MODAL POPUP LIVRAISON & VENTE (AU-DESSUS DE L'INTERFACE SANS DÉFILEMENT) -->
+    <!-- ========================================================================= -->
+    <div x-show="modalVente" style="display: none;"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-sm flex items-start sm:items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-slate-100 space-y-4 my-auto max-h-[94vh] flex flex-col"
+             @click.away="modalVente = false">
+
+            <!-- En-tête fixe -->
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-shrink-0">
+                <div>
+                    <div class="text-[10px] font-black uppercase tracking-wider text-emerald-600 flex items-center gap-1">
+                        <span>⚡</span> Livraison & Encaissement Terrain
+                    </div>
+                    <h3 class="text-base font-black text-slate-900" x-text="selectedBoutiqueObj ? selectedBoutiqueObj.nom : 'Enregistrer une Vente'"></h3>
+                </div>
+                <button type="button" @click="modalVente = false"
+                        class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold flex items-center justify-center text-sm transition">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Corps scrollable si nécessaire -->
+            <div class="space-y-4 overflow-y-auto flex-1 pr-1">
+                <!-- Choix Boutique -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Boutique Destinataire</label>
+                    <select x-model="venteForm.alimentation_id" @change="onBoutiqueChange()"
+                            class="w-full p-2.5 border rounded-xl text-xs font-bold text-slate-800 bg-slate-50 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500">
+                        <option value="">-- Choisir une alimentation --</option>
+                        <template x-for="b in boutiques" :key="b.id">
+                            <option :value="b.id" x-text="b.nom + ' (' + b.quartier + ')'"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <!-- Alerte Risque Crédit & Plafond de la boutique sélectionnée -->
+                <div x-show="selectedBoutiqueObj" class="p-3 rounded-2xl text-xs space-y-1 transition"
+                     :class="(selectedBoutiqueObj?.a_creance_en_retard || selectedBoutiqueObj?.depasse_plafond_credit) ? 'bg-red-50 border border-red-200 text-red-900' : 'bg-slate-50 border border-slate-200 text-slate-700'">
+                    <div class="flex items-center justify-between font-bold">
+                        <span>Dette en cours : <span x-text="formatFCFA(selectedBoutiqueObj?.creance_actuelle) + ' FCFA'"></span></span>
+                        <span>Plafond : <span x-text="formatFCFA(selectedBoutiqueObj?.plafond_credit) + ' FCFA'"></span></span>
+                    </div>
+                    <template x-if="selectedBoutiqueObj?.a_creance_en_retard">
+                        <p class="text-red-700 font-bold text-[11px] pt-1 border-t border-red-200/60">
+                            🚨 Échéance impayée dépassée ! Vente à crédit bloquée. Paiement comptant obligatoire.
+                        </p>
+                    </template>
+                    <template x-if="!selectedBoutiqueObj?.a_creance_en_retard && selectedBoutiqueObj?.depasse_plafond_credit">
+                        <p class="text-amber-800 font-bold text-[11px] pt-1 border-t border-amber-200/60">
+                            ⚠️ Plafond d'encours atteint. Vente à crédit non autorisée pour éviter le surendettement.
+                        </p>
+                    </template>
+                    <template x-if="!selectedBoutiqueObj?.a_creance_en_retard && !selectedBoutiqueObj?.depasse_plafond_credit">
+                        <p class="text-emerald-700 font-medium text-[11px]">
+                            🟢 Compte sain. Crédit disponible : <strong x-text="formatFCFA(selectedBoutiqueObj?.credit_disponible) + ' FCFA'"></strong>
+                        </p>
+                    </template>
+                </div>
+
+                <!-- Liste des Produits avec Stock Camion, Boutons +/- & Saisie Directe Modifiable -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-2">Produits Livrés (Stock Embarqué)</label>
+                    <div class="space-y-2 max-h-72 overflow-y-auto pr-1">
+                        <template x-for="item in dotations" :key="item.produit_id">
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-2">
+                                <div class="flex-1 pr-1">
+                                    <div class="text-xs font-bold text-slate-800" x-text="item.designation"></div>
+                                    <div class="text-[11px] text-slate-500">
+                                        <span x-text="formatFCFA(item.prix_unitaire) + ' FCFA'"></span> •
+                                        Restant van: <strong :class="item.stock_restant < 3 ? 'text-red-600' : 'text-emerald-700'" x-text="item.stock_restant"></strong>
+                                    </div>
+                                </div>
+
+                                <!-- Contrôleurs Quantité Tactiles +/- et Champ Modifiable Direct -->
+                                <div class="flex items-center space-x-1.5 flex-shrink-0">
+                                    <button type="button"
+                                            @click="diminuerQte(item.produit_id)"
+                                            class="w-9 h-9 rounded-xl bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-800 font-black text-base flex items-center justify-center transition">
+                                        -
+                                    </button>
+                                    <input type="number" min="0" :max="item.stock_restant"
+                                           :value="getQteChoisie(item.produit_id)"
+                                           @input="setQteChoisie(item.produit_id, $event.target.value, item.stock_restant)"
+                                           class="w-14 h-9 text-center font-black text-sm text-slate-900 bg-white border border-slate-300 rounded-xl outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                                    <button type="button"
+                                            @click="augmenterQte(item.produit_id, item.stock_restant)"
+                                            class="w-9 h-9 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-base flex items-center justify-center transition">
+                                        +
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Résumé Montant -->
+                <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center justify-between">
+                    <span class="text-xs font-bold text-emerald-900">Total Commande :</span>
+                    <span class="text-base font-black text-emerald-800" x-text="formatFCFA(totalVenteCalcul) + ' FCFA'"></span>
+                </div>
+
+                <!-- Mode de Règlement & Statut Paiement -->
+                <div class="space-y-3">
+                    <label class="block text-xs font-semibold text-slate-600">Mode de Règlement</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button"
+                                @click="venteForm.mode_reglement = 'ESPECES'; venteForm.statut_paiement = 'PAYE'"
+                                :class="venteForm.mode_reglement === 'ESPECES' ? 'bg-emerald-800 text-white ring-2 ring-emerald-500' : 'bg-slate-100 text-slate-700'"
+                                class="p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+                            💵 Espèces (Cash)
+                        </button>
+                        <button type="button"
+                                @click="venteForm.mode_reglement = 'ORANGE_MONEY'; venteForm.statut_paiement = 'PAYE'"
+                                :class="venteForm.mode_reglement === 'ORANGE_MONEY' ? 'bg-orange-600 text-white ring-2 ring-orange-400' : 'bg-slate-100 text-slate-700'"
+                                class="p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+                            🟠 Orange Money
+                        </button>
+                        <button type="button"
+                                @click="venteForm.mode_reglement = 'MOOV_MONEY'; venteForm.statut_paiement = 'PAYE'"
+                                :class="venteForm.mode_reglement === 'MOOV_MONEY' ? 'bg-blue-600 text-white ring-2 ring-blue-400' : 'bg-slate-100 text-slate-700'"
+                                class="p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+                            🔵 Moov Money
+                        </button>
+                        <button type="button"
+                                @click="if (selectedBoutiqueObj && (selectedBoutiqueObj.a_creance_en_retard || selectedBoutiqueObj.depasse_plafond_credit)) { alert('⚠️ Vente à crédit bloquée : Cette boutique a dépassé son plafond autorisé ou a une facture échue en retard. Veuillez encaisser en espèces ou Mobile Money avant d\'approvisionner.'); } else { venteForm.mode_reglement = 'AUCUN'; venteForm.statut_paiement = 'CREDIT'; }"
+                                :class="venteForm.statut_paiement === 'CREDIT' ? 'bg-red-700 text-white ring-2 ring-red-400' : ((selectedBoutiqueObj && (selectedBoutiqueObj.a_creance_en_retard || selectedBoutiqueObj.depasse_plafond_credit)) ? 'bg-red-50 text-red-400 opacity-60 cursor-not-allowed border border-red-200' : 'bg-slate-100 text-slate-700')"
+                                class="p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+                            ⏳ À Crédit / Partiel
+                        </button>
+                    </div>
+
+                    {% if tenant.lien_paiement_cinetpay %}
+                    <div class="mt-2 p-2.5 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between text-xs">
+                        <div class="text-blue-900 font-semibold flex items-center gap-1.5">
+                            <span>💳</span>
+                            <span>Règlement digital CinetPay</span>
+                        </div>
+                        <a href="{{ tenant.lien_paiement_cinetpay }}" target="_blank"
+                           class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-[11px] shadow">
+                            Ouvrir Guichet 🔗
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Champs de Crédit / Acompte -->
+                <div x-show="venteForm.statut_paiement === 'CREDIT' || venteForm.statut_paiement === 'PARTIEL'"
+                     class="p-3.5 bg-amber-50 rounded-xl border border-amber-200 space-y-3">
+                    <div class="flex items-center justify-between text-xs font-bold text-amber-900">
+                        <span>Gestion de la Créance</span>
+                        <span class="text-[11px] font-normal">Acompte possible</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-amber-800 mb-1">Acompte Versé (FCFA)</label>
+                            <input type="number" step="100" x-model.number="venteForm.montant_paye"
+                                   class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-amber-800 mb-1">Date Relance / Échéance</label>
+                            <input type="date" x-model="venteForm.date_echeance"
+                                   class="w-full p-2 border rounded-lg text-xs font-medium bg-white outline-none">
+                        </div>
+                    </div>
+                    <div class="text-xs font-bold text-amber-900 flex justify-between pt-1">
+                        <span>Reste dû en crédit :</span>
+                        <span x-text="formatFCFA(Math.max(0, totalVenteCalcul - (venteForm.montant_paye || 0))) + ' FCFA'"></span>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Note de livraison (optionnel)</label>
+                    <input type="text" x-model="venteForm.notes" placeholder="Ex: Déposé 3 cartons au frigo"
+                           class="w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+            </div>
+
+            <!-- Boutons de validation fixes en bas de la modale -->
+            <div class="pt-2 border-t border-slate-100 flex-shrink-0 flex items-center gap-2">
+                <button type="button" @click="modalVente = false"
+                        class="px-4 py-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+                    Annuler
+                </button>
+                <button type="button" @click="validerVente()"
+                        :disabled="venteSubmitting || totalVenteCalcul <= 0 || !venteForm.alimentation_id"
+                        class="touch-btn flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-black text-xs sm:text-sm py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                    <span x-show="!venteSubmitting">
+                        <span>✅</span> Valider & Encaisser (<span x-text="formatFCFA(totalVenteCalcul) + ' FCFA'"></span>)
+                    </span>
+                    <span x-show="venteSubmitting">Enregistrement en cours...</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
     <!-- ONGLET 2 : SAISIE RAPIDE DE VENTE (STOCK EMBARQUÉ + MODES PAIEMENT) -->
     <!-- ========================================================================= -->
     <div x-show="currentTab === 'vente'" class="space-y-4">
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 space-y-4">
-            <h2 class="text-sm font-black text-slate-800 flex items-center justify-between">
-                <span>⚡ Enregistrer une Livraison / Vente</span>
-                <span class="text-xs text-emerald-600 font-bold" x-text="formatFCFA(totalVenteCalcul) + ' FCFA'"></span>
-            </h2>
-
-            <!-- Choix Boutique -->
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Boutique Destinataire</label>
-                <select x-model="venteForm.alimentation_id" class="w-full p-2.5 border rounded-xl text-xs font-bold text-slate-800 bg-slate-50 outline-none">
-                    <option value="">-- Choisir une alimentation --</option>
-                    <template x-for="b in boutiques" :key="b.id">
-                        <option :value="b.id" x-text="b.nom + ' (' + b.quartier + ')'"></option>
-                    </template>
-                </select>
-            </div>
-
-            <!-- Alerte Risque Crédit & Plafond de la boutique sélectionnée -->
-            <div x-show="selectedBoutiqueObj" class="p-3 rounded-2xl text-xs space-y-1 transition"
-                 :class="(selectedBoutiqueObj?.a_creance_en_retard || selectedBoutiqueObj?.depasse_plafond_credit) ? 'bg-red-50 border border-red-200 text-red-900' : 'bg-slate-50 border border-slate-200 text-slate-700'">
-                <div class="flex items-center justify-between font-bold">
-                    <span>Dette en cours : <span x-text="formatFCFA(selectedBoutiqueObj?.creance_actuelle) + ' FCFA'"></span></span>
-                    <span>Plafond : <span x-text="formatFCFA(selectedBoutiqueObj?.plafond_credit) + ' FCFA'"></span></span>
-                </div>
-                <template x-if="selectedBoutiqueObj?.a_creance_en_retard">
-                    <p class="text-red-700 font-bold text-[11px] pt-1 border-t border-red-200/60">
-                        🚨 Échéance impayée dépassée ! Vente à crédit bloquée. Paiement comptant obligatoire.
-                    </p>
-                </template>
-                <template x-if="!selectedBoutiqueObj?.a_creance_en_retard && selectedBoutiqueObj?.depasse_plafond_credit">
-                    <p class="text-amber-800 font-bold text-[11px] pt-1 border-t border-amber-200/60">
-                        ⚠️ Plafond d'encours atteint. Vente à crédit non autorisée pour éviter le surendettement.
-                    </p>
-                </template>
-                <template x-if="!selectedBoutiqueObj?.a_creance_en_retard && !selectedBoutiqueObj?.depasse_plafond_credit">
-                    <p class="text-emerald-700 font-medium text-[11px]">
-                        🟢 Compte sain. Crédit disponible : <strong x-text="formatFCFA(selectedBoutiqueObj?.credit_disponible) + ' FCFA'"></strong>
-                    </p>
-                </template>
-            </div>
-
-            <!-- Liste des Produits avec Stock Camion & Contrôleurs Tactiles +/- -->
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-2">Produits Livrés (Stock Camion)</label>
-                <div class="space-y-2 max-h-72 overflow-y-auto pr-1">
-                    <template x-for="item in dotations" :key="item.produit_id">
-                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
-                            <div class="flex-1 pr-2">
-                                <div class="text-xs font-bold text-slate-800" x-text="item.designation"></div>
-                                <div class="text-[11px] text-slate-500">
-                                    <span x-text="formatFCFA(item.prix_unitaire) + ' FCFA'"></span> •
-                                    Restant van: <strong :class="item.stock_restant < 3 ? 'text-red-600' : 'text-emerald-700'" x-text="item.stock_restant"></strong>
-                                </div>
-                            </div>
-
-                            <!-- Contrôle Quantité Tactile -->
-                            <div class="flex items-center space-x-2">
-                                <button type="button"
-                                        @click="diminuerQte(item.produit_id)"
-                                        class="w-8 h-8 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 font-black text-sm flex items-center justify-center">
-                                    -
-                                </button>
-                                <span class="w-7 text-center font-black text-sm text-slate-900"
-                                      x-text="getQteChoisie(item.produit_id)">
-                                </span>
-                                <button type="button"
-                                        @click="augmenterQte(item.produit_id, item.stock_restant)"
-                                        class="w-8 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm flex items-center justify-center">
-                                    +
-                                </button>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-            </div>
-
-            <!-- Résumé Montant -->
-            <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center justify-between">
-                <span class="text-xs font-bold text-emerald-900">Total Commande :</span>
-                <span class="text-base font-black text-emerald-800" x-text="formatFCFA(totalVenteCalcul) + ' FCFA'"></span>
-            </div>
-
-            <!-- Mode de Règlement & Statut Paiement -->
-            <div class="space-y-3">
-                <label class="block text-xs font-semibold text-slate-600">Mode de Règlement</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <button type="button"
-                            @click="venteForm.mode_reglement = 'ESPECES'; venteForm.statut_paiement = 'PAYE'"
-                            :class="venteForm.mode_reglement === 'ESPECES' ? 'bg-emerald-800 text-white ring-2 ring-emerald-500' : 'bg-slate-100 text-slate-700'"
-                            class="p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
-                        💵 Espèces (Cash)
-                    </button>
-                    <button type="button"
-                            @click="venteForm.mode_reglement = 'ORANGE_MONEY'; venteForm.statut_paiement = 'PAYE'"
-                            :class="venteForm.mode_reglement === 'ORANGE_MONEY' ? 'bg-orange-600 text-white ring-2 ring-orange-400' : 'bg-slate-100 text-slate-700'"
-                            class="p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
-                        🟠 Orange Money
-                    </button>
-                    <button type="button"
-                            @click="venteForm.mode_reglement = 'MOOV_MONEY'; venteForm.statut_paiement = 'PAYE'"
-                            :class="venteForm.mode_reglement === 'MOOV_MONEY' ? 'bg-blue-600 text-white ring-2 ring-blue-400' : 'bg-slate-100 text-slate-700'"
-                            class="p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
-                        🔵 Moov Money
-                    </button>
-                    <button type="button"
-                            @click="if (selectedBoutiqueObj && (selectedBoutiqueObj.a_creance_en_retard || selectedBoutiqueObj.depasse_plafond_credit)) { alert('⚠️ Vente à crédit bloquée : Cette boutique a dépassé son plafond autorisé ou a une facture échue en retard. Veuillez encaisser en espèces ou Mobile Money avant d\'approvisionner.'); } else { venteForm.mode_reglement = 'AUCUN'; venteForm.statut_paiement = 'CREDIT'; }"
-                            :class="venteForm.statut_paiement === 'CREDIT' ? 'bg-red-700 text-white ring-2 ring-red-400' : ((selectedBoutiqueObj && (selectedBoutiqueObj.a_creance_en_retard || selectedBoutiqueObj.depasse_plafond_credit)) ? 'bg-red-50 text-red-400 opacity-60 cursor-not-allowed border border-red-200' : 'bg-slate-100 text-slate-700')"
-                            class="p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
-                        ⏳ À Crédit / Partiel
-                    </button>
-                </div>
-
-                {% if tenant.lien_paiement_cinetpay %}
-                <div class="mt-2 p-2.5 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between text-xs">
-                    <div class="text-blue-900 font-semibold flex items-center gap-1.5">
-                        <span>💳</span>
-                        <span>Règlement digital CinetPay</span>
-                    </div>
-                    <a href="{{ tenant.lien_paiement_cinetpay }}" target="_blank"
-                       class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-[11px] shadow">
-                        Ouvrir Guichet 🔗
-                    </a>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- Champs de Crédit / Acompte -->
-            <div x-show="venteForm.statut_paiement === 'CREDIT' || venteForm.statut_paiement === 'PARTIEL'"
-                 class="p-3.5 bg-amber-50 rounded-xl border border-amber-200 space-y-3">
-                <div class="flex items-center justify-between text-xs font-bold text-amber-900">
-                    <span>Gestion de la Créance</span>
-                    <span class="text-[11px] font-normal">Acompte possible</span>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[11px] font-semibold text-amber-800 mb-1">Acompte Versé (FCFA)</label>
-                        <input type="number" step="100" x-model.number="venteForm.montant_paye"
-                               class="w-full p-2 border rounded-lg text-xs font-bold bg-white outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-semibold text-amber-800 mb-1">Date Relance / Échéance</label>
-                        <input type="date" x-model="venteForm.date_echeance"
-                               class="w-full p-2 border rounded-lg text-xs font-medium bg-white outline-none">
-                    </div>
-                </div>
-                <div class="text-xs font-bold text-amber-900 flex justify-between pt-1">
-                    <span>Reste dû en crédit :</span>
-                    <span x-text="formatFCFA(Math.max(0, totalVenteCalcul - (venteForm.montant_paye || 0))) + ' FCFA'"></span>
-                </div>
-            </div>
-
-            <!-- Notes -->
-            <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Note de livraison (optionnel)</label>
-                <input type="text" x-model="venteForm.notes" placeholder="Ex: Déposé 3 cartons au frigo"
-                       class="w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500">
-            </div>
-
-            <!-- Bouton Validation Vente -->
-            <button @click="validerVente()"
-                    :disabled="venteSubmitting || totalVenteCalcul <= 0 || !venteForm.alimentation_id"
-                    class="touch-btn w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-black text-sm rounded-xl shadow-lg transition flex items-center justify-center gap-2">
-                <span x-show="!venteSubmitting">✅ Valider la Vente & Reçu</span>
-                <span x-show="venteSubmitting">Enregistrement en cours...</span>
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 text-center space-y-3">
+            <div class="text-3xl">⚡</div>
+            <h2 class="text-base font-black text-slate-900">Enregistrer une Vente Terrain</h2>
+            <p class="text-xs text-slate-500 max-w-sm mx-auto">
+                Cliquez ci-dessous pour ouvrir le formulaire de vente rapide ou sélectionnez directement une boutique ou une mission dans l'onglet Boutiques.
+            </p>
+            <button type="button" @click="ouvrirVenteLibre()"
+                    class="touch-btn px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-md transition inline-flex items-center gap-2">
+                <span>🛒</span> Ouvrir le Formulaire de Vente
             </button>
         </div>
     </div>
@@ -683,7 +724,7 @@
                    class="touch-btn w-full bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow">
                     🧾 Voir / Imprimer le Reçu
                 </a>
-                <button type="button" @click="modalRecu = false; currentTab = 'boutiques'"
+                <button type="button" @click="modalRecu = false; window.location.reload()"
                         class="touch-btn w-full bg-emerald-50 text-emerald-800 font-bold text-xs rounded-xl hover:bg-emerald-100">
                     Fermer & Continuer la Tournée
                 </button>
@@ -703,8 +744,8 @@
                 <span>Boutiques</span>
             </button>
 
-            <button @click="currentTab = 'vente'"
-                    :class="currentTab === 'vente' ? 'text-emerald-700 bg-emerald-50' : 'text-slate-500 hover:text-slate-800'"
+            <button @click="ouvrirVenteLibre()"
+                    :class="modalVente ? 'text-emerald-700 bg-emerald-50' : 'text-slate-500 hover:text-slate-800'"
                     class="py-2 rounded-xl flex flex-col items-center justify-center">
                 <span class="text-lg">⚡</span>
                 <span>Vendre</span>
@@ -741,6 +782,7 @@ function livreurApp() {
         currentTab: 'boutiques',
         boutiques: {{ alimentations_json|safe }},
         dotations: {{ dotations_json|safe }},
+        missionsData: {{ missions_json|default:'{}'|safe }},
         caisseTheorique: {{ tournee.caisse_theorique|floatformat:0 }},
         ventesCount: {{ ventes_recents.count }},
 
@@ -755,6 +797,9 @@ function livreurApp() {
         navBoutique: {},
         leafMap: null,
         leafMarkers: [],
+
+        // Modal Formulaire de Vente / Livraison (au-dessus)
+        modalVente: false,
 
         // Formulaire de Vente
         venteForm: {
@@ -956,18 +1001,93 @@ function livreurApp() {
             return `https://www.google.com/maps/dir/?api=1&origin=${this.userLat},${this.userLon}&destination=${this.navBoutique.latitude},${this.navBoutique.longitude}&travelmode=driving&dir_action=navigate`;
         },
 
-        preparerVente(boutique) {
-            this.venteForm.alimentation_id = boutique.id;
-            if (boutique.a_creance_en_retard || boutique.depasse_plafond_credit) {
+        preparerVenteMission(missionId) {
+            const m = this.missionsData[missionId];
+            if (!m) return;
+            this.venteForm.alimentation_id = m.alim_id;
+            this.venteForm.lignes = {};
+
+            // Précharger automatiquement les quantités consignées par le promoteur
+            if (m.lignes && typeof m.lignes === 'object') {
+                for (const [prodId, qte] of Object.entries(m.lignes)) {
+                    const d = this.dotations.find(dot => String(dot.produit_id) === String(prodId));
+                    const maxDispo = d ? d.stock_restant : Number(qte);
+                    this.venteForm.lignes[prodId] = Math.min(Number(qte), maxDispo);
+                }
+            }
+
+            const b = this.boutiques.find(item => String(item.id) === String(m.alim_id));
+            if (b && (b.a_creance_en_retard || b.depasse_plafond_credit)) {
+                this.venteForm.mode_reglement = 'ESPECES';
+                this.venteForm.statut_paiement = 'PAYE';
+            } else {
                 this.venteForm.mode_reglement = 'ESPECES';
                 this.venteForm.statut_paiement = 'PAYE';
             }
-            this.currentTab = 'vente';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            this.modalVente = true;
+        },
+
+        preparerVente(boutique) {
+            this.venteForm.alimentation_id = boutique.id;
+            this.venteForm.lignes = {};
+
+            // Si cette boutique a une mission en attente, récupérer automatiquement ses quantités
+            for (const [mId, m] of Object.entries(this.missionsData)) {
+                if (String(m.alim_id) === String(boutique.id) && m.statut === 'A_FAIRE') {
+                    if (m.lignes && typeof m.lignes === 'object') {
+                        for (const [prodId, qte] of Object.entries(m.lignes)) {
+                            const d = this.dotations.find(dot => String(dot.produit_id) === String(prodId));
+                            const maxDispo = d ? d.stock_restant : Number(qte);
+                            this.venteForm.lignes[prodId] = Math.min(Number(qte), maxDispo);
+                        }
+                    }
+                    break;
+                }
+            }
+
+            if (boutique.a_creance_en_retard || boutique.depasse_plafond_credit) {
+                this.venteForm.mode_reglement = 'ESPECES';
+                this.venteForm.statut_paiement = 'PAYE';
+            } else {
+                this.venteForm.mode_reglement = 'ESPECES';
+                this.venteForm.statut_paiement = 'PAYE';
+            }
+            this.modalVente = true;
+        },
+
+        ouvrirVenteLibre() {
+            this.modalVente = true;
+        },
+
+        onBoutiqueChange() {
+            const alimId = this.venteForm.alimentation_id;
+            if (!alimId) return;
+
+            // Si la nouvelle boutique sélectionnée a une mission en attente, charger ses consignes
+            for (const [mId, m] of Object.entries(this.missionsData)) {
+                if (String(m.alim_id) === String(alimId) && m.statut === 'A_FAIRE') {
+                    if (m.lignes && typeof m.lignes === 'object') {
+                        this.venteForm.lignes = {};
+                        for (const [prodId, qte] of Object.entries(m.lignes)) {
+                            const d = this.dotations.find(dot => String(dot.produit_id) === String(prodId));
+                            const maxDispo = d ? d.stock_restant : Number(qte);
+                            this.venteForm.lignes[prodId] = Math.min(Number(qte), maxDispo);
+                        }
+                    }
+                    break;
+                }
+            }
         },
 
         getQteChoisie(prodId) {
             return this.venteForm.lignes[prodId] || 0;
+        },
+
+        setQteChoisie(prodId, val, maxDispo) {
+            let q = parseInt(val);
+            if (isNaN(q) || q < 0) q = 0;
+            if (q > maxDispo) q = maxDispo;
+            this.venteForm.lignes[prodId] = q;
         },
 
         augmenterQte(prodId, maxDispo) {
@@ -1057,12 +1177,20 @@ function livreurApp() {
                     }
                     this.ventesCount += 1;
 
+                    // Marquer la mission comme livrée dans les données locales
+                    for (const [mId, m] of Object.entries(this.missionsData)) {
+                        if (String(m.alim_id) === String(this.venteForm.alimentation_id)) {
+                            m.statut = 'LIVRE';
+                        }
+                    }
+
                     this.recuDetails = {
                         total: data.montant_total,
                         paye: data.montant_paye,
                         reste: data.reste_a_payer,
                         url: data.recu_url
                     };
+                    this.modalVente = false;
                     this.modalRecu = true;
 
                     this.venteForm.lignes = {};

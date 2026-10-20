@@ -236,12 +236,13 @@ class Tournee(models.Model):
     entreprise = models.ForeignKey(Entreprise, on_delete=models.CASCADE, null=True, blank=True, related_name="tournees")
     livreur = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tournees")
     date_tournee = models.DateField(auto_now_add=True)
+    date_creation = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='EN_COURS')
     caisse_theorique = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     caisse_declaree = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     class Meta:
-        ordering = ['-date_tournee', '-id']
+        ordering = ['-date_tournee', '-date_creation']
         verbose_name = "Tournée"
         verbose_name_plural = "Tournées"
 
@@ -481,6 +482,7 @@ class OrdreMission(models.Model):
     alimentation = models.ForeignKey(Alimentation, on_delete=models.CASCADE, related_name="missions_assignees")
     date_creation = models.DateTimeField(auto_now_add=True)
     produits_consignes = models.TextField(help_text="Ex: 10 sachets mangue 100g, 5 pots miel")
+    donnees_produits = models.JSONField(default=dict, blank=True)
     montant_cible = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Montant exact à réclamer")
     consigne_particuliere = models.TextField(blank=True, help_text="Ex: Exiger espèces ou Orange Money, déposer facture")
     statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='A_FAIRE')
@@ -493,6 +495,41 @@ class OrdreMission(models.Model):
 
     def __str__(self):
         return f"Mission {self.alimentation.nom} ({self.montant_cible:,.0f} FCFA)"
+
+    def get_lignes_dict(self):
+        """Retourne le dictionnaire {str(produit_id): quantite} des produits consignés."""
+        if self.donnees_produits and isinstance(self.donnees_produits, dict):
+            # Convertir les valeurs en entiers
+            res = {}
+            for k, v in self.donnees_produits.items():
+                try:
+                    res[str(k)] = int(v)
+                except (ValueError, TypeError):
+                    pass
+            if res:
+                return res
+
+        # Fallback pour anciennes missions sans donnees_produits : extraction depuis le texte
+        res = {}
+        if self.produits_consignes:
+            import re
+            # Récupérer les produits embarqués dans la tournée
+            dotations = list(self.tournee.dotations.select_related('produit').all())
+            for d in dotations:
+                p = d.produit
+                # Recherche d'un motif comme "10x Produit" ou "10 Produit"
+                pattern = rf'(\d+)\s*(?:x|\*|sachets?|pots?|unit[ée]s?)?\s*{re.escape(p.designation)}'
+                match = re.search(pattern, self.produits_consignes, re.IGNORECASE)
+                if match:
+                    try:
+                        res[str(p.id)] = int(match.group(1))
+                    except ValueError:
+                        pass
+        return res
+
+    def get_lignes_json(self):
+        import json
+        return json.dumps(self.get_lignes_dict())
 
 
 class DeclarationPaiementBoutique(models.Model):
