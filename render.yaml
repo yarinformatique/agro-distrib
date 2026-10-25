@@ -1,13 +1,8 @@
-databases:
-  - name: agrodistrib-db
-    databaseName: agrodistrib
-    user: agrodistrib_user
-    plan: free
-
 services:
   - type: web
     name: agrodistrib
     runtime: python
+    plan: free
     buildCommand: "./build.sh"
     startCommand: "python manage.py migrate --no-input && gunicorn agrodistrib.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
     healthCheckPath: /healthz
@@ -15,9 +10,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.12.0
       - key: DATABASE_URL
-        fromDatabase:
-          name: agrodistrib-db
-          property: connectionString
+        sync: false
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG

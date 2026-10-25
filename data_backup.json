@@ -1,0 +1,1790 @@
+[
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$PfacqSNxHbsfDY4avcWhks$cBs21tg97sYRTLtyOMv/4X5/srLe/T/tM9KWPrqLnZs=",
+    "last_login": "2026-10-10T13:28:39.178Z",
+    "is_superuser": true,
+    "username": "promotrice",
+    "first_name": "Aïcha",
+    "last_name": "Ouédraogo",
+    "email": "promotrice@agrodistrib.bf",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-10-10T12:00:08.322Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$XRBk3l5IEpCD3gjOvUbhdA$64i/GYRN/vQc3tnBLZ/iLOY9C8zVB7/SotKqIghiPtM=",
+    "last_login": "2026-10-10T12:38:08.762Z",
+    "is_superuser": false,
+    "username": "livreur1",
+    "first_name": "Moussa",
+    "last_name": "Sawadogo",
+    "email": "moussa@agrodistrib.bf",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-10-10T12:00:10.858Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$947i3WWpfLkWWP8ug0ZWOm$Ko2M3hpKasXKK+qV/1l28wXBPTlkbdekEyW7GTsc1H4=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "livreur2",
+    "first_name": "Ibrahim",
+    "last_name": "Traoré",
+    "email": "ibrahim@agrodistrib.bf",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-10-10T12:00:13.268Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$47lgFfqL5yxg3C34rkDKzo$Wu6Zqr/IXCPlmmJRiP43FHbXuV1xE4s2cSSzpl2+1F8=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "boutique_wendkuni",
+    "first_name": "Fatouma",
+    "last_name": "Guira",
+    "email": "wendkuni@boutique.bf",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-10-10T12:29:44.072Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$HM33t5sLsWqlDp8o3W4Tqh$X5F6zDWyju1T+C/cbFOynL8608C4cASNdZF2yCqDFI8=",
+    "last_login": "2026-10-11T16:44:07.129Z",
+    "is_superuser": true,
+    "username": "superadmin",
+    "first_name": "Propriétaire",
+    "last_name": "Plateforme",
+    "email": "superadmin@agrodistrib.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-10-11T10:47:17.428Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$uZc5nzF0ePHOkpp02TLQD3$mCsBY2INAZocCSqYFO8+lT6/IgL7YAudTbNlx0a+6HU=",
+    "last_login": "2026-10-12T12:32:32.689Z",
+    "is_superuser": false,
+    "username": "demo",
+    "first_name": "Aïcha",
+    "last_name": "Ouédraogo",
+    "email": "demo@agrodistrib.bf",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-10-11T10:47:51.262Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$cBDDQnE5oLVjJfHOnil5Kd$OlM/AmVm5uUBr+ETDJwVdZIVm5E1qJTuupE8o7Jk7Lg=",
+    "last_login": "2026-10-12T12:23:39.400Z",
+    "is_superuser": false,
+    "username": "livreur_demo",
+    "first_name": "Moussa",
+    "last_name": "Sawadogo",
+    "email": "livreur@agrodistrib.bf",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-10-11T10:47:55.437Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$L6JlbZJIXLqx9WSoybyhvK$AGrEgxVFMofn1EtGa3EdWpd6JkOQ/JcG6k6IwK8VIzk=",
+    "last_login": "2026-10-11T10:56:50.456Z",
+    "is_superuser": false,
+    "username": "suspendu_demo",
+    "first_name": "Salif",
+    "last_name": "Traoré",
+    "email": "suspendu@biosahel.bf",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-10-11T10:48:02.242Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$eVOGwC365oww1wHTQEnKT3$71JHu3cmnTM9R2VSaf1FFHiA3TKYZwcmO1aryuu8gMo=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "livreur_suspendu",
+    "first_name": "Alassane",
+    "last_name": "Sanou",
+    "email": "livreur_suspendu@biosahel.bf",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-10-11T10:48:04.771Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$ksTFNVB9ei2eSOP0vT7QW2$AV4LrXVeNrnD4ndkUk4MPZMedmaOXZxp3tufGL+EuZE=",
+    "last_login": "2026-10-11T15:42:33.406Z",
+    "is_superuser": false,
+    "username": "marte",
+    "first_name": "Martine",
+    "last_name": "",
+    "email": "",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-10-11T14:46:58.967Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$vbAr25BcNyBRrl6W4FcX9V$Xefxk5jruFmJMJMJXsgwqCmj/O9pup6RU+xkcGZzAvQ=",
+    "last_login": "2026-10-11T15:45:43.950Z",
+    "is_superuser": false,
+    "username": "livreur",
+    "first_name": "Moussa",
+    "last_name": "Zerbo",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-10-11T15:31:39.201Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "0my6dwd9z0b764fdngp4cqh1mfzt1xl2",
+  "fields": {
+    "session_data": ".eJxVjLsOwjAMAP_FM4pSt0njjux8Q-XEDi2gROpjQvw7qtQB1rvTvWHkfZvGfdVlnAUGQLj8ssjpqeUQ8uByrybVsi1zNEdiTruaWxV9Xc_2bzDxOsEA1rKSutYrtik5bBpitYl6YewoZ_JJOw2hlxiDExei00xofYcBW0vw-QLqzTe3:1xFWL2:UswN6mu6RTwYGXR4JEYU_dcBL-15MJfVSXeaFrBtQzg",
+    "expire_date": "2026-10-24T12:38:08.772Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "3h4fla92rc28k6wtffg07nsuocybhei9",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQAP9lz4Z0gfLo0bvfQBZYpGpoUtqT8d9Nkx70OjOZNwTatxr2zmuYM0xg4fLLIqUnt0PkB7X7ItLStnWO4kjEabu4LZlf17P9G1TqFSagqMl5QsWIHmPxRpZRKc5RRjlmYjTOGpSDtyoRkXFMyWo1KO1Q5gKfL-kjN8U:1xFwTS:Pz_DeHfyrAkHl_USSTC07svOtWm3KRrzEfI9sL-K_2o",
+    "expire_date": "2026-10-25T16:32:34.124Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "3mwvmcg6xf7ycdlwrrt74gsj98obsa6k",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQAP9lz4bwKKX06N1vIMsuSNVAUtqT8d9Nkx70OjOZNwTctxL2ntawMMygFFx-YUR6pnoYfmC9N0GtbusSxZGI03Zxa5xe17P9GxTsBWbQCrP20lpCbbMZJElkkyNGjhNxotFmdJ7kQNJg8iNqSd5ZNzF6RRo-XyWSONo:1xFvk6:A5N2jRGYd0wDgADEYD6ogJlrCA-BybnqrkasUJ16sSk",
+    "expire_date": "2026-10-25T15:45:42.531Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "6xbt4o4o6f4xhlhyc13qqrgvqqz6a1y1",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQAP9lz4ZAKa8evfsNhN2lUjWQlPZk_HfTpAe9zkzmDTHtW4l7z2tcGCYwcPllmOiZ6yH4keq9CWp1WxcURyJO28WtcX5dz_ZvUFIvMIHkjDLMpHhGNDQEZ_RgvcnWsVJWuSS9HzUSji6wItJBZw4KJSXrjYHPF-6MN9g:1xFwed:HbvL8xCNVkmRn7n3Sf3-U144Rm8V4QOCq71bpzDibyk",
+    "expire_date": "2026-10-25T16:44:07.139Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "9nwbn5qw5bw0pvy0o1fviw5ljivifqq2",
+  "fields": {
+    "session_data": ".eJxVjDsOwjAQBe_iGln2En-Wkp4zWLv-4ABypDipEHdHllJA-2bmvUWgfath73kNcxIX4cXpd2OKz9wGSA9q90XGpW3rzHIo8qBd3paUX9fD_Tuo1OuoiePZRKPAaatxgsjeG3YI0Vm0UJQr6DyBQbSUM6TslZ5UAYfaFxafL8_gNzQ:1xFrEY:1xKOnC8S9PQCGEijXZxZ24TXjnz3K136baZUUgRY2uo",
+    "expire_date": "2026-10-25T10:56:50.470Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "dco0dh2of9377jmsqy7eunwmgrwiga78",
+  "fields": {
+    "session_data": ".eJxVjDsOgzAQBe_iOli21_hDmT5nQLv2EkgirACuotw9QqGhfTPzPoJK3aZ35X7KohMhREDLrvFZqcZGhQ0ZjA21OjoITkFW4iJ6rNvY15WXf-bPG2F68ryD_MD5XmQq87ZMJHdFHnSVt5L5dT3c08GI6yg6gWQxRNTAWkdNQ3RmaAE4kyHTZmTtgnfaqOghIaILjMlbUGCDNnkQ3x8gnkYD:1xFsR8:84NNQ4bUPnWGbmU5Z7R9ChMqc4ZT3Olphs14uepc4lM",
+    "expire_date": "2026-10-25T12:13:54.116Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "e6aoq93xvem8fikub4po9p5jywke48uk",
+  "fields": {
+    "session_data": ".eJxVjEEOwiAQAP-yZ0MosHTt0XvfQIAFqRpISnsy_t006UGvM5N5g_P7Vtze0-oWhgksXH5Z8PGZ6iH44eu9idjqti5BHIk4bRdz4_S6ne3foPheYAJCLdFIz8lEo4gGRdZqDGHMzGGI7IfEaSTUEVkHa_FKrMmoSDIjZvh8AddCN7Q:1xGFCf:iFfgSp9Ww6rTUDOaYix3Rhr7H2GTO-2CsZ7FTUReigw",
+    "expire_date": "2026-10-26T12:32:29.996Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "ew64ts960g4uerlz5r8rixmfhz5w6ks2",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQAP9lz4ZAoQv06N1vaFh2sVUDSR8n47-bJj3odWYybxjTvk3jvsoyzgwDGA2XX0gpP6Uehh-p3pvKrW7LTOpI1GlXdWssr-vZ_g2mtE4wAArazqOlXIyQjiYKmd73Etm4GDwH6jxicTmRxVJKkZiw095acYEDfL4Dhzgm:1xFuu7:R0SMW9DfTBHzeteEA70T_73h4LVJwaeOTlyb7uktQiI",
+    "expire_date": "2026-10-25T14:51:59.302Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "fixl7jnfqvqx5zco85vlgmw8bgu1c3wt",
+  "fields": {
+    "session_data": ".eJxVjMsOgjAQAP9lz6bZFVoKR-9-A9lHFdS0CYWT8d8NCQe9zkzmDSNv6zRuNS3jbDAAwemXCesz5V3Yg_O9OC15XWZxe-IOW921WHpdjvZvMHGdYIDOOo1sLUkIqhh8EkqsqC02wtH6qBToFhG974SoOZtqy72gqo-hgc8X9uo4Fw:1xFVrb:8d1XgHJYpGZfavWMxAC4UgG5VbNKmidYfki-br1tzcQ",
+    "expire_date": "2026-10-24T12:07:43.674Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "hn2725ij8qgclr6ad5zmqfssdcn9s1po",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQAP9lz4ZAoQv06N1vaFh2sVUDSR8n47-bJj3odWYybxjTvk3jvsoyzgwDGA2XX0gpP6Uehh-p3pvKrW7LTOpI1GlXdWssr-vZ_g2mtE4wAArazqOlXIyQjiYKmd73Etm4GDwH6jxicTmRxVJKkZiw095acYEDfL4Dhzgm:1xFvh0:lnnU_3kg1-sx7WAyRlrOyfml-fGDDOjaOYS1Ta2SQdY",
+    "expire_date": "2026-10-25T15:42:30.828Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "htlxjfiia3aeybpryo196l5t2mo3out1",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQAP9lz4Z0gfLo0bvfQBZYpGpoUtqT8d9Nkx70OjOZNwTatxr2zmuYM0xg4fLLIqUnt0PkB7X7ItLStnWO4kjEabu4LZlf17P9G1TqFSagqMl5QsWIHmPxRpZRKc5RRjlmYjTOGpSDtyoRkXFMyWo1KO1Q5gKfL-kjN8U:1xFrFR:d7xzTpxDPS6i3_THenP2n-CWiPdG2lVGv3i9hItJM8M",
+    "expire_date": "2026-10-25T10:57:45.357Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "kulljfbarbos4bx3erafjbgcighmoxxm",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQAP9lz4Z0gfLo0bvfQBZYpGpoUtqT8d9Nkx70OjOZNwTatxr2zmuYM0xg4fLLIqUnt0PkB7X7ItLStnWO4kjEabu4LZlf17P9G1TqFSagqMl5QsWIHmPxRpZRKc5RRjlmYjTOGpSDtyoRkXFMyWo1KO1Q5gKfL-kjN8U:1xFrEx:uaAzXB3_LcCbmTYFUFQzHKZXohKI4PrZexB9nm_07iA",
+    "expire_date": "2026-10-25T10:57:15.225Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "m3sg2npuna3afdgypxr85q7sqim8b4sa",
+  "fields": {
+    "session_data": ".eJxVjDEKwzAMAP-iuRhLSWycsXvfYCzJrdMWB-JkCv17CWRo17vjdohpW0vcWl7ipDACwuWXcZJXrofQZ6qP2chc12VicyTmtM3cZs3v69n-DUpqBUboBT3bEByFwE6siEUljwNlUpLBu2RFO5uRFTF1RHfpuLdOxbFSD58vzlI3pQ:1xFWiT:BR7T6vyOO48MZYiAad-8a4WGvrvcSRNT98Ryn1GJTs4",
+    "expire_date": "2026-10-24T13:02:21.384Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "mtk9m1v8zb1ich36ccyiqyf51zjt9fli",
+  "fields": {
+    "session_data": ".eJxVjEEKwyAQAP-y5yJqFNcce-8bRF23pi0KMTmV_r0EcmivM8O8IcR9q2EfZQ0LwQwWLr8sxfws7RD0iO3eRe5tW5ckjkScdohbp_K6nu3foMZRYQbN2VMkNkkadorLNLFCdBpRMUv0nJz0xbLOaFkRR4NWS1UmtNJIC58v-xI3uQ:1xFviJ:fm7j4mGiBKMaNkW2KGkwBQBd41lg_tgvnK-rtxRWyTM",
+    "expire_date": "2026-10-25T15:43:51.243Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "muxpaxp0iy3df936so1ss9uun2kobw22",
+  "fields": {
+    "session_data": ".eJxVjEEOwiAQAP-yZ0MosHTt0XvfQIAFqRpISnsy_t006UGvM5N5g_P7Vtze0-oWhgksXH5Z8PGZ6iH44eu9idjqti5BHIk4bRdz4_S6ne3foPheYAJCLdFIz8lEo4gGRdZqDGHMzGGI7IfEaSTUEVkHa_FKrMmoSDIjZvh8AddCN7Q:1xGFCi:O82DwjwTB-ufjI3k5GJ8jg0kGlXa0qpSKvaPbhfhc0s",
+    "expire_date": "2026-10-26T12:32:32.701Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "ohmu3utaxoxwlzv6ie4gg7z4d79lcc32",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQAP9lz4bwKKX06N1vIMsuSNVAUtqT8d9Nkx70OjOZNwTctxL2ntawMMygFFx-YUR6pnoYfmC9N0GtbusSxZGI03Zxa5xe17P9GxTsBWbQCrP20lpCbbMZJElkkyNGjhNxotFmdJ7kQNJg8iNqSd5ZNzF6RRo-XyWSONo:1xFvk7:O8bhXi_azj3iEQr61p45PwR6DxNIAuQpwVqBIW99vkA",
+    "expire_date": "2026-10-25T15:45:43.958Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "opu2w5pekcmi58ej4teiytebomwf51fm",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQAP9lz4Z0gfLo0bvfQBZYpGpoUtqT8d9Nkx70OjOZNwTatxr2zmuYM0xg4fLLIqUnt0PkB7X7ItLStnWO4kjEabu4LZlf17P9G1TqFSagqMl5QsWIHmPxRpZRKc5RRjlmYjTOGpSDtyoRkXFMyWo1KO1Q5gKfL-kjN8U:1xFrux:lFBv0rODLfc9bFBdD7DXZF72r7Ay0Pbr0QeCeNrW79M",
+    "expire_date": "2026-10-25T11:40:39.339Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "p3j61g7nnm7subrawqnfu6wag4vms485",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQAP9lz4Z0gfLo0bvfQBZYpGpoUtqT8d9Nkx70OjOZNwTatxr2zmuYM0xg4fLLIqUnt0PkB7X7ItLStnWO4kjEabu4LZlf17P9G1TqFSagqMl5QsWIHmPxRpZRKc5RRjlmYjTOGpSDtyoRkXFMyWo1KO1Q5gKfL-kjN8U:1xFrFb:TzytSdOAsGdvQoFoo8jPs6TPo0GF8JUxnbPUoIsCkhQ",
+    "expire_date": "2026-10-25T10:57:55.768Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "pmynjg8ntsr0npbs2q6o2y0la2ntjkpe",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQAP9lz4ZAoQv06N1vaFh2sVUDSR8n47-bJj3odWYybxjTvk3jvsoyzgwDGA2XX0gpP6Uehh-p3pvKrW7LTOpI1GlXdWssr-vZ_g2mtE4wAArazqOlXIyQjiYKmd73Etm4GDwH6jxicTmRxVJKkZiw095acYEDfL4Dhzgm:1xFv3l:QUF99FER4g0CCWNm7rLtXBtzKmBxfviv2loud_7QuWY",
+    "expire_date": "2026-10-25T15:01:57.317Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "s5xpe884zv5k89e2b3p0njafw4biaw6v",
+  "fields": {
+    "session_data": ".eJxVjDEKwzAMAP-iuRhLSWycsXvfYCzJrdMWB-JkCv17CWRo17vjdohpW0vcWl7ipDACwuWXcZJXrofQZ6qP2chc12VicyTmtM3cZs3v69n-DUpqBUboBT3bEByFwE6siEUljwNlUpLBu2RFO5uRFTF1RHfpuLdOxbFSD58vzlI3pQ:1xFX7v:kUVFU2G6bkwqaTlQ51wJBYca7eDe-oNkTbRUjxae24I",
+    "expire_date": "2026-10-24T13:28:39.187Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "to7o8hevg40o3q07mupp9e51o3o3c0vp",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQAP9lz4Z0gfLo0bvfQBZYpGpoUtqT8d9Nkx70OjOZNwTatxr2zmuYM0xg4fLLIqUnt0PkB7X7ItLStnWO4kjEabu4LZlf17P9G1TqFSagqMl5QsWIHmPxRpZRKc5RRjlmYjTOGpSDtyoRkXFMyWo1KO1Q5gKfL-kjN8U:1xFrFH:2KTvOA_WUoXVVCNVFW8ZD4c3PlC3f0Uyy4-mdBST1-U",
+    "expire_date": "2026-10-25T10:57:35.549Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "tridl165gksgrs273jfs8meyy70v7il7",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQAP9lz4Z0gfLo0bvfQBZYpGpoUtqT8d9Nkx70OjOZNwTatxr2zmuYM0xg4fLLIqUnt0PkB7X7ItLStnWO4kjEabu4LZlf17P9G1TqFSagqMl5QsWIHmPxRpZRKc5RRjlmYjTOGpSDtyoRkXFMyWo1KO1Q5gKfL-kjN8U:1xFrSL:I2FEnKxEQVe4dS8LKNBBmPMdKVUrmLAouRCrgTYp5vI",
+    "expire_date": "2026-10-25T11:11:05.425Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "uspvk8w5qzrijdgtq8j4ww4klf8607wi",
+  "fields": {
+    "session_data": ".eJxVjEEKwyAQAP-y5yKaVas59p43hNVdatqiEJNT6d9LIIf2OjPMG2batzLvXdZ5YRhhgMsvS5SfUg_BD6r3pnKr27okdSTqtF1NjeV1O9u_QaFeYAQ0WgfjiNDbEBJnTiaJFaFMrI33aIZIQQuS85oyo0Mbr0688xER4fMF33E3Wg:1xFVre:TOvgKYURSVxIIi-k_NsWkeDt0XvHLXpzC4ySgD_unpU",
+    "expire_date": "2026-10-24T12:07:46.244Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "w8m73wo4xe5xq6ackw9luonrjnwxcyqb",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQAP9lz4Z0gfLo0bvfQBZYpGpoUtqT8d9Nkx70OjOZNwTatxr2zmuYM0xg4fLLIqUnt0PkB7X7ItLStnWO4kjEabu4LZlf17P9G1TqFSagqMl5QsWIHmPxRpZRKc5RRjlmYjTOGpSDtyoRkXFMyWo1KO1Q5gKfL-kjN8U:1xFrEn:vAajI3_Ks86p-tsq7XRDxEb_Z7MLG25L9DIlV9u_0Fg",
+    "expire_date": "2026-10-25T10:57:05.040Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "xkepmldzpgixqthh9d3cd3i7xskk0u5p",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQAP9lz4bwKKX06N1vIMsuSNVAUtqT8d9Nkx70OjOZNwTctxL2ntawMMygFFx-YUR6pnoYfmC9N0GtbusSxZGI03Zxa5xe17P9GxTsBWbQCrP20lpCbbMZJElkkyNGjhNxotFmdJ7kQNJg8iNqSd5ZNzF6RRo-XyWSONo:1xFvXl:Nap5yn-8x-UtddGXdlJQfCnW5MM5BooDhEkjBr0DQuQ",
+    "expire_date": "2026-10-25T15:32:57.574Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "xrktof3miu99pl8khbsxfn2lj61w39r5",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQAP9lz4bwLNij934D2WVBqoYmpT0Z_9006UGvM5N5Q8R9q3HveY0zwwgKLr-MMD1zOwQ_sN0XkZa2rTOJIxGn7WJaOL9uZ_s3qNgrjFASX4sjNFISqhBIG1OKM-zZyuStd0iWWHOQXLQOgxwwcU4qKxl8Yfh8AQI9OLA:1xFWL0:PBHjp_6dku8Cb5I2aavOqEf-905z_DdWZJulqTScDGc",
+    "expire_date": "2026-10-24T12:38:06.254Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "xvyskckmytrwu47hza2ee24tuqtnsaap",
+  "fields": {
+    "session_data": ".eJxVjEEKwyAQAP-y5yJqFNcce-8bRF23pi0KMTmV_r0EcmivM8O8IcR9q2EfZQ0LwQwWLr8sxfws7RD0iO3eRe5tW5ckjkScdohbp_K6nu3foMZRYQbN2VMkNkkadorLNLFCdBpRMUv0nJz0xbLOaFkRR4NWS1UmtNJIC58v-xI3uQ:1xFugd:8RuxkxfkK3fx1XjRparz3R21Zvq2TPv-Jf37U2i8lkA",
+    "expire_date": "2026-10-25T14:38:03.106Z"
+  }
+},
+{
+  "model": "distribution.entreprise",
+  "pk": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+  "fields": {
+    "nom": "Agro-Distrib Faso",
+    "slug": "agro-distrib-faso",
+    "statut_abonnement": "actif",
+    "expire_le": "2027-10-11",
+    "date_creation": "2026-10-11T10:47:51.235Z",
+    "contact_nom": "Aïcha Ouédraogo",
+    "contact_email": "demo@agrodistrib.bf",
+    "contact_telephone": "+226 70 12 34 56",
+    "ville": "Ouagadougou",
+    "adresse": "Zone Industrielle de Gounghin",
+    "devise": "FCFA",
+    "actif": true,
+    "lien_paiement_cinetpay": "",
+    "numero_orange_money": "",
+    "numero_moov_money": ""
+  }
+},
+{
+  "model": "distribution.entreprise",
+  "pk": "6b60b78f-c7da-4e35-9d42-647cd5df2eaf",
+  "fields": {
+    "nom": "ShipsGro",
+    "slug": "shipsgro",
+    "statut_abonnement": "actif",
+    "expire_le": null,
+    "date_creation": "2026-10-11T14:46:58.964Z",
+    "contact_nom": "Martine",
+    "contact_email": "",
+    "contact_telephone": "1212176345",
+    "ville": "Ouagadougou",
+    "adresse": "",
+    "devise": "FCFA",
+    "actif": true,
+    "lien_paiement_cinetpay": "https://link.saspay.me/naekg5bbcsa",
+    "numero_orange_money": "64582202",
+    "numero_moov_money": ""
+  }
+},
+{
+  "model": "distribution.entreprise",
+  "pk": "e714d12e-fbd9-4893-9a42-1d8eb6c669a5",
+  "fields": {
+    "nom": "Bio Sahel Distribution",
+    "slug": "bio-sahel",
+    "statut_abonnement": "suspendu",
+    "expire_le": "2026-10-01",
+    "date_creation": "2026-10-11T10:48:02.225Z",
+    "contact_nom": "Salif Traoré",
+    "contact_email": "suspendu@biosahel.bf",
+    "contact_telephone": "+226 71 22 33 44",
+    "ville": "Bobo-Dioulasso",
+    "adresse": "Secteur 22, Bobo",
+    "devise": "FCFA",
+    "actif": false,
+    "lien_paiement_cinetpay": "",
+    "numero_orange_money": "",
+    "numero_moov_money": ""
+  }
+},
+{
+  "model": "distribution.societelivraison",
+  "pk": "704a4af0-e36a-4193-a166-03936b04bbd2",
+  "fields": {
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "nom": "Express Faso Livraisons",
+    "telephone": "+226 78 11 22 33",
+    "responsable": "Moussa Sawadogo",
+    "ville": "Ouagadougou",
+    "actif": true,
+    "date_creation": "2026-10-11T10:47:51.253Z"
+  }
+},
+{
+  "model": "distribution.societelivraison",
+  "pk": "e9a11521-037a-4baa-9481-0e49b42e7526",
+  "fields": {
+    "entreprise": "6b60b78f-c7da-4e35-9d42-647cd5df2eaf",
+    "nom": "Service Livraison ShipsGro",
+    "telephone": "1212176345",
+    "responsable": "Martine",
+    "ville": "Ouagadougou",
+    "actif": true,
+    "date_creation": "2026-10-11T14:47:01.763Z"
+  }
+},
+{
+  "model": "distribution.profilutilisateur",
+  "pk": "024eab1a-e640-4f59-a559-377e56a72df5",
+  "fields": {
+    "user": [
+      "boutique_wendkuni"
+    ],
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "role": "BOUTIQUE",
+    "societe_livraison": null,
+    "telephone": "+226 76 98 76 54",
+    "adresse": ""
+  }
+},
+{
+  "model": "distribution.profilutilisateur",
+  "pk": "267a0832-c7c3-4072-99d7-eacfb3d39655",
+  "fields": {
+    "user": [
+      "livreur"
+    ],
+    "entreprise": "6b60b78f-c7da-4e35-9d42-647cd5df2eaf",
+    "role": "LIVREUR",
+    "societe_livraison": null,
+    "telephone": "56565656",
+    "adresse": ""
+  }
+},
+{
+  "model": "distribution.profilutilisateur",
+  "pk": "2baa5146-d55f-4259-857e-f8af2c6d1ef1",
+  "fields": {
+    "user": [
+      "livreur_demo"
+    ],
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "role": "LIVREUR",
+    "societe_livraison": "704a4af0-e36a-4193-a166-03936b04bbd2",
+    "telephone": "+226 76 99 88 77",
+    "adresse": ""
+  }
+},
+{
+  "model": "distribution.profilutilisateur",
+  "pk": "3a720292-ad9b-401e-bde4-6a827ddc41ca",
+  "fields": {
+    "user": [
+      "livreur_suspendu"
+    ],
+    "entreprise": "e714d12e-fbd9-4893-9a42-1d8eb6c669a5",
+    "role": "LIVREUR",
+    "societe_livraison": null,
+    "telephone": "+226 72 33 44 55",
+    "adresse": ""
+  }
+},
+{
+  "model": "distribution.profilutilisateur",
+  "pk": "6023add6-cb92-4193-9594-f4aaa0540fe5",
+  "fields": {
+    "user": [
+      "superadmin"
+    ],
+    "entreprise": null,
+    "role": "SUPERADMIN",
+    "societe_livraison": null,
+    "telephone": "+226 70 00 00 01",
+    "adresse": "Siège SaaS Central"
+  }
+},
+{
+  "model": "distribution.profilutilisateur",
+  "pk": "a2d9fb6d-0876-4674-93ae-c1716154e791",
+  "fields": {
+    "user": [
+      "suspendu_demo"
+    ],
+    "entreprise": "e714d12e-fbd9-4893-9a42-1d8eb6c669a5",
+    "role": "PROMOTRICE",
+    "societe_livraison": null,
+    "telephone": "+226 71 22 33 44",
+    "adresse": ""
+  }
+},
+{
+  "model": "distribution.profilutilisateur",
+  "pk": "ec5980ef-aa66-46a9-be98-8411987c7e22",
+  "fields": {
+    "user": [
+      "marte"
+    ],
+    "entreprise": "6b60b78f-c7da-4e35-9d42-647cd5df2eaf",
+    "role": "PROMOTRICE",
+    "societe_livraison": null,
+    "telephone": "1212176345",
+    "adresse": ""
+  }
+},
+{
+  "model": "distribution.profilutilisateur",
+  "pk": "fb8a384e-bbdb-456e-b88c-6fcfa28fac05",
+  "fields": {
+    "user": [
+      "demo"
+    ],
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "role": "PROMOTRICE",
+    "societe_livraison": null,
+    "telephone": "+226 70 12 34 56",
+    "adresse": ""
+  }
+},
+{
+  "model": "distribution.produit",
+  "pk": "06962ccb-5fd6-4b06-809c-287c5d484ca5",
+  "fields": {
+    "entreprise": null,
+    "designation": "Anacarde nature (150g)",
+    "unite": "sachet",
+    "prix_unitaire_defaut": "1400.00",
+    "stock_entrepot": 70
+  }
+},
+{
+  "model": "distribution.produit",
+  "pk": "196e08b9-c95e-49a1-9804-9bb537be7d1a",
+  "fields": {
+    "entreprise": null,
+    "designation": "Mangues séchées Bio (250g)",
+    "unite": "sachet",
+    "prix_unitaire_defaut": "2200.00",
+    "stock_entrepot": 95
+  }
+},
+{
+  "model": "distribution.produit",
+  "pk": "2156bd3d-106f-4069-a20b-e053d49a5e7c",
+  "fields": {
+    "entreprise": null,
+    "designation": "Piment fort séché moulu (100g)",
+    "unite": "pot",
+    "prix_unitaire_defaut": "800.00",
+    "stock_entrepot": 130
+  }
+},
+{
+  "model": "distribution.produit",
+  "pk": "290fcef2-6c85-483b-8840-1473cd8dea94",
+  "fields": {
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "designation": "Anacarde grillé salé Premium (150g)",
+    "unite": "sachet",
+    "prix_unitaire_defaut": "1500.00",
+    "stock_entrepot": 132
+  }
+},
+{
+  "model": "distribution.produit",
+  "pk": "3add9f92-69a6-4175-a6a6-b5c7bcd8b773",
+  "fields": {
+    "entreprise": null,
+    "designation": "Mangues séchées Bio (100g)",
+    "unite": "sachet",
+    "prix_unitaire_defaut": "1000.00",
+    "stock_entrepot": 180
+  }
+},
+{
+  "model": "distribution.produit",
+  "pk": "507864a7-9a1d-4254-a4ce-fe5adbff660c",
+  "fields": {
+    "entreprise": null,
+    "designation": "Anacarde grillé salé (150g)",
+    "unite": "sachet",
+    "prix_unitaire_defaut": "1500.00",
+    "stock_entrepot": 140
+  }
+},
+{
+  "model": "distribution.produit",
+  "pk": "7f48f148-a4d9-414e-8442-970ce195140a",
+  "fields": {
+    "entreprise": null,
+    "designation": "Pâte d'arachide pure (1kg)",
+    "unite": "pot",
+    "prix_unitaire_defaut": "2000.00",
+    "stock_entrepot": 50
+  }
+},
+{
+  "model": "distribution.produit",
+  "pk": "89ab1779-da28-4ee6-b454-33f8eb9d7ad6",
+  "fields": {
+    "entreprise": "e714d12e-fbd9-4893-9a42-1d8eb6c669a5",
+    "designation": "Beurre de Karité Bio Brut (250g)",
+    "unite": "pot",
+    "prix_unitaire_defaut": "1500.00",
+    "stock_entrepot": 100
+  }
+},
+{
+  "model": "distribution.produit",
+  "pk": "a40d2461-6197-472a-8e29-a36cc4e287b5",
+  "fields": {
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "designation": "Miel pur de savane du Gourma (500g)",
+    "unite": "pot",
+    "prix_unitaire_defaut": "2500.00",
+    "stock_entrepot": 120
+  }
+},
+{
+  "model": "distribution.produit",
+  "pk": "a94ba34f-8569-4876-ad04-92442344919f",
+  "fields": {
+    "entreprise": null,
+    "designation": "Miel pur de savane (500g)",
+    "unite": "pot",
+    "prix_unitaire_defaut": "2500.00",
+    "stock_entrepot": 85
+  }
+},
+{
+  "model": "distribution.produit",
+  "pk": "b57244a2-6a43-4ef2-8908-eac13957ec2e",
+  "fields": {
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "designation": "Huile pure de Sésame pressée à froid (1L)",
+    "unite": "bouteille",
+    "prix_unitaire_defaut": "3000.00",
+    "stock_entrepot": 80
+  }
+},
+{
+  "model": "distribution.produit",
+  "pk": "e116cdf7-fad1-485c-9cf2-12265a96bc7d",
+  "fields": {
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "designation": "Soumbala moulu pur luxe (200g)",
+    "unite": "pot",
+    "prix_unitaire_defaut": "1200.00",
+    "stock_entrepot": 100
+  }
+},
+{
+  "model": "distribution.produit",
+  "pk": "eb492491-e525-4cc9-ad3f-28952b4fb45e",
+  "fields": {
+    "entreprise": null,
+    "designation": "Soumbala moulu pur luxe (200g)",
+    "unite": "pot",
+    "prix_unitaire_defaut": "1200.00",
+    "stock_entrepot": 110
+  }
+},
+{
+  "model": "distribution.produit",
+  "pk": "faed9639-d692-4b42-abb4-5ed55ce3501d",
+  "fields": {
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "designation": "Mangues séchées Bio du Burkina (100g)",
+    "unite": "sachet",
+    "prix_unitaire_defaut": "1000.00",
+    "stock_entrepot": 178
+  }
+},
+{
+  "model": "distribution.produit",
+  "pk": "fe72a979-533f-4837-a237-421148da5729",
+  "fields": {
+    "entreprise": "6b60b78f-c7da-4e35-9d42-647cd5df2eaf",
+    "designation": "Mangue séché",
+    "unite": "sachet",
+    "prix_unitaire_defaut": "500.00",
+    "stock_entrepot": 100
+  }
+},
+{
+  "model": "distribution.alimentation",
+  "pk": "0b3af0e0-564b-4625-9942-a291ac6630b5",
+  "fields": {
+    "entreprise": null,
+    "nom": "Alimentation La Grâce",
+    "ville": "Ouagadougou",
+    "quartier": "Ouaga 2000",
+    "nom_gerant": "Salif Kaboré",
+    "telephone_gerant": "+226 70 12 34 56",
+    "latitude": "12.311500",
+    "longitude": "-1.492500",
+    "panier_moyen_estime": "25000.00",
+    "consignes_reglement": "Préfère Orange Money. Réassort le mardi matin.",
+    "actif": true,
+    "plafond_credit": "50000.00",
+    "bloquer_si_plafond_depasse": true,
+    "code_pin": "1234",
+    "user": null
+  }
+},
+{
+  "model": "distribution.alimentation",
+  "pk": "26622a33-96fb-4ca1-8ed2-adad867c5b78",
+  "fields": {
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "nom": "Alimentation La Grâce",
+    "ville": "Ouagadougou",
+    "quartier": "Ouaga 2000",
+    "nom_gerant": "Salif Kaboré",
+    "telephone_gerant": "+226 70 12 34 56",
+    "latitude": "12.311500",
+    "longitude": "-1.492500",
+    "panier_moyen_estime": "25000.00",
+    "consignes_reglement": "Préfère Orange Money. Réassort régulier.",
+    "actif": true,
+    "plafond_credit": "50000.00",
+    "bloquer_si_plafond_depasse": true,
+    "code_pin": "1234",
+    "user": null
+  }
+},
+{
+  "model": "distribution.alimentation",
+  "pk": "33e2c689-8c6d-4bfd-b390-50163965a573",
+  "fields": {
+    "entreprise": null,
+    "nom": "Alimentation Nouvelle Vision",
+    "ville": "Ouagadougou",
+    "quartier": "Wayalghin",
+    "nom_gerant": "Clarisse Compaoré",
+    "telephone_gerant": "+226 74 11 22 33",
+    "latitude": "12.385000",
+    "longitude": "-1.470000",
+    "panier_moyen_estime": "28000.00",
+    "consignes_reglement": "Paiement Orange Money direct.",
+    "actif": true,
+    "plafond_credit": "50000.00",
+    "bloquer_si_plafond_depasse": true,
+    "code_pin": "1234",
+    "user": null
+  }
+},
+{
+  "model": "distribution.alimentation",
+  "pk": "39317eb6-8faf-42e5-8b92-09092df679f4",
+  "fields": {
+    "entreprise": null,
+    "nom": "Boutique Proximité Agro",
+    "ville": "Ouagadougou",
+    "quartier": "Somgandé",
+    "nom_gerant": "Alima Ilboudo",
+    "telephone_gerant": "+226 70 77 66 55",
+    "latitude": "12.412000",
+    "longitude": "-1.495000",
+    "panier_moyen_estime": "18000.00",
+    "consignes_reglement": "Prend souvent 1 carton de miel et mangues.",
+    "actif": true,
+    "plafond_credit": "50000.00",
+    "bloquer_si_plafond_depasse": true,
+    "code_pin": "1234",
+    "user": null
+  }
+},
+{
+  "model": "distribution.alimentation",
+  "pk": "447b4258-576c-484a-b835-17ff53f9bf3e",
+  "fields": {
+    "entreprise": null,
+    "nom": "Alimentation Moderne du Nord",
+    "ville": "Ouagadougou",
+    "quartier": "Tampouy",
+    "nom_gerant": "Boukary Sanfo",
+    "telephone_gerant": "+226 71 33 22 11",
+    "latitude": "12.405000",
+    "longitude": "-1.552000",
+    "panier_moyen_estime": "35000.00",
+    "consignes_reglement": "Accepte crédit 5 jours.",
+    "actif": true,
+    "plafond_credit": "50000.00",
+    "bloquer_si_plafond_depasse": true,
+    "code_pin": "1234",
+    "user": null
+  }
+},
+{
+  "model": "distribution.alimentation",
+  "pk": "6d14738b-1c00-41c1-9c2f-02bcab8cf951",
+  "fields": {
+    "entreprise": null,
+    "nom": "Superette Sainte Rita",
+    "ville": "Ouagadougou",
+    "quartier": "Pissy",
+    "nom_gerant": "André Somé",
+    "telephone_gerant": "+226 68 99 88 77",
+    "latitude": "12.338000",
+    "longitude": "-1.562000",
+    "panier_moyen_estime": "40000.00",
+    "consignes_reglement": "Espèces uniquement.",
+    "actif": true,
+    "plafond_credit": "50000.00",
+    "bloquer_si_plafond_depasse": true,
+    "code_pin": "1234",
+    "user": null
+  }
+},
+{
+  "model": "distribution.alimentation",
+  "pk": "748f1834-d509-4a08-8ac0-c05548ef32e1",
+  "fields": {
+    "entreprise": null,
+    "nom": "Alimentation Barka",
+    "ville": "Ouagadougou",
+    "quartier": "Gounghin",
+    "nom_gerant": "Ousmane Diallo",
+    "telephone_gerant": "+226 78 55 44 33",
+    "latitude": "12.355000",
+    "longitude": "-1.554000",
+    "panier_moyen_estime": "30000.00",
+    "consignes_reglement": "Paye sous 7 jours par Moov Money. Relancer le vendredi.",
+    "actif": true,
+    "plafond_credit": "50000.00",
+    "bloquer_si_plafond_depasse": true,
+    "code_pin": "1234",
+    "user": null
+  }
+},
+{
+  "model": "distribution.alimentation",
+  "pk": "7acf40ab-d066-45ff-b300-b96a0eae5394",
+  "fields": {
+    "entreprise": null,
+    "nom": "Superette Wend-Kuni",
+    "ville": "Ouagadougou",
+    "quartier": "Koulouba (Centre)",
+    "nom_gerant": "Fatouma Guira",
+    "telephone_gerant": "+226 76 98 76 54",
+    "latitude": "12.368500",
+    "longitude": "-1.527500",
+    "panier_moyen_estime": "45000.00",
+    "consignes_reglement": "Paye cash à la livraison. Demande toujours facture.",
+    "actif": true,
+    "plafond_credit": "50000.00",
+    "bloquer_si_plafond_depasse": true,
+    "code_pin": "1234",
+    "user": null
+  }
+},
+{
+  "model": "distribution.alimentation",
+  "pk": "7fe60b5c-3220-40d7-af7a-1657130eb7a2",
+  "fields": {
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "nom": "Alimentation Barka",
+    "ville": "Ouagadougou",
+    "quartier": "Gounghin",
+    "nom_gerant": "Ousmane Diallo",
+    "telephone_gerant": "+226 78 55 44 33",
+    "latitude": "12.355000",
+    "longitude": "-1.554000",
+    "panier_moyen_estime": "30000.00",
+    "consignes_reglement": "Paye sous 7 jours par Moov Money.",
+    "actif": true,
+    "plafond_credit": "50000.00",
+    "bloquer_si_plafond_depasse": true,
+    "code_pin": "1234",
+    "user": null
+  }
+},
+{
+  "model": "distribution.alimentation",
+  "pk": "80633a8f-67c1-43ec-b24f-114d6faf5b1c",
+  "fields": {
+    "entreprise": null,
+    "nom": "Boutique Étoile du Sahel",
+    "ville": "Ouagadougou",
+    "quartier": "Dassasgho",
+    "nom_gerant": "Mariam Zongo",
+    "telephone_gerant": "+226 65 22 11 00",
+    "latitude": "12.378000",
+    "longitude": "-1.482000",
+    "panier_moyen_estime": "20000.00",
+    "consignes_reglement": "Règlement en espèces ou Orange Money.",
+    "actif": true,
+    "plafond_credit": "50000.00",
+    "bloquer_si_plafond_depasse": true,
+    "code_pin": "1234",
+    "user": null
+  }
+},
+{
+  "model": "distribution.alimentation",
+  "pk": "8168105a-7a7d-4c11-8392-bb96cf278bbf",
+  "fields": {
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "nom": "Boutique Étoile du Sahel",
+    "ville": "Ouagadougou",
+    "quartier": "Dassasgho",
+    "nom_gerant": "Mariam Zongo",
+    "telephone_gerant": "+226 65 22 11 00",
+    "latitude": "12.378000",
+    "longitude": "-1.482000",
+    "panier_moyen_estime": "20000.00",
+    "consignes_reglement": "Règlement en espèces ou Orange Money.",
+    "actif": true,
+    "plafond_credit": "50000.00",
+    "bloquer_si_plafond_depasse": true,
+    "code_pin": "1234",
+    "user": null
+  }
+},
+{
+  "model": "distribution.alimentation",
+  "pk": "881767c2-68a1-450a-ae59-ddf6e068be2f",
+  "fields": {
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "nom": "Alimentation Moderne du Nord",
+    "ville": "Ouagadougou",
+    "quartier": "Tampouy",
+    "nom_gerant": "Boukary Sanfo",
+    "telephone_gerant": "+226 71 33 22 11",
+    "latitude": "12.405000",
+    "longitude": "-1.552000",
+    "panier_moyen_estime": "35000.00",
+    "consignes_reglement": "Accepte acompte 50%.",
+    "actif": true,
+    "plafond_credit": "50000.00",
+    "bloquer_si_plafond_depasse": true,
+    "code_pin": "1234",
+    "user": null
+  }
+},
+{
+  "model": "distribution.alimentation",
+  "pk": "8893a4e6-7d00-490a-b2a9-b519638603d0",
+  "fields": {
+    "entreprise": null,
+    "nom": "Abdoul Rachid Yago",
+    "ville": "Ouagadougou",
+    "quartier": "vvv",
+    "nom_gerant": "Abdoul Rachid Yago",
+    "telephone_gerant": "7000",
+    "latitude": "12.656543",
+    "longitude": "-1.899335",
+    "panier_moyen_estime": "25000.00",
+    "consignes_reglement": "",
+    "actif": true,
+    "plafond_credit": "50000.00",
+    "bloquer_si_plafond_depasse": true,
+    "code_pin": "1234",
+    "user": null
+  }
+},
+{
+  "model": "distribution.alimentation",
+  "pk": "b5a86656-b100-4f6b-ba61-7603f3662463",
+  "fields": {
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "nom": "Superette Wend-Kuni",
+    "ville": "Ouagadougou",
+    "quartier": "Koulouba (Centre)",
+    "nom_gerant": "Fatouma Guira",
+    "telephone_gerant": "+226 76 98 76 54",
+    "latitude": "12.368500",
+    "longitude": "-1.527500",
+    "panier_moyen_estime": "45000.00",
+    "consignes_reglement": "Paye cash à la livraison. Demande toujours reçu.",
+    "actif": true,
+    "plafond_credit": "50000.00",
+    "bloquer_si_plafond_depasse": true,
+    "code_pin": "1234",
+    "user": [
+      "boutique_wendkuni"
+    ]
+  }
+},
+{
+  "model": "distribution.alimentation",
+  "pk": "e1fb6570-6a5a-4213-8d43-be70d9d2cc55",
+  "fields": {
+    "entreprise": "6b60b78f-c7da-4e35-9d42-647cd5df2eaf",
+    "nom": "Brafasso",
+    "ville": "Ouagadougou",
+    "quartier": "Goughin",
+    "nom_gerant": "Marwan",
+    "telephone_gerant": "709986",
+    "latitude": "12.371400",
+    "longitude": "-1.519700",
+    "panier_moyen_estime": "25000.00",
+    "consignes_reglement": "",
+    "actif": true,
+    "plafond_credit": "50000.00",
+    "bloquer_si_plafond_depasse": true,
+    "code_pin": "123",
+    "user": null
+  }
+},
+{
+  "model": "distribution.tournee",
+  "pk": "15ee48e2-6ce6-4032-823d-cf645699b035",
+  "fields": {
+    "entreprise": "6b60b78f-c7da-4e35-9d42-647cd5df2eaf",
+    "livreur": [
+      "livreur"
+    ],
+    "date_tournee": "2026-10-11",
+    "date_creation": "2026-10-20T12:20:06.134Z",
+    "statut": "EN_COURS",
+    "caisse_theorique": "0.00",
+    "caisse_declaree": "0.00"
+  }
+},
+{
+  "model": "distribution.tournee",
+  "pk": "43a3359a-9a26-453a-8de2-8575a2c3ccfe",
+  "fields": {
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "livreur": [
+      "demo"
+    ],
+    "date_tournee": "2026-10-12",
+    "date_creation": "2026-10-20T12:20:06.134Z",
+    "statut": "EN_COURS",
+    "caisse_theorique": "0.00",
+    "caisse_declaree": "0.00"
+  }
+},
+{
+  "model": "distribution.tournee",
+  "pk": "5d464cd8-0b7b-4f65-a6fe-717dda763686",
+  "fields": {
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "livreur": [
+      "livreur_demo"
+    ],
+    "date_tournee": "2026-10-12",
+    "date_creation": "2026-10-20T12:20:06.134Z",
+    "statut": "EN_COURS",
+    "caisse_theorique": "0.00",
+    "caisse_declaree": "0.00"
+  }
+},
+{
+  "model": "distribution.tournee",
+  "pk": "691b1f6e-b631-451a-a4fd-e203b4428b43",
+  "fields": {
+    "entreprise": "6b60b78f-c7da-4e35-9d42-647cd5df2eaf",
+    "livreur": [
+      "marte"
+    ],
+    "date_tournee": "2026-10-11",
+    "date_creation": "2026-10-20T12:20:06.134Z",
+    "statut": "EN_COURS",
+    "caisse_theorique": "0.00",
+    "caisse_declaree": "0.00"
+  }
+},
+{
+  "model": "distribution.tournee",
+  "pk": "707b2ad6-ba78-4170-994c-ea2b20a84275",
+  "fields": {
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "livreur": [
+      "livreur_demo"
+    ],
+    "date_tournee": "2026-10-11",
+    "date_creation": "2026-10-20T12:20:06.134Z",
+    "statut": "EN_COURS",
+    "caisse_theorique": "0.00",
+    "caisse_declaree": "0.00"
+  }
+},
+{
+  "model": "distribution.tournee",
+  "pk": "8570a0b1-7a47-4501-b98d-ec3f152e44ba",
+  "fields": {
+    "entreprise": null,
+    "livreur": [
+      "promotrice"
+    ],
+    "date_tournee": "2026-10-10",
+    "date_creation": "2026-10-20T12:20:06.134Z",
+    "statut": "EN_COURS",
+    "caisse_theorique": "0.00",
+    "caisse_declaree": "0.00"
+  }
+},
+{
+  "model": "distribution.tournee",
+  "pk": "a0f24eb3-090c-414d-aeee-53d91bc2a456",
+  "fields": {
+    "entreprise": null,
+    "livreur": [
+      "livreur1"
+    ],
+    "date_tournee": "2026-10-10",
+    "date_creation": "2026-10-20T12:20:06.134Z",
+    "statut": "EN_COURS",
+    "caisse_theorique": "24500.00",
+    "caisse_declaree": "0.00"
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "04718f11-5b6c-481c-ad92-9d1b6527faa9",
+  "fields": {
+    "tournee": "691b1f6e-b631-451a-a4fd-e203b4428b43",
+    "produit": "fe72a979-533f-4837-a237-421148da5729",
+    "quantite_depart": 15,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "1045717a-4cea-4170-bee2-4f47857e1a8b",
+  "fields": {
+    "tournee": "8570a0b1-7a47-4501-b98d-ec3f152e44ba",
+    "produit": "eb492491-e525-4cc9-ad3f-28952b4fb45e",
+    "quantite_depart": 15,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "1dc67100-996e-4885-870f-6c2920599926",
+  "fields": {
+    "tournee": "5d464cd8-0b7b-4f65-a6fe-717dda763686",
+    "produit": "a40d2461-6197-472a-8e29-a36cc4e287b5",
+    "quantite_depart": 15,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "21db80c7-5972-4d2e-8483-ae4a157d8fbc",
+  "fields": {
+    "tournee": "43a3359a-9a26-453a-8de2-8575a2c3ccfe",
+    "produit": "e116cdf7-fad1-485c-9cf2-12265a96bc7d",
+    "quantite_depart": 15,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "28fca562-003e-449f-86ce-db487eab0e71",
+  "fields": {
+    "tournee": "a0f24eb3-090c-414d-aeee-53d91bc2a456",
+    "produit": "eb492491-e525-4cc9-ad3f-28952b4fb45e",
+    "quantite_depart": 20,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "297b0b63-8de4-4474-8f63-b63e64e4bd97",
+  "fields": {
+    "tournee": "5d464cd8-0b7b-4f65-a6fe-717dda763686",
+    "produit": "faed9639-d692-4b42-abb4-5ed55ce3501d",
+    "quantite_depart": 22,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "2d1eda3e-c5f5-4877-b5f9-91fe5c43c024",
+  "fields": {
+    "tournee": "8570a0b1-7a47-4501-b98d-ec3f152e44ba",
+    "produit": "a94ba34f-8569-4876-ad04-92442344919f",
+    "quantite_depart": 15,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "327bf413-67aa-43f7-b512-a0c4e433b2e0",
+  "fields": {
+    "tournee": "a0f24eb3-090c-414d-aeee-53d91bc2a456",
+    "produit": "3add9f92-69a6-4175-a6a6-b5c7bcd8b773",
+    "quantite_depart": 30,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "33df0da6-1235-4ccd-a2e5-60f3a3cc30e7",
+  "fields": {
+    "tournee": "8570a0b1-7a47-4501-b98d-ec3f152e44ba",
+    "produit": "3add9f92-69a6-4175-a6a6-b5c7bcd8b773",
+    "quantite_depart": 15,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "39abb608-a930-4efb-a4b8-ebd603823daa",
+  "fields": {
+    "tournee": "5d464cd8-0b7b-4f65-a6fe-717dda763686",
+    "produit": "b57244a2-6a43-4ef2-8908-eac13957ec2e",
+    "quantite_depart": 15,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "49982539-b952-4afc-a412-1d6ca6d7c507",
+  "fields": {
+    "tournee": "43a3359a-9a26-453a-8de2-8575a2c3ccfe",
+    "produit": "b57244a2-6a43-4ef2-8908-eac13957ec2e",
+    "quantite_depart": 15,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "4a42313a-be19-495e-bf72-abba039cdc45",
+  "fields": {
+    "tournee": "8570a0b1-7a47-4501-b98d-ec3f152e44ba",
+    "produit": "507864a7-9a1d-4254-a4ce-fe5adbff660c",
+    "quantite_depart": 15,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "5d80cf3a-49a7-44a1-a21b-f8ec5ea11422",
+  "fields": {
+    "tournee": "8570a0b1-7a47-4501-b98d-ec3f152e44ba",
+    "produit": "7f48f148-a4d9-414e-8442-970ce195140a",
+    "quantite_depart": 15,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "6ab33679-9429-4198-993b-368e185eee71",
+  "fields": {
+    "tournee": "5d464cd8-0b7b-4f65-a6fe-717dda763686",
+    "produit": "290fcef2-6c85-483b-8840-1473cd8dea94",
+    "quantite_depart": 18,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "6ad27933-2ecb-4362-87f5-f095a55d94a2",
+  "fields": {
+    "tournee": "707b2ad6-ba78-4170-994c-ea2b20a84275",
+    "produit": "b57244a2-6a43-4ef2-8908-eac13957ec2e",
+    "quantite_depart": 20,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "7f32659e-ee80-46cc-ac8f-c2e5e178b70f",
+  "fields": {
+    "tournee": "43a3359a-9a26-453a-8de2-8575a2c3ccfe",
+    "produit": "a40d2461-6197-472a-8e29-a36cc4e287b5",
+    "quantite_depart": 15,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "80c8b0b4-f6e8-47fa-9978-e2a99c52e613",
+  "fields": {
+    "tournee": "707b2ad6-ba78-4170-994c-ea2b20a84275",
+    "produit": "e116cdf7-fad1-485c-9cf2-12265a96bc7d",
+    "quantite_depart": 20,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "8edd7a16-e6d3-4645-b752-d2e3f9ce6937",
+  "fields": {
+    "tournee": "8570a0b1-7a47-4501-b98d-ec3f152e44ba",
+    "produit": "06962ccb-5fd6-4b06-809c-287c5d484ca5",
+    "quantite_depart": 15,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "9b75e48c-c396-4f25-99d5-53b5bb320686",
+  "fields": {
+    "tournee": "8570a0b1-7a47-4501-b98d-ec3f152e44ba",
+    "produit": "196e08b9-c95e-49a1-9804-9bb537be7d1a",
+    "quantite_depart": 15,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "ad261e71-37b7-40a4-a737-0c133d636ab3",
+  "fields": {
+    "tournee": "a0f24eb3-090c-414d-aeee-53d91bc2a456",
+    "produit": "196e08b9-c95e-49a1-9804-9bb537be7d1a",
+    "quantite_depart": 15,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "b2b419f0-8eca-432c-a2fc-c191b84593bf",
+  "fields": {
+    "tournee": "707b2ad6-ba78-4170-994c-ea2b20a84275",
+    "produit": "faed9639-d692-4b42-abb4-5ed55ce3501d",
+    "quantite_depart": 20,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "bb30c9f0-e579-47f3-88ab-f4c1f450cb63",
+  "fields": {
+    "tournee": "707b2ad6-ba78-4170-994c-ea2b20a84275",
+    "produit": "a40d2461-6197-472a-8e29-a36cc4e287b5",
+    "quantite_depart": 20,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "c1291770-d1a2-4435-ba69-0d833ccdcb75",
+  "fields": {
+    "tournee": "a0f24eb3-090c-414d-aeee-53d91bc2a456",
+    "produit": "507864a7-9a1d-4254-a4ce-fe5adbff660c",
+    "quantite_depart": 25,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "c3a5af00-33b5-4252-8150-ca8d703c9f45",
+  "fields": {
+    "tournee": "8570a0b1-7a47-4501-b98d-ec3f152e44ba",
+    "produit": "2156bd3d-106f-4069-a20b-e053d49a5e7c",
+    "quantite_depart": 15,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "cbd98afc-2cde-4f94-b735-df3968fb4166",
+  "fields": {
+    "tournee": "a0f24eb3-090c-414d-aeee-53d91bc2a456",
+    "produit": "a94ba34f-8569-4876-ad04-92442344919f",
+    "quantite_depart": 12,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "d838704e-03be-4cbb-ba4b-e0c1b114ffa7",
+  "fields": {
+    "tournee": "707b2ad6-ba78-4170-994c-ea2b20a84275",
+    "produit": "290fcef2-6c85-483b-8840-1473cd8dea94",
+    "quantite_depart": 20,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "d8391bd5-d4c2-40ed-b8d3-701f494041d9",
+  "fields": {
+    "tournee": "43a3359a-9a26-453a-8de2-8575a2c3ccfe",
+    "produit": "faed9639-d692-4b42-abb4-5ed55ce3501d",
+    "quantite_depart": 15,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "f34e1239-0d9e-4f9e-9244-9690cb5661bf",
+  "fields": {
+    "tournee": "5d464cd8-0b7b-4f65-a6fe-717dda763686",
+    "produit": "e116cdf7-fad1-485c-9cf2-12265a96bc7d",
+    "quantite_depart": 15,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "fe12f877-d444-49ba-83ce-de2e77d284c7",
+  "fields": {
+    "tournee": "43a3359a-9a26-453a-8de2-8575a2c3ccfe",
+    "produit": "290fcef2-6c85-483b-8840-1473cd8dea94",
+    "quantite_depart": 15,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.lignedotationstock",
+  "pk": "fffb13d7-4829-460b-923c-800c875513fa",
+  "fields": {
+    "tournee": "15ee48e2-6ce6-4032-823d-cf645699b035",
+    "produit": "fe72a979-533f-4837-a237-421148da5729",
+    "quantite_depart": 15,
+    "quantite_retour": 0
+  }
+},
+{
+  "model": "distribution.livraisonvente",
+  "pk": "447c5fd8-b849-4cd9-a0e2-595818155f1b",
+  "fields": {
+    "entreprise": null,
+    "tournee": "a0f24eb3-090c-414d-aeee-53d91bc2a456",
+    "alimentation": "7acf40ab-d066-45ff-b300-b96a0eae5394",
+    "date_heure": "2026-10-10T12:00:15.847Z",
+    "montant_total": "24500.00",
+    "montant_paye": "24500.00",
+    "statut_paiement": "PAYE",
+    "mode_reglement": "ESPECES",
+    "date_echeance_credit": null,
+    "notes": "Livraison complète effectuée. Patron très satisfait du miel.",
+    "confirme_par_boutique": false,
+    "date_confirmation_boutique": null,
+    "note_boutique": ""
+  }
+},
+{
+  "model": "distribution.livraisonvente",
+  "pk": "99eeac48-a792-4105-bbd1-cff16a12cab8",
+  "fields": {
+    "entreprise": null,
+    "tournee": "a0f24eb3-090c-414d-aeee-53d91bc2a456",
+    "alimentation": "748f1834-d509-4a08-8ac0-c05548ef32e1",
+    "date_heure": "2026-10-10T12:00:15.881Z",
+    "montant_total": "29000.00",
+    "montant_paye": "15000.00",
+    "statut_paiement": "PARTIEL",
+    "mode_reglement": "ORANGE_MONEY",
+    "date_echeance_credit": "2026-10-17",
+    "notes": "Acompte versé par Orange Money. Reste 14 000 FCFA à régler vendredi prochain.",
+    "confirme_par_boutique": false,
+    "date_confirmation_boutique": null,
+    "note_boutique": ""
+  }
+},
+{
+  "model": "distribution.lignelivraisonvente",
+  "pk": "1d46b58f-0156-439b-829b-32fe7593593c",
+  "fields": {
+    "vente": "99eeac48-a792-4105-bbd1-cff16a12cab8",
+    "produit": "196e08b9-c95e-49a1-9804-9bb537be7d1a",
+    "quantite": 5,
+    "prix_unitaire": "2200.00",
+    "sous_total": "11000.00"
+  }
+},
+{
+  "model": "distribution.lignelivraisonvente",
+  "pk": "3cd4b7e9-7a29-4ac1-b74c-a633ad056d75",
+  "fields": {
+    "vente": "447c5fd8-b849-4cd9-a0e2-595818155f1b",
+    "produit": "507864a7-9a1d-4254-a4ce-fe5adbff660c",
+    "quantite": 4,
+    "prix_unitaire": "1500.00",
+    "sous_total": "6000.00"
+  }
+},
+{
+  "model": "distribution.lignelivraisonvente",
+  "pk": "643d4cc4-3787-4843-88f9-c9f2b9bbfe50",
+  "fields": {
+    "vente": "447c5fd8-b849-4cd9-a0e2-595818155f1b",
+    "produit": "3add9f92-69a6-4175-a6a6-b5c7bcd8b773",
+    "quantite": 6,
+    "prix_unitaire": "1000.00",
+    "sous_total": "6000.00"
+  }
+},
+{
+  "model": "distribution.lignelivraisonvente",
+  "pk": "c00a0097-c29a-4990-9d43-557cf74ac720",
+  "fields": {
+    "vente": "447c5fd8-b849-4cd9-a0e2-595818155f1b",
+    "produit": "a94ba34f-8569-4876-ad04-92442344919f",
+    "quantite": 5,
+    "prix_unitaire": "2500.00",
+    "sous_total": "12500.00"
+  }
+},
+{
+  "model": "distribution.lignelivraisonvente",
+  "pk": "cae71879-6eed-475b-830e-15a08824a8d2",
+  "fields": {
+    "vente": "99eeac48-a792-4105-bbd1-cff16a12cab8",
+    "produit": "eb492491-e525-4cc9-ad3f-28952b4fb45e",
+    "quantite": 10,
+    "prix_unitaire": "1200.00",
+    "sous_total": "12000.00"
+  }
+},
+{
+  "model": "distribution.expedition",
+  "pk": "abde458f-4da7-4928-9d49-71251792e5c7",
+  "fields": {
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "numero_bordereau": "EXP-BOBO-OUAGA-001",
+    "date_expedition": "2026-10-11T10:48:02.185Z",
+    "ville_depart": "Bobo-Dioulasso",
+    "ville_destination": "Ouagadougou",
+    "transporteur_nom": "TSR Express Cargo",
+    "transporteur_telephone": "+226 70 88 99 00",
+    "livreur_destinataire": null,
+    "destinataire_nom": "Moussa Sawadogo",
+    "destinataire_telephone": "+226 76 99 88 77",
+    "statut": "EN_TRANSIT",
+    "frais_transport": "15000.00",
+    "consignes_generales": "Marchandise fraîche à ventiler dès réception au dépôt de Gounghin",
+    "date_reception": null,
+    "cree_par": [
+      "demo"
+    ]
+  }
+},
+{
+  "model": "distribution.expedition",
+  "pk": "f2c3ca8a-2e11-4507-9908-23bbb68f2744",
+  "fields": {
+    "entreprise": null,
+    "numero_bordereau": "EXP-2026-0042",
+    "date_expedition": "2026-10-10T12:29:46.362Z",
+    "ville_depart": "Bobo-Dioulasso",
+    "ville_destination": "Ouagadougou",
+    "transporteur_nom": "TSR Transport Express",
+    "transporteur_telephone": "+226 20 98 00 11",
+    "livreur_destinataire": null,
+    "destinataire_nom": "Moussa Sawadogo (Livreur Hub Ouaga)",
+    "destinataire_telephone": "+226 70 88 99 00",
+    "statut": "EN_TRANSIT",
+    "frais_transport": "7500.00",
+    "consignes_generales": "Colis à retirer à la gare TSR Ouaga échangeur de l'Est dès 15h00. Répartir les 50 sachets mangue 100g immédiatement aux boutiques du centre-ville (Wend-Kuni et Gounghin).",
+    "date_reception": null,
+    "cree_par": [
+      "promotrice"
+    ]
+  }
+},
+{
+  "model": "distribution.ligneexpedition",
+  "pk": "0c4f40ba-677c-4a62-90b6-ced944786f30",
+  "fields": {
+    "expedition": "abde458f-4da7-4928-9d49-71251792e5c7",
+    "produit": "faed9639-d692-4b42-abb4-5ed55ce3501d",
+    "quantite": 50,
+    "unite": "sachet",
+    "valeur_unitaire": "1000.00",
+    "sous_total": "50000.00",
+    "consigne_specifique": "Lot vérifié et scellé"
+  }
+},
+{
+  "model": "distribution.ligneexpedition",
+  "pk": "1098f57e-bc97-48db-a0cb-1f401d8c8a68",
+  "fields": {
+    "expedition": "f2c3ca8a-2e11-4507-9908-23bbb68f2744",
+    "produit": "507864a7-9a1d-4254-a4ce-fe5adbff660c",
+    "quantite": 30,
+    "unite": "sachet",
+    "valeur_unitaire": "1500.00",
+    "sous_total": "45000.00",
+    "consigne_specifique": "Stock de réassort pour le van de Moussa"
+  }
+},
+{
+  "model": "distribution.ligneexpedition",
+  "pk": "957e9b92-318e-49d3-8aeb-fb6c0dc4e519",
+  "fields": {
+    "expedition": "f2c3ca8a-2e11-4507-9908-23bbb68f2744",
+    "produit": "3add9f92-69a6-4175-a6a6-b5c7bcd8b773",
+    "quantite": 50,
+    "unite": "sachet",
+    "valeur_unitaire": "1000.00",
+    "sous_total": "50000.00",
+    "consigne_specifique": "À répartir entre Wend-Kuni (25 sachets) et Barka (25 sachets)"
+  }
+},
+{
+  "model": "distribution.ligneexpedition",
+  "pk": "aa5fe956-eeca-4b0e-80e9-60e02e9011f6",
+  "fields": {
+    "expedition": "abde458f-4da7-4928-9d49-71251792e5c7",
+    "produit": "b57244a2-6a43-4ef2-8908-eac13957ec2e",
+    "quantite": 50,
+    "unite": "bouteille",
+    "valeur_unitaire": "3000.00",
+    "sous_total": "150000.00",
+    "consigne_specifique": "Lot vérifié et scellé"
+  }
+},
+{
+  "model": "distribution.ligneexpedition",
+  "pk": "d555cdab-3faa-4b8a-ae86-d49ad7333871",
+  "fields": {
+    "expedition": "abde458f-4da7-4928-9d49-71251792e5c7",
+    "produit": "a40d2461-6197-472a-8e29-a36cc4e287b5",
+    "quantite": 50,
+    "unite": "pot",
+    "valeur_unitaire": "2500.00",
+    "sous_total": "125000.00",
+    "consigne_specifique": "Lot vérifié et scellé"
+  }
+},
+{
+  "model": "distribution.ligneexpedition",
+  "pk": "f205b74f-c331-4c6d-9d41-b0cce25cbb9f",
+  "fields": {
+    "expedition": "f2c3ca8a-2e11-4507-9908-23bbb68f2744",
+    "produit": "a94ba34f-8569-4876-ad04-92442344919f",
+    "quantite": 20,
+    "unite": "pot",
+    "valeur_unitaire": "2500.00",
+    "sous_total": "50000.00",
+    "consigne_specifique": "Pots étiquetés récolte spéciale savane"
+  }
+},
+{
+  "model": "distribution.ordremission",
+  "pk": "00254075-a620-4b8e-8fe3-4bde59e40176",
+  "fields": {
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "tournee": "5d464cd8-0b7b-4f65-a6fe-717dda763686",
+    "alimentation": "8168105a-7a7d-4c11-8392-bb96cf278bbf",
+    "date_creation": "2026-10-12T12:22:15.220Z",
+    "produits_consignes": "4x Anacarde grillé salé Premium (150g), 7x Mangues séchées Bio du Burkina (100g)",
+    "donnees_produits": {},
+    "montant_cible": "13000.00",
+    "consigne_particuliere": "",
+    "statut": "A_FAIRE",
+    "livraison_vente": null
+  }
+},
+{
+  "model": "distribution.ordremission",
+  "pk": "0760d452-d935-4d3a-aa95-325fa85293c4",
+  "fields": {
+    "entreprise": null,
+    "tournee": "a0f24eb3-090c-414d-aeee-53d91bc2a456",
+    "alimentation": "7acf40ab-d066-45ff-b300-b96a0eae5394",
+    "date_creation": "2026-10-10T12:29:46.329Z",
+    "produits_consignes": "6 sachets mangue 100g, 5 pots miel 500g, 4 anacardes salés",
+    "donnees_produits": {},
+    "montant_cible": "24500.00",
+    "consigne_particuliere": "Remettre le reçu imprimé, paiement cash attendu à la livraison.",
+    "statut": "LIVRE",
+    "livraison_vente": null
+  }
+},
+{
+  "model": "distribution.ordremission",
+  "pk": "177e42ac-1fd7-44b4-bc96-a4dad79bca58",
+  "fields": {
+    "entreprise": null,
+    "tournee": "a0f24eb3-090c-414d-aeee-53d91bc2a456",
+    "alimentation": "748f1834-d509-4a08-8ac0-c05548ef32e1",
+    "date_creation": "2026-10-10T12:29:46.337Z",
+    "produits_consignes": "10 pots soumbala pur luxe, 5 sachets mangue 250g",
+    "donnees_produits": {},
+    "montant_cible": "29000.00",
+    "consigne_particuliere": "Exiger acompte minimum de 15 000 FCFA par Orange Money. Relance solde vendredi.",
+    "statut": "LIVRE",
+    "livraison_vente": null
+  }
+},
+{
+  "model": "distribution.ordremission",
+  "pk": "5e7ac7bf-7061-4347-85a9-464b1e13517d",
+  "fields": {
+    "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
+    "tournee": "707b2ad6-ba78-4170-994c-ea2b20a84275",
+    "alimentation": "b5a86656-b100-4f6b-ba61-7603f3662463",
+    "date_creation": "2026-10-11T10:48:02.175Z",
+    "produits_consignes": "10 sachets mangue 100g, 5 pots miel savane",
+    "donnees_produits": {},
+    "montant_cible": "22500.00",
+    "consigne_particuliere": "Remettre le reçu avec signature du gérant",
+    "statut": "A_FAIRE",
+    "livraison_vente": null
+  }
+},
+{
+  "model": "distribution.ordremission",
+  "pk": "b2b8e0b3-af98-4583-804b-9c9dbe8becca",
+  "fields": {
+    "entreprise": null,
+    "tournee": "a0f24eb3-090c-414d-aeee-53d91bc2a456",
+    "alimentation": "0b3af0e0-564b-4625-9942-a291ac6630b5",
+    "date_creation": "2026-10-10T12:29:46.345Z",
+    "produits_consignes": "10 sachets mangue 100g, 5 anacardes 150g",
+    "donnees_produits": {},
+    "montant_cible": "17500.00",
+    "consigne_particuliere": "Contacter le gérant Salif à l'arrivée. Préfère Orange Money.",
+    "statut": "A_FAIRE",
+    "livraison_vente": null
+  }
+}
+]

@@ -1,9 +1,11 @@
-name: Keep Render Awake (Anti Spin-Down)
+name: Keep Render Awake (Anti Spin-Down Heures d'Activité)
 
 on:
   schedule:
-    # Exécute un ping léger toutes les 10 minutes 24h/24 et 7j/7
-    - cron: '*/10 * * * *'
+    # Maintient le serveur éveillé toutes les 10 minutes pendant les heures actives (06h00 à 21h00 UTC)
+    # Total : ~480 heures / mois, ce qui garantit 0 seconde d'attente le jour et RESTE LARGEMENT SOUS le quota de 750h Render
+    # Résultat : 0 mise en veille le jour ET 0 suspension en fin de mois !
+    - cron: '*/10 6-21 * * *'
   workflow_dispatch:
 
 jobs:
@@ -12,7 +14,7 @@ jobs:
     steps:
       - name: Ping Render /healthz endpoint
         env:
-          RENDER_APP_URL: ${{ vars.RENDER_APP_URL || 'https://agrodistrib.onrender.com' }}
+          RENDER_APP_URL: ${{ vars.RENDER_APP_URL || 'https://agro-distrib-1.onrender.com' }}
         run: |
           echo "Pinging ${RENDER_APP_URL}/healthz ..."
-          curl -fsSL --max-time 15 "${RENDER_APP_URL}/healthz" || echo "Ping sent (service waking up or URL custom)"
+          curl -fsSL --max-time 15 "${RENDER_APP_URL}/healthz" || echo "Ping sent"
