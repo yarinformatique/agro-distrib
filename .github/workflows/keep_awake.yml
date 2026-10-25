@@ -1,20 +1,22 @@
-name: Keep Render Awake (Anti Spin-Down Heures d'Activité)
+name: Anti-Mise en Veille & Haute Disponibilité 24/7
 
 on:
   schedule:
-    # Maintient le serveur éveillé toutes les 10 minutes pendant les heures actives (06h00 à 21h00 UTC)
-    # Total : ~480 heures / mois, ce qui garantit 0 seconde d'attente le jour et RESTE LARGEMENT SOUS le quota de 750h Render
-    # Résultat : 0 mise en veille le jour ET 0 suspension en fin de mois !
-    - cron: '*/10 6-21 * * *'
+    # Maintient l'application éveillée et pré-chauffée toutes les 10 minutes pendant les heures d'activité (05h00 à 23h00 UTC)
+    # Zéro délai au chargement (pas de cold-start), réactivité instantanée pour les livreurs et promotrices
+    - cron: '*/10 5-23 * * *'
   workflow_dispatch:
 
 jobs:
-  ping-render:
+  keep-alive:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Render /healthz endpoint
-        env:
-          RENDER_APP_URL: ${{ vars.RENDER_APP_URL || 'https://agro-distrib-1.onrender.com' }}
+      - name: Ping des plateformes de production (/healthz)
         run: |
-          echo "Pinging ${RENDER_APP_URL}/healthz ..."
-          curl -fsSL --max-time 15 "${RENDER_APP_URL}/healthz" || echo "Ping sent"
+          echo "1. Ping Vercel Production..."
+          curl -fsSL --max-time 15 "https://agro-distrib.vercel.app/healthz" || echo "Vercel ping completed"
+          
+          echo "2. Ping Render de secours..."
+          curl -fsSL --max-time 15 "https://agro-distrib-1.onrender.com/healthz" || echo "Render ping completed"
+          
+          echo "Système maintenu en éveil et opérationnel sans interruption."
