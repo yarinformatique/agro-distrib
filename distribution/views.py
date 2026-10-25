@@ -331,17 +331,39 @@ def superadmin_modifier_entreprise_view(request, pk):
 
     ent = get_object_or_404(Entreprise, id=pk)
     if request.method == 'POST':
-        ent.nom = request.POST.get('nom', ent.nom)
-        ent.ville = request.POST.get('ville', ent.ville)
-        ent.contact_nom = request.POST.get('contact_nom', ent.contact_nom)
-        ent.contact_email = request.POST.get('contact_email', ent.contact_email)
-        ent.contact_telephone = request.POST.get('contact_telephone', ent.contact_telephone)
-        ent.adresse = request.POST.get('adresse', ent.adresse)
+        ent.nom = request.POST.get('nom', ent.nom).strip()
+        ent.ville = request.POST.get('ville', ent.ville).strip()
+        ent.contact_nom = request.POST.get('contact_nom', ent.contact_nom).strip()
+        ent.contact_email = request.POST.get('contact_email', ent.contact_email).strip()
+        ent.contact_telephone = request.POST.get('contact_telephone', ent.contact_telephone).strip()
+        ent.adresse = request.POST.get('adresse', ent.adresse).strip()
+        ent.numero_orange_money = request.POST.get('numero_orange_money', ent.numero_orange_money).strip()
+        ent.numero_moov_money = request.POST.get('numero_moov_money', ent.numero_moov_money).strip()
         statut = request.POST.get('statut_abonnement', ent.statut_abonnement)
         ent.statut_abonnement = statut
         ent.actif = (statut == 'actif')
         ent.save()
-        messages.success(request, f"Entreprise '{ent.nom}' mise à jour.")
+        messages.success(request, f"Entreprise '{ent.nom}' mise à jour avec succès.")
+
+    return redirect('superadmin_dashboard')
+
+
+@login_required
+def superadmin_supprimer_entreprise_view(request, pk):
+    """Suppression définitive d'une entreprise et de toutes ses données associées par le Superadmin."""
+    if not getattr(request, 'is_superadmin', False):
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        ent = get_object_or_404(Entreprise, id=pk)
+        nom = ent.nom
+        with transaction.atomic():
+            user_ids = list(ent.utilisateurs.filter(user__is_superuser=False).values_list('user_id', flat=True))
+            ent.delete()
+            if user_ids:
+                User.objects.filter(id__in=user_ids, is_superuser=False).delete()
+
+        messages.success(request, f"L'entreprise '{nom}' et tous ses comptes/données ont été supprimés définitivement.")
 
     return redirect('superadmin_dashboard')
 

@@ -95,7 +95,7 @@
                         <th class="py-3.5 px-4 text-center">Statut Abonnement</th>
                         <th class="py-3.5 px-4 text-center">Ressources</th>
                         <th class="py-3.5 px-4 text-right">CA Réalisé</th>
-                        <th class="py-3.5 px-4 text-center">Action Sécurité</th>
+                        <th class="py-3.5 px-4 text-center">Actions de Gestion</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -203,24 +203,141 @@
                             <span class="font-black text-slate-800 text-xs">{{ item.ca|floatformat:0 }} FCFA</span>
                         </td>
 
-                        <td class="py-4 px-4 text-center">
-                            <form method="POST" action="{% url 'superadmin_toggle_statut' item.obj.id %}" class="inline-block"
-                                  onsubmit="return confirm('Confirmez-vous le changement de statut pour {{ item.obj.nom }} ?')">
-                                {% csrf_token %}
-                                {% if item.obj.statut_abonnement == 'actif' %}
-                                <button type="submit"
-                                        class="px-3 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold text-[11px] transition flex items-center gap-1 mx-auto">
-                                    <span>⛔</span>
-                                    <span>Suspendre</span>
+                        <td class="py-4 px-4 text-center" x-data="{ modalEdit: false, modalDelete: false }">
+                            <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                                <!-- Activer / Suspendre -->
+                                <form method="POST" action="{% url 'superadmin_toggle_statut' item.obj.id %}" class="inline-block"
+                                      onsubmit="return confirm('Confirmez-vous le changement de statut pour {{ item.obj.nom }} ?')">
+                                    {% csrf_token %}
+                                    {% if item.obj.statut_abonnement == 'actif' %}
+                                    <button type="submit"
+                                            class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-bold text-[11px] transition flex items-center gap-1"
+                                            title="Suspendre l'accès">
+                                        <span>⛔</span>
+                                        <span>Suspendre</span>
+                                    </button>
+                                    {% else %}
+                                    <button type="submit"
+                                            class="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-[11px] transition flex items-center gap-1"
+                                            title="Réactiver l'accès">
+                                        <span>✅</span>
+                                        <span>Activer</span>
+                                    </button>
+                                    {% endif %}
+                                </form>
+
+                                <!-- Modifier -->
+                                <button type="button" @click="modalEdit = true"
+                                        class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold text-[11px] transition flex items-center gap-1"
+                                        title="Modifier les informations de l'entreprise">
+                                    <span>✏️</span>
+                                    <span>Modifier</span>
                                 </button>
-                                {% else %}
-                                <button type="submit"
-                                        class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-[11px] transition flex items-center gap-1 mx-auto">
-                                    <span>✅</span>
-                                    <span>Activer</span>
+
+                                <!-- Supprimer -->
+                                <button type="button" @click="modalDelete = true"
+                                        class="px-2.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-[11px] transition flex items-center gap-1"
+                                        title="Supprimer définitivement cette entreprise">
+                                    <span>🗑️</span>
+                                    <span>Supprimer</span>
                                 </button>
-                                {% endif %}
-                            </form>
+                            </div>
+
+                            <!-- Modal Modification Entreprise -->
+                            <div x-show="modalEdit" style="display: none;" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                                <div class="bg-white rounded-3xl max-w-lg w-full p-6 text-left shadow-2xl border border-slate-100 space-y-4" @click.away="modalEdit = false">
+                                    <div class="flex items-center justify-between border-b pb-3">
+                                        <h3 class="font-black text-base text-slate-800 flex items-center gap-2">
+                                            <span>✏️</span>
+                                            <span>Modifier : {{ item.obj.nom }}</span>
+                                        </h3>
+                                        <button type="button" @click="modalEdit = false" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+                                    </div>
+
+                                    <form method="POST" action="{% url 'superadmin_modifier_entreprise' item.obj.id %}" class="space-y-3">
+                                        {% csrf_token %}
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Nom de l'entreprise</label>
+                                                <input type="text" name="nom" required value="{{ item.obj.nom }}"
+                                                       class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Ville</label>
+                                                <input type="text" name="ville" required value="{{ item.obj.ville }}"
+                                                       class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Nom du Contact / Gérante</label>
+                                                <input type="text" name="contact_nom" value="{{ item.obj.contact_nom }}"
+                                                       class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Téléphone Contact</label>
+                                                <input type="text" name="contact_telephone" value="{{ item.obj.contact_telephone }}"
+                                                       class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Email Contact</label>
+                                                <input type="email" name="contact_email" value="{{ item.obj.contact_email }}"
+                                                       class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Statut Abonnement</label>
+                                                <select name="statut_abonnement" class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50">
+                                                    <option value="actif" {% if item.obj.statut_abonnement == 'actif' %}selected{% endif %}>Actif</option>
+                                                    <option value="suspendu" {% if item.obj.statut_abonnement == 'suspendu' %}selected{% endif %}>Suspendu</option>
+                                                    <option value="inactif" {% if item.obj.statut_abonnement == 'inactif' %}selected{% endif %}>Inactif</option>
+                                                </select>
+                                            </div>
+                                            <div class="sm:col-span-2">
+                                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Adresse</label>
+                                                <input type="text" name="adresse" value="{{ item.obj.adresse }}"
+                                                       class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Numéro Orange Money</label>
+                                                <input type="text" name="numero_orange_money" value="{{ item.obj.numero_orange_money }}"
+                                                       class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Numéro Moov Money</label>
+                                                <input type="text" name="numero_moov_money" value="{{ item.obj.numero_moov_money }}"
+                                                       class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50">
+                                            </div>
+                                        </div>
+                                        <div class="flex justify-end space-x-2 pt-3 border-t">
+                                            <button type="button" @click="modalEdit = false" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Annuler</button>
+                                            <button type="submit" class="px-5 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl hover:bg-emerald-700 shadow-md">Enregistrer les modifications</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Modal Suppression Entreprise -->
+                            <div x-show="modalDelete" style="display: none;" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                                <div class="bg-white rounded-3xl max-w-md w-full p-6 text-left shadow-2xl border border-red-100 space-y-4" @click.away="modalDelete = false">
+                                    <div class="flex items-center justify-between border-b border-red-100 pb-3">
+                                        <h3 class="font-black text-base text-red-600 flex items-center gap-2">
+                                            <span>⚠️</span>
+                                            <span>Supprimer l'entreprise</span>
+                                        </h3>
+                                        <button type="button" @click="modalDelete = false" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+                                    </div>
+                                    <p class="text-xs text-slate-600 leading-relaxed">
+                                        Êtes-vous sûr de vouloir supprimer définitivement l'entreprise <strong>{{ item.obj.nom }}</strong> ?
+                                    </p>
+                                    <div class="bg-red-50 p-3 rounded-2xl border border-red-200 text-[11px] text-red-800 space-y-1">
+                                        <div>⚠️ <strong>Cette action est irréversible.</strong></div>
+                                        <div>Tous les comptes associés, produits, alimentations partenaires, tournées et livraisons de cette entreprise seront définitivement supprimés.</div>
+                                    </div>
+                                    <form method="POST" action="{% url 'superadmin_supprimer_entreprise' item.obj.id %}" class="flex justify-end space-x-2 pt-2">
+                                        {% csrf_token %}
+                                        <button type="button" @click="modalDelete = false" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Annuler</button>
+                                        <button type="submit" class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-red-600/30">Confirmer la suppression</button>
+                                    </form>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}
