@@ -19,6 +19,7 @@ urlpatterns = [
     path('superadmin/entreprises/creer/', views.superadmin_creer_entreprise_view, name='superadmin_creer_entreprise'),
     path('superadmin/entreprises/<uuid:pk>/toggle/', views.superadmin_toggle_statut_view, name='superadmin_toggle_statut'),
     path('superadmin/entreprises/<uuid:pk>/modifier/', views.superadmin_modifier_entreprise_view, name='superadmin_modifier_entreprise'),
+    path('superadmin/entreprises/<uuid:pk>/reinitialiser-mdp/', views.superadmin_reinitialiser_mot_de_passe_view, name='superadmin_reinitialiser_mot_de_passe'),
 
     # Promotrice Dashboard (Tenant)
     path('dashboard/', views.dashboard_view, name='dashboard'),

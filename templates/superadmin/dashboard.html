@@ -116,15 +116,58 @@
                             </div>
                         </td>
 
-                        <td class="py-4 px-4">
+                        <td class="py-4 px-4" x-data="{ showPass: false, modalPass: false }">
                             {% if item.promotrice %}
                             <div class="font-bold text-slate-700">{{ item.promotrice.get_full_name|default:item.promotrice.username }}</div>
-                            <div class="text-[11px] text-slate-400">Identifiant : <span class="font-mono text-slate-600">{{ item.promotrice.username }}</span></div>
+                            <div class="text-[11px] text-slate-500 mt-0.5">
+                                Identifiant : <strong class="font-mono bg-slate-100 px-1 py-0.5 rounded text-slate-800 select-all">{{ item.promotrice.username }}</strong>
+                            </div>
+                            <div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5 flex-wrap">
+                                <span>Mot de passe :</span>
+                                <span x-show="!showPass" class="font-mono text-slate-400">••••••••</span>
+                                <strong x-show="showPass" class="font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded select-all font-bold">
+                                    {{ item.obj.mot_de_passe_initial|default:"(non défini)" }}
+                                </strong>
+                                <button type="button" @click="showPass = !showPass" class="text-xs text-slate-400 hover:text-slate-700 ml-1" title="Afficher/Masquer">
+                                    <span x-text="showPass ? '🙈 Masquer' : '👁️ Afficher'"></span>
+                                </button>
+                                <button type="button" @click="modalPass = true" class="text-[10px] px-2 py-0.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-semibold ml-1 shadow-sm" title="Modifier le mot de passe">
+                                    🔑 Modifier
+                                </button>
+                            </div>
+
+                            <!-- Modal changement / réinitialisation mot de passe -->
+                            <div x-show="modalPass" style="display: none;" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                                <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 space-y-4" @click.away="modalPass = false">
+                                    <div class="flex items-center justify-between border-b pb-3">
+                                        <h3 class="font-black text-sm text-slate-800 flex items-center gap-1.5">
+                                            <span>🔑</span>
+                                            <span>Mot de passe : {{ item.obj.nom }}</span>
+                                        </h3>
+                                        <button type="button" @click="modalPass = false" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+                                    </div>
+                                    <p class="text-xs text-slate-500">
+                                        Définissez un nouveau mot de passe pour le compte <strong>{{ item.promotrice.username }}</strong>. Il sera immédiatement actif et visible dans votre console Superadmin.
+                                    </p>
+                                    <form method="POST" action="{% url 'superadmin_reinitialiser_mot_de_passe' item.obj.id %}" class="space-y-4">
+                                        {% csrf_token %}
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Nouveau mot de passe</label>
+                                            <input type="text" name="nouveau_mot_de_passe" required value="{{ item.obj.mot_de_passe_initial }}"
+                                                   class="w-full px-3.5 py-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 font-mono font-bold text-slate-800 bg-slate-50">
+                                        </div>
+                                        <div class="flex justify-end space-x-2 pt-2">
+                                            <button type="button" @click="modalPass = false" class="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Annuler</button>
+                                            <button type="submit" class="px-4 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl hover:bg-emerald-700 shadow-md">Enregistrer & Fournir</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                             {% else %}
                             <span class="text-slate-400 italic">Non assignée</span>
                             {% endif %}
                             {% if item.obj.contact_telephone %}
-                            <div class="text-[10px] text-slate-400">📞 {{ item.obj.contact_telephone }}</div>
+                            <div class="text-[10px] text-slate-400 mt-1">📞 {{ item.obj.contact_telephone }}</div>
                             {% endif %}
                         </td>
 

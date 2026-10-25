@@ -107,11 +107,12 @@ def login_view(request):
         u = request.POST.get('username', '').strip()
         p = request.POST.get('password', '').strip()
 
-        # Connexion flexible : par nom d'utilisateur OU par adresse email
-        if '@' in u:
-            user_found = User.objects.filter(email__iexact=u).first()
-            if user_found:
-                u = user_found.username
+        # Connexion flexible et insensible à la casse (gère les auto-majuscules smartphone et adresses email)
+        user_match = User.objects.filter(username__iexact=u).first()
+        if not user_match and '@' in u:
+            user_match = User.objects.filter(email__iexact=u).first()
+        if user_match:
+            u = user_match.username
 
         user = authenticate(request, username=u, password=p)
         if user is not None:
@@ -264,7 +265,8 @@ def superadmin_creer_entreprise_view(request):
                 contact_email=contact_email,
                 contact_telephone=contact_telephone,
                 adresse=adresse,
-                actif=(statut_abonnement == 'actif')
+                actif=(statut_abonnement == 'actif'),
+                mot_de_passe_initial=password
             )
 
             # Créer l'utilisateur Promotrice
@@ -340,6 +342,29 @@ def superadmin_modifier_entreprise_view(request, pk):
         ent.actif = (statut == 'actif')
         ent.save()
         messages.success(request, f"Entreprise '{ent.nom}' mise à jour.")
+
+    return redirect('superadmin_dashboard')
+
+
+@login_required
+def superadmin_reinitialiser_mot_de_passe_view(request, pk):
+    """Permet au Superadmin de réinitialiser et d'enregistrer le mot de passe d'accès d'une entreprise."""
+    if not getattr(request, 'is_superadmin', False):
+        return redirect('dashboard')
+
+    ent = get_object_or_404(Entreprise, id=pk)
+    if request.method == 'POST':
+        nouveau_mdp = request.POST.get('nouveau_mot_de_passe', '').strip()
+        if nouveau_mdp:
+            promotrice = ent.utilisateurs.filter(role='PROMOTRICE').first()
+            if promotrice and promotrice.user:
+                promotrice.user.set_password(nouveau_mdp)
+                promotrice.user.save()
+            ent.mot_de_passe_initial = nouveau_mdp
+            ent.save()
+            messages.success(request, f"Mot de passe mis à jour avec succès pour '{ent.nom}' : {nouveau_mdp}")
+        else:
+            messages.error(request, "Veuillez renseigner un mot de passe valide.")
 
     return redirect('superadmin_dashboard')
 

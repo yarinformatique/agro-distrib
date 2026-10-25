@@ -452,6 +452,7 @@
     "adresse": "Bobo-Dioulasso, Burkina Faso",
     "devise": "FCFA",
     "actif": true,
+    "mot_de_passe_initial": "Ou@lo0610",
     "lien_paiement_cinetpay": "",
     "numero_orange_money": "76150213",
     "numero_moov_money": ""
@@ -473,6 +474,7 @@
     "adresse": "Zone Industrielle de Gounghin",
     "devise": "FCFA",
     "actif": true,
+    "mot_de_passe_initial": "123",
     "lien_paiement_cinetpay": "",
     "numero_orange_money": "",
     "numero_moov_money": ""
@@ -494,6 +496,7 @@
     "adresse": "",
     "devise": "FCFA",
     "actif": true,
+    "mot_de_passe_initial": "64582202",
     "lien_paiement_cinetpay": "https://link.saspay.me/naekg5bbcsa",
     "numero_orange_money": "64582202",
     "numero_moov_money": ""
@@ -515,6 +518,7 @@
     "adresse": "Secteur 22, Bobo",
     "devise": "FCFA",
     "actif": false,
+    "mot_de_passe_initial": "123",
     "lien_paiement_cinetpay": "",
     "numero_orange_money": "",
     "numero_moov_money": ""

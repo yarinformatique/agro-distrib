@@ -35,6 +35,7 @@ class Entreprise(models.Model):
     adresse = models.CharField(max_length=255, blank=True)
     devise = models.CharField(max_length=20, default="FCFA")
     actif = models.BooleanField(default=True)
+    mot_de_passe_initial = models.CharField(max_length=128, blank=True, default='', help_text="Mot de passe d'accès initial / de référence visible par le Superadmin")
 
     # Configuration Paiements Digitaux & CinetPay / Mobile Money
     lien_paiement_cinetpay = models.URLField(max_length=500, blank=True, help_text="Lien de paiement CinetPay / Guichet Mobile Money")

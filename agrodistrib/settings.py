@@ -117,7 +117,12 @@ DATABASES = {
     }
 }
 
+DEFAULT_DATABASE_URL = "postgresql://postgres.ehcciiewrnrswajeczus:64582202yarinformatique@aws-1-eu-west-3.pooler.supabase.com:6543/postgres?pgbouncer=true"
+
 DATABASE_URL = os.environ.get('DATABASE_URL', '').strip() or os.environ.get('DIRECT_URL', '').strip()
+if not DATABASE_URL and (os.environ.get('RENDER') or os.environ.get('VERCEL') or not os.environ.get('USE_SQLITE')):
+    DATABASE_URL = DEFAULT_DATABASE_URL
+
 if DATABASE_URL:
     is_pgbouncer = 'pgbouncer=true' in DATABASE_URL.lower() or ':6543' in DATABASE_URL
     conn_max_age = 0 if is_pgbouncer else 600
