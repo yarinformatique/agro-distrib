@@ -121,7 +121,7 @@
 {
   "model": "auth.user",
   "fields": {
-    "password": "pbkdf2_sha256$1200000$L6JlbZJIXLqx9WSoybyhvK$AGrEgxVFMofn1EtGa3EdWpd6JkOQ/JcG6k6IwK8VIzk=",
+    "password": "pbkdf2_sha256$1200000$TzqDpBFl2AaqovMJGC4c7p$ugoCcK6gJz8xjUNatcwJUp+yuFEYgezwgNeQwRwXnzM=",
     "last_login": "2026-10-11T10:56:50.456Z",
     "is_superuser": false,
     "username": "suspendu_demo",
@@ -138,7 +138,7 @@
 {
   "model": "auth.user",
   "fields": {
-    "password": "pbkdf2_sha256$1200000$eVOGwC365oww1wHTQEnKT3$71JHu3cmnTM9R2VSaf1FFHiA3TKYZwcmO1aryuu8gMo=",
+    "password": "pbkdf2_sha256$1200000$XXvFGpeRET6bzqPUud1LZc$uaDpBFsclh0AgTCaOJMvdZ8ckdD1ZIa0PiW94IkohL8=",
     "last_login": null,
     "is_superuser": false,
     "username": "livreur_suspendu",
@@ -182,6 +182,40 @@
     "is_staff": false,
     "is_active": true,
     "date_joined": "2026-10-11T15:31:39.201Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$dxI6EwkauCm88JULpMUYc2$kGryR/qt43/JjGAA+ZWBzhLRPNy3Xl/1hJFmP/EGh60=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "yioualo",
+    "first_name": "Mme",
+    "last_name": "Bayala",
+    "email": "contact@yioualo.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-10-25T15:02:57.699Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$GO0a5adND3hNSiXToR7giG$BknnzwErDHVvyisqAbsnVSdJTRp2sOJR2FulWb7Os/s=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "livreur_yioualo",
+    "first_name": "Livreur",
+    "last_name": "YI OUALO",
+    "email": "livreur.yioualo@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-10-25T15:02:59.720Z",
     "groups": [],
     "user_permissions": []
   }
@@ -404,6 +438,27 @@
 },
 {
   "model": "distribution.entreprise",
+  "pk": "57b1f7f2-30c7-4b63-bd2d-9798fcc7580e",
+  "fields": {
+    "nom": "YI OUALO Agrobusiness",
+    "slug": "yioualo-agrobusiness",
+    "statut_abonnement": "actif",
+    "expire_le": "2028-10-24",
+    "date_creation": "2026-10-25T15:02:57.690Z",
+    "contact_nom": "Mme Bayala",
+    "contact_email": "contact@yioualo.com",
+    "contact_telephone": "+226 76 15 02 13",
+    "ville": "Bobo-Dioulasso",
+    "adresse": "Bobo-Dioulasso, Burkina Faso",
+    "devise": "FCFA",
+    "actif": true,
+    "lien_paiement_cinetpay": "",
+    "numero_orange_money": "76150213",
+    "numero_moov_money": ""
+  }
+},
+{
+  "model": "distribution.entreprise",
   "pk": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
   "fields": {
     "nom": "Agro-Distrib Faso",
@@ -476,6 +531,19 @@
     "ville": "Ouagadougou",
     "actif": true,
     "date_creation": "2026-10-11T10:47:51.253Z"
+  }
+},
+{
+  "model": "distribution.societelivraison",
+  "pk": "b464747f-ab1d-4000-9431-2d176f3f7a85",
+  "fields": {
+    "entreprise": "57b1f7f2-30c7-4b63-bd2d-9798fcc7580e",
+    "nom": "Express YI OUALO Livraisons",
+    "telephone": "+226 76 15 02 13",
+    "responsable": "Mme Bayala",
+    "ville": "Bobo-Dioulasso",
+    "actif": true,
+    "date_creation": "2026-10-25T15:02:59.712Z"
   }
 },
 {
@@ -563,6 +631,34 @@
 },
 {
   "model": "distribution.profilutilisateur",
+  "pk": "854364cc-32ca-46cf-b0d8-7461089fffda",
+  "fields": {
+    "user": [
+      "livreur_yioualo"
+    ],
+    "entreprise": "57b1f7f2-30c7-4b63-bd2d-9798fcc7580e",
+    "role": "LIVREUR",
+    "societe_livraison": "b464747f-ab1d-4000-9431-2d176f3f7a85",
+    "telephone": "+226 76 15 02 13",
+    "adresse": "Bobo-Dioulasso"
+  }
+},
+{
+  "model": "distribution.profilutilisateur",
+  "pk": "a09226ed-1425-4883-a0ab-ad675a8624ff",
+  "fields": {
+    "user": [
+      "yioualo"
+    ],
+    "entreprise": "57b1f7f2-30c7-4b63-bd2d-9798fcc7580e",
+    "role": "PROMOTRICE",
+    "societe_livraison": null,
+    "telephone": "+226 76 15 02 13",
+    "adresse": "Bobo-Dioulasso"
+  }
+},
+{
+  "model": "distribution.profilutilisateur",
   "pk": "a2d9fb6d-0876-4674-93ae-c1716154e791",
   "fields": {
     "user": [
@@ -612,6 +708,17 @@
     "unite": "sachet",
     "prix_unitaire_defaut": "1400.00",
     "stock_entrepot": 70
+  }
+},
+{
+  "model": "distribution.produit",
+  "pk": "1904b7e6-d533-4a08-820e-72771a6c86f3",
+  "fields": {
+    "entreprise": "57b1f7f2-30c7-4b63-bd2d-9798fcc7580e",
+    "designation": "Miel pur de savane du Gourma (500g)",
+    "unite": "pot",
+    "prix_unitaire_defaut": "2500.00",
+    "stock_entrepot": 120
   }
 },
 {
@@ -671,6 +778,17 @@
 },
 {
   "model": "distribution.produit",
+  "pk": "672a1387-8c75-44eb-917b-b7a9330546e4",
+  "fields": {
+    "entreprise": "57b1f7f2-30c7-4b63-bd2d-9798fcc7580e",
+    "designation": "Mangues séchées Bio du Burkina (100g)",
+    "unite": "sachet",
+    "prix_unitaire_defaut": "1000.00",
+    "stock_entrepot": 200
+  }
+},
+{
+  "model": "distribution.produit",
   "pk": "7f48f148-a4d9-414e-8442-970ce195140a",
   "fields": {
     "entreprise": null,
@@ -682,6 +800,17 @@
 },
 {
   "model": "distribution.produit",
+  "pk": "8065049a-1638-4a3d-82b3-bd8b18933566",
+  "fields": {
+    "entreprise": "57b1f7f2-30c7-4b63-bd2d-9798fcc7580e",
+    "designation": "Huile pure de Sésame pressée à froid (1L)",
+    "unite": "bouteille",
+    "prix_unitaire_defaut": "3000.00",
+    "stock_entrepot": 80
+  }
+},
+{
+  "model": "distribution.produit",
   "pk": "89ab1779-da28-4ee6-b454-33f8eb9d7ad6",
   "fields": {
     "entreprise": "e714d12e-fbd9-4893-9a42-1d8eb6c669a5",
@@ -689,6 +818,17 @@
     "unite": "pot",
     "prix_unitaire_defaut": "1500.00",
     "stock_entrepot": 100
+  }
+},
+{
+  "model": "distribution.produit",
+  "pk": "8e26cfb0-e702-47f9-8102-d085f13c9a03",
+  "fields": {
+    "entreprise": "57b1f7f2-30c7-4b63-bd2d-9798fcc7580e",
+    "designation": "Anacarde grillé salé Premium (150g)",
+    "unite": "sachet",
+    "prix_unitaire_defaut": "1500.00",
+    "stock_entrepot": 150
   }
 },
 {
@@ -722,6 +862,17 @@
     "unite": "bouteille",
     "prix_unitaire_defaut": "3000.00",
     "stock_entrepot": 80
+  }
+},
+{
+  "model": "distribution.produit",
+  "pk": "d7ffd8f4-8259-4a9f-92c1-f08f8e0c65ea",
+  "fields": {
+    "entreprise": "57b1f7f2-30c7-4b63-bd2d-9798fcc7580e",
+    "designation": "Soumbala moulu pur luxe (200g)",
+    "unite": "pot",
+    "prix_unitaire_defaut": "1200.00",
+    "stock_entrepot": 100
   }
 },
 {

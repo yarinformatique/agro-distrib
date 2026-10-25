@@ -373,18 +373,119 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS("[OK] Entreprise Suspendue créée : Bio Sahel Distribution (suspendu_demo / 123)"))
 
+        # ======================================================================
+        # 4. TENANT CLIENT PRINCIPAL : YI OUALO AGROBUSINESS (Bobo-Dioulasso)
+        # ======================================================================
+        tenant_yioualo, _ = Entreprise.objects.get_or_create(
+            slug="yioualo-agrobusiness",
+            defaults={
+                "nom": "YI OUALO Agrobusiness",
+                "statut_abonnement": "actif",
+                "expire_le": timezone.localdate() + timedelta(days=730),
+                "contact_nom": "Mme Bayala",
+                "contact_email": "contact@yioualo.com",
+                "contact_telephone": "+226 76 15 02 13",
+                "ville": "Bobo-Dioulasso",
+                "adresse": "Bobo-Dioulasso, Burkina Faso",
+                "devise": "FCFA",
+                "actif": True,
+                "numero_orange_money": "76150213"
+            }
+        )
+
+        user_yioualo, created_yi = User.objects.get_or_create(
+            username="yioualo",
+            defaults={
+                "email": "contact@yioualo.com",
+                "first_name": "Mme",
+                "last_name": "Bayala",
+                "is_staff": True,
+                "is_active": True
+            }
+        )
+        if created_yi or force or not user_yioualo.has_usable_password():
+            user_yioualo.set_password("Ou@lo0610")
+            user_yioualo.is_staff = True
+            user_yioualo.is_active = True
+            user_yioualo.save()
+
+        ProfilUtilisateur.objects.get_or_create(
+            user=user_yioualo,
+            defaults={
+                "entreprise": tenant_yioualo,
+                "role": "PROMOTRICE",
+                "telephone": "+226 76 15 02 13",
+                "adresse": "Bobo-Dioulasso"
+            }
+        )
+
+        # Société de livraison pour YI OUALO
+        soc_yioualo, _ = SocieteLivraison.objects.get_or_create(
+            entreprise=tenant_yioualo,
+            nom="Express YI OUALO Livraisons",
+            defaults={
+                "telephone": "+226 76 15 02 13",
+                "responsable": "Mme Bayala",
+                "ville": "Bobo-Dioulasso",
+                "actif": True
+            }
+        )
+
+        # Livreur YI OUALO
+        livreur_yioualo_user, created_lyi = User.objects.get_or_create(
+            username="livreur_yioualo",
+            defaults={
+                "email": "livreur.yioualo@gmail.com",
+                "first_name": "Livreur",
+                "last_name": "YI OUALO",
+                "is_staff": False,
+                "is_active": True
+            }
+        )
+        if created_lyi or force or not livreur_yioualo_user.has_usable_password():
+            livreur_yioualo_user.set_password("Ou@lo0610")
+            livreur_yioualo_user.save()
+
+        ProfilUtilisateur.objects.get_or_create(
+            user=livreur_yioualo_user,
+            defaults={
+                "entreprise": tenant_yioualo,
+                "role": "LIVREUR",
+                "societe_livraison": soc_yioualo,
+                "telephone": "+226 76 15 02 13",
+                "adresse": "Bobo-Dioulasso"
+            }
+        )
+
+        # Produits pour YI OUALO
+        for des, uni, px, stk in produits_data:
+            Produit.objects.get_or_create(
+                entreprise=tenant_yioualo,
+                designation=des,
+                defaults={
+                    "unite": uni,
+                    "prix_unitaire_defaut": Decimal(px),
+                    "stock_entrepot": stk
+                }
+            )
+
+        self.stdout.write(self.style.SUCCESS("[OK] Entreprise Principale créée : YI OUALO Agrobusiness (yioualo / Ou@lo0610)"))
+
         self.stdout.write("\n" + "=" * 60)
         self.stdout.write(self.style.SUCCESS("RÉSUMÉ DES COMPTES SEEDER PRÊTS :"))
         self.stdout.write("1. SUPERADMIN GLOBAL :")
         self.stdout.write("   - Accès : /superadmin/")
         self.stdout.write("   - Identifiant : superadmin | Mot de passe : admin123")
-        self.stdout.write("2. PROMOTRICE ACTIVE (Agro-Distrib Faso) :")
+        self.stdout.write("2. CLIENT PRINCIPAL (YI OUALO Agrobusiness - Bobo-Dioulasso) :")
+        self.stdout.write("   - Accès : /dashboard/")
+        self.stdout.write("   - Identifiant : yioualo | Mot de passe : Ou@lo0610")
+        self.stdout.write("3. PROMOTRICE ACTIVE (Agro-Distrib Faso) :")
         self.stdout.write("   - Accès : /dashboard/")
         self.stdout.write("   - Identifiant : demo | Mot de passe : 123")
-        self.stdout.write("3. LIVREUR ACTIF (Agro-Distrib Faso) :")
+        self.stdout.write("4. LIVREUR ACTIF (Agro-Distrib Faso) :")
         self.stdout.write("   - Accès : /livreur/")
         self.stdout.write("   - Identifiant : livreur_demo | Mot de passe : 123")
-        self.stdout.write("4. ENTREPRISE SUSPENDUE (Bio Sahel Distribution) :")
+        self.stdout.write("5. ENTREPRISE SUSPENDUE (Bio Sahel Distribution) :")
         self.stdout.write("   - Identifiant : suspendu_demo | Mot de passe : 123")
         self.stdout.write("   - Comportement : Bloqué immédiatement avec 'Accès suspendu'")
         self.stdout.write("=" * 60)
