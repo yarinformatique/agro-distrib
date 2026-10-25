@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 *.sqlite3
 *.log
+_pg_bridge_*.py
 
 # Staticfiles collectstatic target
 staticfiles/

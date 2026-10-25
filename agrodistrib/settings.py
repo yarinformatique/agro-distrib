@@ -34,6 +34,7 @@ ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
+    'https://*.vercel.app',
     'https://*.trycloudflare.com',
     'https://*.pinggy.link',
     'https://*.run.pinggy-free.link',
@@ -107,7 +108,7 @@ WSGI_APPLICATION = 'agrodistrib.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-# Persistance PostgreSQL via DATABASE_URL (Render / Production) avec fallback SQLite local
+# Persistance PostgreSQL via DATABASE_URL / DIRECT_URL (Render / Vercel / Supabase) avec fallback SQLite local
 
 DATABASES = {
     'default': {
@@ -116,15 +117,19 @@ DATABASES = {
     }
 }
 
-DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
+DATABASE_URL = os.environ.get('DATABASE_URL', '').strip() or os.environ.get('DIRECT_URL', '').strip()
 if DATABASE_URL:
+    is_pgbouncer = 'pgbouncer=true' in DATABASE_URL.lower() or ':6543' in DATABASE_URL
+    conn_max_age = 0 if is_pgbouncer else 600
     try:
         import dj_database_url
         DATABASES['default'] = dj_database_url.parse(
             DATABASE_URL,
-            conn_max_age=600,
+            conn_max_age=conn_max_age,
             conn_health_checks=True,
         )
+        if is_pgbouncer:
+            DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
     except ImportError:
         # Fallback natif sans dépendance externe si dj-database-url n'est pas installé
         parsed_db = urlparse(DATABASE_URL)
@@ -141,10 +146,12 @@ if DATABASE_URL:
                 'PASSWORD': parsed_db.password or '',
                 'HOST': parsed_db.hostname or 'localhost',
                 'PORT': str(parsed_db.port or 5432),
-                'CONN_MAX_AGE': 600,
+                'CONN_MAX_AGE': conn_max_age,
                 'CONN_HEALTH_CHECKS': True,
                 'OPTIONS': db_options,
             }
+            if is_pgbouncer:
+                DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
         elif scheme == 'sqlite':
             sqlite_path = parsed_db.path.lstrip('/') or 'db.sqlite3'
             DATABASES['default'] = {

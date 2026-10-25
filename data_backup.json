@@ -6,8 +6,8 @@
     "last_login": "2026-10-10T13:28:39.178Z",
     "is_superuser": true,
     "username": "promotrice",
-    "first_name": "AÔcha",
-    "last_name": "OuÈdraogo",
+    "first_name": "A√Øcha",
+    "last_name": "Ou√©draogo",
     "email": "promotrice@agrodistrib.bf",
     "is_staff": true,
     "is_active": true,
@@ -41,7 +41,7 @@
     "is_superuser": false,
     "username": "livreur2",
     "first_name": "Ibrahim",
-    "last_name": "TraorÈ",
+    "last_name": "Traor√©",
     "email": "ibrahim@agrodistrib.bf",
     "is_staff": false,
     "is_active": true,
@@ -74,7 +74,7 @@
     "last_login": "2026-10-11T16:44:07.129Z",
     "is_superuser": true,
     "username": "superadmin",
-    "first_name": "PropriÈtaire",
+    "first_name": "Propri√©taire",
     "last_name": "Plateforme",
     "email": "superadmin@agrodistrib.com",
     "is_staff": true,
@@ -91,8 +91,8 @@
     "last_login": "2026-10-12T12:32:32.689Z",
     "is_superuser": false,
     "username": "demo",
-    "first_name": "AÔcha",
-    "last_name": "OuÈdraogo",
+    "first_name": "A√Øcha",
+    "last_name": "Ou√©draogo",
     "email": "demo@agrodistrib.bf",
     "is_staff": true,
     "is_active": true,
@@ -126,7 +126,7 @@
     "is_superuser": false,
     "username": "suspendu_demo",
     "first_name": "Salif",
-    "last_name": "TraorÈ",
+    "last_name": "Traor√©",
     "email": "suspendu@biosahel.bf",
     "is_staff": true,
     "is_active": true,
@@ -411,7 +411,7 @@
     "statut_abonnement": "actif",
     "expire_le": "2027-10-11",
     "date_creation": "2026-10-11T10:47:51.235Z",
-    "contact_nom": "AÔcha OuÈdraogo",
+    "contact_nom": "A√Øcha Ou√©draogo",
     "contact_email": "demo@agrodistrib.bf",
     "contact_telephone": "+226 70 12 34 56",
     "ville": "Ouagadougou",
@@ -453,7 +453,7 @@
     "statut_abonnement": "suspendu",
     "expire_le": "2026-10-01",
     "date_creation": "2026-10-11T10:48:02.225Z",
-    "contact_nom": "Salif TraorÈ",
+    "contact_nom": "Salif Traor√©",
     "contact_email": "suspendu@biosahel.bf",
     "contact_telephone": "+226 71 22 33 44",
     "ville": "Bobo-Dioulasso",
@@ -558,7 +558,7 @@
     "role": "SUPERADMIN",
     "societe_livraison": null,
     "telephone": "+226 70 00 00 01",
-    "adresse": "SiËge SaaS Central"
+    "adresse": "Si√®ge SaaS Central"
   }
 },
 {
@@ -619,7 +619,7 @@
   "pk": "196e08b9-c95e-49a1-9804-9bb537be7d1a",
   "fields": {
     "entreprise": null,
-    "designation": "Mangues sÈchÈes Bio (250g)",
+    "designation": "Mangues s√©ch√©es Bio (250g)",
     "unite": "sachet",
     "prix_unitaire_defaut": "2200.00",
     "stock_entrepot": 95
@@ -630,7 +630,7 @@
   "pk": "2156bd3d-106f-4069-a20b-e053d49a5e7c",
   "fields": {
     "entreprise": null,
-    "designation": "Piment fort sÈchÈ moulu (100g)",
+    "designation": "Piment fort s√©ch√© moulu (100g)",
     "unite": "pot",
     "prix_unitaire_defaut": "800.00",
     "stock_entrepot": 130
@@ -641,7 +641,7 @@
   "pk": "290fcef2-6c85-483b-8840-1473cd8dea94",
   "fields": {
     "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
-    "designation": "Anacarde grillÈ salÈ Premium (150g)",
+    "designation": "Anacarde grill√© sal√© Premium (150g)",
     "unite": "sachet",
     "prix_unitaire_defaut": "1500.00",
     "stock_entrepot": 132
@@ -652,7 +652,7 @@
   "pk": "3add9f92-69a6-4175-a6a6-b5c7bcd8b773",
   "fields": {
     "entreprise": null,
-    "designation": "Mangues sÈchÈes Bio (100g)",
+    "designation": "Mangues s√©ch√©es Bio (100g)",
     "unite": "sachet",
     "prix_unitaire_defaut": "1000.00",
     "stock_entrepot": 180
@@ -663,7 +663,7 @@
   "pk": "507864a7-9a1d-4254-a4ce-fe5adbff660c",
   "fields": {
     "entreprise": null,
-    "designation": "Anacarde grillÈ salÈ (150g)",
+    "designation": "Anacarde grill√© sal√© (150g)",
     "unite": "sachet",
     "prix_unitaire_defaut": "1500.00",
     "stock_entrepot": 140
@@ -674,7 +674,7 @@
   "pk": "7f48f148-a4d9-414e-8442-970ce195140a",
   "fields": {
     "entreprise": null,
-    "designation": "P‚te d'arachide pure (1kg)",
+    "designation": "P√¢te d'arachide pure (1kg)",
     "unite": "pot",
     "prix_unitaire_defaut": "2000.00",
     "stock_entrepot": 50
@@ -685,7 +685,7 @@
   "pk": "89ab1779-da28-4ee6-b454-33f8eb9d7ad6",
   "fields": {
     "entreprise": "e714d12e-fbd9-4893-9a42-1d8eb6c669a5",
-    "designation": "Beurre de KaritÈ Bio Brut (250g)",
+    "designation": "Beurre de Karit√© Bio Brut (250g)",
     "unite": "pot",
     "prix_unitaire_defaut": "1500.00",
     "stock_entrepot": 100
@@ -718,7 +718,7 @@
   "pk": "b57244a2-6a43-4ef2-8908-eac13957ec2e",
   "fields": {
     "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
-    "designation": "Huile pure de SÈsame pressÈe ‡ froid (1L)",
+    "designation": "Huile pure de S√©same press√©e √† froid (1L)",
     "unite": "bouteille",
     "prix_unitaire_defaut": "3000.00",
     "stock_entrepot": 80
@@ -751,7 +751,7 @@
   "pk": "faed9639-d692-4b42-abb4-5ed55ce3501d",
   "fields": {
     "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
-    "designation": "Mangues sÈchÈes Bio du Burkina (100g)",
+    "designation": "Mangues s√©ch√©es Bio du Burkina (100g)",
     "unite": "sachet",
     "prix_unitaire_defaut": "1000.00",
     "stock_entrepot": 178
@@ -762,7 +762,7 @@
   "pk": "fe72a979-533f-4837-a237-421148da5729",
   "fields": {
     "entreprise": "6b60b78f-c7da-4e35-9d42-647cd5df2eaf",
-    "designation": "Mangue sÈchÈ",
+    "designation": "Mangue s√©ch√©",
     "unite": "sachet",
     "prix_unitaire_defaut": "500.00",
     "stock_entrepot": 100
@@ -773,15 +773,15 @@
   "pk": "0b3af0e0-564b-4625-9942-a291ac6630b5",
   "fields": {
     "entreprise": null,
-    "nom": "Alimentation La Gr‚ce",
+    "nom": "Alimentation La Gr√¢ce",
     "ville": "Ouagadougou",
     "quartier": "Ouaga 2000",
-    "nom_gerant": "Salif KaborÈ",
+    "nom_gerant": "Salif Kabor√©",
     "telephone_gerant": "+226 70 12 34 56",
     "latitude": "12.311500",
     "longitude": "-1.492500",
     "panier_moyen_estime": "25000.00",
-    "consignes_reglement": "PrÈfËre Orange Money. RÈassort le mardi matin.",
+    "consignes_reglement": "Pr√©f√®re Orange Money. R√©assort le mardi matin.",
     "actif": true,
     "plafond_credit": "50000.00",
     "bloquer_si_plafond_depasse": true,
@@ -794,15 +794,15 @@
   "pk": "26622a33-96fb-4ca1-8ed2-adad867c5b78",
   "fields": {
     "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
-    "nom": "Alimentation La Gr‚ce",
+    "nom": "Alimentation La Gr√¢ce",
     "ville": "Ouagadougou",
     "quartier": "Ouaga 2000",
-    "nom_gerant": "Salif KaborÈ",
+    "nom_gerant": "Salif Kabor√©",
     "telephone_gerant": "+226 70 12 34 56",
     "latitude": "12.311500",
     "longitude": "-1.492500",
     "panier_moyen_estime": "25000.00",
-    "consignes_reglement": "PrÈfËre Orange Money. RÈassort rÈgulier.",
+    "consignes_reglement": "Pr√©f√®re Orange Money. R√©assort r√©gulier.",
     "actif": true,
     "plafond_credit": "50000.00",
     "bloquer_si_plafond_depasse": true,
@@ -818,7 +818,7 @@
     "nom": "Alimentation Nouvelle Vision",
     "ville": "Ouagadougou",
     "quartier": "Wayalghin",
-    "nom_gerant": "Clarisse CompaorÈ",
+    "nom_gerant": "Clarisse Compaor√©",
     "telephone_gerant": "+226 74 11 22 33",
     "latitude": "12.385000",
     "longitude": "-1.470000",
@@ -836,9 +836,9 @@
   "pk": "39317eb6-8faf-42e5-8b92-09092df679f4",
   "fields": {
     "entreprise": null,
-    "nom": "Boutique ProximitÈ Agro",
+    "nom": "Boutique Proximit√© Agro",
     "ville": "Ouagadougou",
-    "quartier": "SomgandÈ",
+    "quartier": "Somgand√©",
     "nom_gerant": "Alima Ilboudo",
     "telephone_gerant": "+226 70 77 66 55",
     "latitude": "12.412000",
@@ -865,7 +865,7 @@
     "latitude": "12.405000",
     "longitude": "-1.552000",
     "panier_moyen_estime": "35000.00",
-    "consignes_reglement": "Accepte crÈdit 5 jours.",
+    "consignes_reglement": "Accepte cr√©dit 5 jours.",
     "actif": true,
     "plafond_credit": "50000.00",
     "bloquer_si_plafond_depasse": true,
@@ -881,12 +881,12 @@
     "nom": "Superette Sainte Rita",
     "ville": "Ouagadougou",
     "quartier": "Pissy",
-    "nom_gerant": "AndrÈ SomÈ",
+    "nom_gerant": "Andr√© Som√©",
     "telephone_gerant": "+226 68 99 88 77",
     "latitude": "12.338000",
     "longitude": "-1.562000",
     "panier_moyen_estime": "40000.00",
-    "consignes_reglement": "EspËces uniquement.",
+    "consignes_reglement": "Esp√®ces uniquement.",
     "actif": true,
     "plafond_credit": "50000.00",
     "bloquer_si_plafond_depasse": true,
@@ -928,7 +928,7 @@
     "latitude": "12.368500",
     "longitude": "-1.527500",
     "panier_moyen_estime": "45000.00",
-    "consignes_reglement": "Paye cash ‡ la livraison. Demande toujours facture.",
+    "consignes_reglement": "Paye cash √† la livraison. Demande toujours facture.",
     "actif": true,
     "plafond_credit": "50000.00",
     "bloquer_si_plafond_depasse": true,
@@ -962,7 +962,7 @@
   "pk": "80633a8f-67c1-43ec-b24f-114d6faf5b1c",
   "fields": {
     "entreprise": null,
-    "nom": "Boutique …toile du Sahel",
+    "nom": "Boutique √âtoile du Sahel",
     "ville": "Ouagadougou",
     "quartier": "Dassasgho",
     "nom_gerant": "Mariam Zongo",
@@ -970,7 +970,7 @@
     "latitude": "12.378000",
     "longitude": "-1.482000",
     "panier_moyen_estime": "20000.00",
-    "consignes_reglement": "RËglement en espËces ou Orange Money.",
+    "consignes_reglement": "R√®glement en esp√®ces ou Orange Money.",
     "actif": true,
     "plafond_credit": "50000.00",
     "bloquer_si_plafond_depasse": true,
@@ -983,7 +983,7 @@
   "pk": "8168105a-7a7d-4c11-8392-bb96cf278bbf",
   "fields": {
     "entreprise": "6aeb81c8-dd29-479d-b2e4-854d809b6cb4",
-    "nom": "Boutique …toile du Sahel",
+    "nom": "Boutique √âtoile du Sahel",
     "ville": "Ouagadougou",
     "quartier": "Dassasgho",
     "nom_gerant": "Mariam Zongo",
@@ -991,7 +991,7 @@
     "latitude": "12.378000",
     "longitude": "-1.482000",
     "panier_moyen_estime": "20000.00",
-    "consignes_reglement": "RËglement en espËces ou Orange Money.",
+    "consignes_reglement": "R√®glement en esp√®ces ou Orange Money.",
     "actif": true,
     "plafond_credit": "50000.00",
     "bloquer_si_plafond_depasse": true,
@@ -1054,7 +1054,7 @@
     "latitude": "12.368500",
     "longitude": "-1.527500",
     "panier_moyen_estime": "45000.00",
-    "consignes_reglement": "Paye cash ‡ la livraison. Demande toujours reÁu.",
+    "consignes_reglement": "Paye cash √† la livraison. Demande toujours re√ßu.",
     "actif": true,
     "plafond_credit": "50000.00",
     "bloquer_si_plafond_depasse": true,
@@ -1503,7 +1503,7 @@
     "statut_paiement": "PAYE",
     "mode_reglement": "ESPECES",
     "date_echeance_credit": null,
-    "notes": "Livraison complËte effectuÈe. Patron trËs satisfait du miel.",
+    "notes": "Livraison compl√®te effectu√©e. Patron tr√®s satisfait du miel.",
     "confirme_par_boutique": false,
     "date_confirmation_boutique": null,
     "note_boutique": ""
@@ -1522,7 +1522,7 @@
     "statut_paiement": "PARTIEL",
     "mode_reglement": "ORANGE_MONEY",
     "date_echeance_credit": "2026-10-17",
-    "notes": "Acompte versÈ par Orange Money. Reste 14 000 FCFA ‡ rÈgler vendredi prochain.",
+    "notes": "Acompte vers√© par Orange Money. Reste 14 000 FCFA √† r√©gler vendredi prochain.",
     "confirme_par_boutique": false,
     "date_confirmation_boutique": null,
     "note_boutique": ""
@@ -1599,7 +1599,7 @@
     "destinataire_telephone": "+226 76 99 88 77",
     "statut": "EN_TRANSIT",
     "frais_transport": "15000.00",
-    "consignes_generales": "Marchandise fraÓche ‡ ventiler dËs rÈception au dÈpÙt de Gounghin",
+    "consignes_generales": "Marchandise fra√Æche √† ventiler d√®s r√©ception au d√©p√¥t de Gounghin",
     "date_reception": null,
     "cree_par": [
       "demo"
@@ -1622,7 +1622,7 @@
     "destinataire_telephone": "+226 70 88 99 00",
     "statut": "EN_TRANSIT",
     "frais_transport": "7500.00",
-    "consignes_generales": "Colis ‡ retirer ‡ la gare TSR Ouaga Èchangeur de l'Est dËs 15h00. RÈpartir les 50 sachets mangue 100g immÈdiatement aux boutiques du centre-ville (Wend-Kuni et Gounghin).",
+    "consignes_generales": "Colis √† retirer √† la gare TSR Ouaga √©changeur de l'Est d√®s 15h00. R√©partir les 50 sachets mangue 100g imm√©diatement aux boutiques du centre-ville (Wend-Kuni et Gounghin).",
     "date_reception": null,
     "cree_par": [
       "promotrice"
@@ -1639,7 +1639,7 @@
     "unite": "sachet",
     "valeur_unitaire": "1000.00",
     "sous_total": "50000.00",
-    "consigne_specifique": "Lot vÈrifiÈ et scellÈ"
+    "consigne_specifique": "Lot v√©rifi√© et scell√©"
   }
 },
 {
@@ -1652,7 +1652,7 @@
     "unite": "sachet",
     "valeur_unitaire": "1500.00",
     "sous_total": "45000.00",
-    "consigne_specifique": "Stock de rÈassort pour le van de Moussa"
+    "consigne_specifique": "Stock de r√©assort pour le van de Moussa"
   }
 },
 {
@@ -1665,7 +1665,7 @@
     "unite": "sachet",
     "valeur_unitaire": "1000.00",
     "sous_total": "50000.00",
-    "consigne_specifique": "¿ rÈpartir entre Wend-Kuni (25 sachets) et Barka (25 sachets)"
+    "consigne_specifique": "√Ä r√©partir entre Wend-Kuni (25 sachets) et Barka (25 sachets)"
   }
 },
 {
@@ -1678,7 +1678,7 @@
     "unite": "bouteille",
     "valeur_unitaire": "3000.00",
     "sous_total": "150000.00",
-    "consigne_specifique": "Lot vÈrifiÈ et scellÈ"
+    "consigne_specifique": "Lot v√©rifi√© et scell√©"
   }
 },
 {
@@ -1691,7 +1691,7 @@
     "unite": "pot",
     "valeur_unitaire": "2500.00",
     "sous_total": "125000.00",
-    "consigne_specifique": "Lot vÈrifiÈ et scellÈ"
+    "consigne_specifique": "Lot v√©rifi√© et scell√©"
   }
 },
 {
@@ -1704,7 +1704,7 @@
     "unite": "pot",
     "valeur_unitaire": "2500.00",
     "sous_total": "50000.00",
-    "consigne_specifique": "Pots ÈtiquetÈs rÈcolte spÈciale savane"
+    "consigne_specifique": "Pots √©tiquet√©s r√©colte sp√©ciale savane"
   }
 },
 {
@@ -1715,7 +1715,7 @@
     "tournee": "5d464cd8-0b7b-4f65-a6fe-717dda763686",
     "alimentation": "8168105a-7a7d-4c11-8392-bb96cf278bbf",
     "date_creation": "2026-10-12T12:22:15.220Z",
-    "produits_consignes": "4x Anacarde grillÈ salÈ Premium (150g), 7x Mangues sÈchÈes Bio du Burkina (100g)",
+    "produits_consignes": "4x Anacarde grill√© sal√© Premium (150g), 7x Mangues s√©ch√©es Bio du Burkina (100g)",
     "donnees_produits": {},
     "montant_cible": "13000.00",
     "consigne_particuliere": "",
@@ -1731,10 +1731,10 @@
     "tournee": "a0f24eb3-090c-414d-aeee-53d91bc2a456",
     "alimentation": "7acf40ab-d066-45ff-b300-b96a0eae5394",
     "date_creation": "2026-10-10T12:29:46.329Z",
-    "produits_consignes": "6 sachets mangue 100g, 5 pots miel 500g, 4 anacardes salÈs",
+    "produits_consignes": "6 sachets mangue 100g, 5 pots miel 500g, 4 anacardes sal√©s",
     "donnees_produits": {},
     "montant_cible": "24500.00",
-    "consigne_particuliere": "Remettre le reÁu imprimÈ, paiement cash attendu ‡ la livraison.",
+    "consigne_particuliere": "Remettre le re√ßu imprim√©, paiement cash attendu √† la livraison.",
     "statut": "LIVRE",
     "livraison_vente": null
   }
@@ -1766,7 +1766,7 @@
     "produits_consignes": "10 sachets mangue 100g, 5 pots miel savane",
     "donnees_produits": {},
     "montant_cible": "22500.00",
-    "consigne_particuliere": "Remettre le reÁu avec signature du gÈrant",
+    "consigne_particuliere": "Remettre le re√ßu avec signature du g√©rant",
     "statut": "A_FAIRE",
     "livraison_vente": null
   }
@@ -1782,7 +1782,7 @@
     "produits_consignes": "10 sachets mangue 100g, 5 anacardes 150g",
     "donnees_produits": {},
     "montant_cible": "17500.00",
-    "consigne_particuliere": "Contacter le gÈrant Salif ‡ l'arrivÈe. PrÈfËre Orange Money.",
+    "consigne_particuliere": "Contacter le g√©rant Salif √† l'arriv√©e. Pr√©f√®re Orange Money.",
     "statut": "A_FAIRE",
     "livraison_vente": null
   }

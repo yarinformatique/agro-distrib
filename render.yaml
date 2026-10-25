@@ -4,15 +4,16 @@ services:
     runtime: python
     plan: free
     buildCommand: "./build.sh"
-    startCommand: "python manage.py migrate --no-input && gunicorn agrodistrib.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+    startCommand: "gunicorn agrodistrib.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
     healthCheckPath: /healthz
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.0
       - key: DATABASE_URL
-        sync: false
+        value: "postgresql://postgres.ehcciiewrnrswajeczus:64582202yarinformatique@aws-1-eu-west-3.pooler.supabase.com:6543/postgres?pgbouncer=true"
+      - key: DIRECT_URL
+        value: "postgresql://postgres.ehcciiewrnrswajeczus:64582202yarinformatique@aws-1-eu-west-3.pooler.supabase.com:5432/postgres"
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
         value: "False"
-
